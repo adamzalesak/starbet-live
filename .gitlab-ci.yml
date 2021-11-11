@@ -1,0 +1,12 @@
+stages:
+  - build
+
+build-frontend:
+  stage: build
+  script:
+    - echo "Build fricking frontend"
+
+build-backend:
+  stage: build
+  script:
+    - echo "Build f-ing backend"
