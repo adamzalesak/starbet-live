@@ -1,6 +1,11 @@
 stages:
   - build
 
+default:
+    tags:
+      - shared-fi
+
+
 build-frontend:
   stage: build
   script:
