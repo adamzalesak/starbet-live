@@ -1,17 +1,53 @@
 stages:
   - build
+  - lint
+  - test
 
 default:
-    tags:
-      - shared-fi
-
-
-build-frontend:
-  stage: build
-  script:
-    - echo "Build fricking frontend"
+  image: rust
+  tags:
+    - shared-fi
 
 build-backend:
   stage: build
   script:
-    - echo "Build f-ing backend"
+    - cd backend
+    - cargo build --verbose
+
+build-frontend:
+  stage: build
+  script:
+    - cd frontend
+    - cargo build --verbose
+
+lint-backend:
+  stage: lint
+  script:
+    - cd backend
+    - rustup component add rustfmt
+    - cargo fmt -- --check
+    - rustup component add clippy
+    - cargo clippy -- -D warnings
+
+lint-frontend:
+  stage: lint
+  script:
+    - cd frontend
+    - rustup component add rustfmt
+    - cargo fmt -- --check
+    - rustup component add clippy
+    - cargo clippy -- -D warnings
+
+test-backend:
+  stage: test
+  script:
+    - cd backend
+    - cargo test --verbose
+
+test-frontend:
+  stage: test
+  script:
+    - cd frontend
+    - cargo test --verbose
+
+
