@@ -2,6 +2,8 @@
 
 hide circle
 skinparam Linetype ortho
+skinparam Nodesep 110
+skinparam Ranksep 50
 
 entity User {
     * id : <<serial>>
@@ -18,11 +20,13 @@ entity User {
 entity UserAddress {
     * id : <<serial>>
     ---
+    * user_id : <<FK>>
     * street_name: text
     * city: text
     * area: text
     * postal_code: text
     * country: text
+    * valid_from: timestamp
 }
 
 entity Game {
@@ -51,6 +55,7 @@ entity TeamPlaysGame {
 entity Match {
     * id: <<serial>>
     ---
+    * game_id: <<FK>>
     * team_one_id: <<FK>>
     * team_two_id: <<FK>>
     * supposed_start: timestamp
@@ -80,6 +85,7 @@ entity MatchEvent {
 entity Bet {
     * id: <<serial>>
     ---
+    * match_id: <<FK>>
     * ticket_id: <<FK>>
     * team_id: <<FK>>
     * bet_ratio: number
@@ -92,27 +98,32 @@ entity Ticket {
     ---
     * user_id: <<FK>>
     * created_at: timestamp
-    submitted_at: timestamp
+    paid_at: timestamp
 }
 
 ' User relationships
-User ||..|{ UserAddress
-User ||..o{ Ticket
+User ||..|{ UserAddress : users_address
+User ||..o{ Ticket : users_tickets
 
 ' Team playing a game
 Game ||..o{ TeamPlaysGame
 Team ||..o{ TeamPlaysGame
 
 ' a match belongs to a game
-Game ||..o{ Match
+Game ||..o{ Match : game_match
 
 ' match has several events that can happen
-Match ||..o{ MatchEvent
+Match ||..o{ MatchEvent : match_events
 
 ' match has unlimited number of bets
-Match ||..o{ Bet
+Match ||..o{ Bet : bet_on_match
+
+' match is played by two teams
+Team ||..o{ Match : team_one
+Team ||..o{ Match : team_two
+Team ||..o{ Bet : bet_on_team
 
 ' Bets belong to a ticket
-Ticket ||..|{ Bet
+Ticket ||..|{ Bet : bet_in ticket
 
 @enduml
