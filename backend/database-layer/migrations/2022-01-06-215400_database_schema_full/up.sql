@@ -55,20 +55,11 @@ CREATE TABLE "Match" (
     "state" TEXT NOT NULL
 );
 
--- Events that can happen during the match
-CREATE TYPE MATCH_EVENTS AS ENUM (
-    'MATCH_UPCOMING',
-    'MATCH_LIVE',
-    'MATCH_END',
-    'MATCH_OVERTIME',
-    'MATCH_CANCELLED'
-);
-
 -- match has events which can happen
 CREATE TABLE "MatchEvent" (
     id SERIAL PRIMARY KEY,
     match_id INTEGER REFERENCES "Match",
-    event_type MATCH_EVENTS NOT NULL,
+    event_type TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
 

@@ -35,7 +35,7 @@ table! {
     MatchEvent (id) {
         id -> Int4,
         match_id -> Nullable<Int4>,
-        event_type -> Match_events,
+        event_type -> Text,
         created_at -> Text,
     }
 }
