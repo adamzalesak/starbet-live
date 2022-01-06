@@ -4,3 +4,5 @@ backend/target/
 frontend/target/
 .envrc
 .env
+**/target
+
