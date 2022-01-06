@@ -1,19 +1,16 @@
 use yew::prelude::*;
 
-mod components;
-use crate::components::layout::Layout;
-enum Msg {
-}
+use crate::components::header::header::Header;
+pub enum Msg {}
 
-struct App {
-}
+pub struct Layout {}
 
-impl Component for App {
+impl Component for Layout {
     type Message = Msg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self {  }
+        Self {}
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -22,11 +19,9 @@ impl Component for App {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <Layout />
+            <>
+                <Header />
+            </>
         }
     }
-}
-
-fn main() {
-    yew::start_app::<App>();
 }

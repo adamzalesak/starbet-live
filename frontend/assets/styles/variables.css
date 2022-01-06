@@ -1,0 +1,67 @@
+
+:root {
+  /* Color definition */
+  --danger: #dc3545;
+  --danger-light: #f8d7da;
+  --success: #198754;
+  --success-light: #d1e7dd;
+
+  --yellow: #FCA311;
+  --dark-yellow: #DC8E0E;
+
+  --blue: #264485;
+  --dark-blue: #14213D;
+
+  --grey: #4E4E4E;
+  --light-grey: #E5E5E5;
+
+  /* transtions */
+  --transition-short: all 0.2s ease;
+  --transition-long: all 0.5s ease;
+
+  --margin-small: 0.3rem;
+  --margin-medium: 0.5rem;
+  --margin-big: 1rem;
+  --padding-small: 0.3rem;
+  --padding-medium: 0.5rem;
+  --padding-big: 1rem;
+
+  /* fonts */
+  --font-size-smaller: 0.8rem;
+  --font-size-normal: 1rem;
+  --font-size-medium: 1.2rem;
+  --font-size-big: 1.5rem;
+
+  --border-radius-small: 0.2rem;
+  --border-radius-medium: 0.5rem;
+  --border-radius-big: 1rem;
+}
+
+.bg-dark-blue {
+  background-color: #14213D;
+}
+
+.bg-blue {
+  background-color: #264485;
+}
+
+.bg-yellow  {
+  background-color: #FCA311;
+}
+
+.bg-dark-yellow {
+  background-color: #DC8E0E;
+}
+
+.bg-black  {
+  background-color: #000000;
+}
+
+.bg-grey  {
+  background-color: #4E4E4E;
+}
+
+.bg-light-grey  {
+  background-color: #E5E5E5;
+}
+
