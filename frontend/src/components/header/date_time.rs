@@ -62,11 +62,11 @@ impl Component for DateTime {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <div>
+            <span>
                 { &self.date } 
                 {" "}
                 { &self.time }
-            </div>
+            </span>
         }
     }
 }

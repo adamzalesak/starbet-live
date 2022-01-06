@@ -1,0 +1,60 @@
+/* custom styles  */
+
+:root {
+  /* Color definition */
+  --danger: #dc3545;
+  --danger-light: #f8d7da;
+  --success: #198754;
+  --success-light: #d1e7dd;
+
+  --yellow: #FCA311;
+  --dark-yellow: #DC8E0E;
+
+  --blue: #264485;
+  --dark-blue: #14213D;
+
+  --grey: #4E4E4E;
+  --light-grey: #E5E5E5;
+
+  --white: #ffffff;
+  --black: #000000;
+}
+
+body {
+  height: 100vh;
+  font-size: 16px;
+}
+
+.bg-dark-blue {
+  background-color: var(--dark-blue);
+}
+
+.bg-blue {
+  background-color: var(--blue);
+}
+
+.bg-yellow  {
+  background-color: var(--yellow);
+}
+
+.bg-dark-yellow {
+  background-color: var(--dark-yellow);
+}
+
+.bg-black  {
+  background-color: var(--black);
+}
+
+.bg-grey  {
+  background-color: var(--grey);
+}
+
+.bg-light-grey  {
+  background-color: var(--light-grey);
+}
+
+.bg-white  {
+  background-color: var(--white);
+}
+
+
