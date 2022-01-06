@@ -1,5 +1,6 @@
 *.swp
 *Cargo.lock
 backend/target/
-frontent/target/
+frontend/target/
 .envrc
+.env
