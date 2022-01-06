@@ -1,0 +1,10 @@
+DROP TABLE "UserAddress";
+DROP TABLE "TeamPlaysGame";
+DROP TABLE "MatchEvent";
+DROP TABLE "Bet";
+DROP TABLE "Match";
+DROP TABLE "Team";
+DROP TABLE "Game";
+DROP TABLE "Ticket";
+DROP TABLE "User";
+DROP TYPE "match_events";
