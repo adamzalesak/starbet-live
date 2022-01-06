@@ -1,0 +1,118 @@
+@startuml database design
+
+hide circle
+skinparam Linetype ortho
+
+entity User {
+    * id : <<serial>>
+    ---
+    * first_name: text
+    * last_name: text
+    * civil_id_number: text
+    * date_of_birth: text
+    * email: text
+    * phone_number: number
+    photo: <<url>>
+}
+
+entity UserAddress {
+    * id : <<serial>>
+    ---
+    * street_name: text
+    * city: text
+    * area: text
+    * postal_code: text
+    * country: text
+}
+
+entity Game {
+    * id: <<serial>>
+    ---
+    * name: text
+    * description: text
+    * logo: <<url>>
+}
+
+entity Team {
+    * id: <<serial>>
+    ---
+    * name: text
+    * description: text
+    * logo: <<url>>
+}
+
+entity TeamPlaysGame {
+    * id: <<serial>>
+    ---
+    * team_id: <<FK>>
+    * game_id: <<FK>>
+}
+
+entity Match {
+    * id: <<serial>>
+    ---
+    * team_one_id: <<FK>>
+    * team_two_id: <<FK>>
+    * supposed_start: timestamp
+    * team_one_ratio: number
+    * team_two_ratio: number
+    * state: text
+}
+
+enum MATCH_EVENT_TYPE {
+    ---
+    MATCH_UPCOMING
+    MATCH_LIVE
+    MATCH_END
+    MATCH_OVERTIME
+    MATCH_CANCELLED
+}
+
+entity MatchEvent {
+    * id: <<serial>>
+    ---
+    * match_id: <<FK>>
+    * event_type: MATCH_EVENT_TYPE
+    * created_at: timestamp
+    overtime_until: timestamp
+}
+
+entity Bet {
+    * id: <<serial>>
+    ---
+    * ticket_id: <<FK>>
+    * team_id: <<FK>>
+    * bet_ratio: number
+    * bet_price: number
+    * created_at: timestamp
+}
+
+entity Ticket {
+    * id: <<serial>>
+    ---
+    * user_id: <<FK>>
+    * created_at: timestamp
+    submitted_at: timestamp
+}
+
+' User relationships
+User ||..|{ UserAddress
+User ||..o{ Ticket
+
+' Team playing a game
+Game ||..o{ TeamPlaysGame
+Team ||..o{ TeamPlaysGame
+
+' a match belongs to a game
+Game ||..o{ Match
+
+' match has several events that can happen
+Match ||..o{ MatchEvent
+
+' match has unlimited number of bets
+Match ||..o{ Bet
+
+' Bets belong to a ticket
+Ticket ||..|{ Bet
+
+@enduml

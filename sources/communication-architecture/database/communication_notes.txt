@@ -1,0 +1,45 @@
+USERSPACE
+    Zobrazovatko:
+
+        Zobrazenie hier (kategorii)
+        Zobrazenie momentalnych zapasov (+ SUBSCRIBE)
+                + predoslych
+                + buducich
+                + vsetkych
+
+        Zobrazenie momentalneho otvoreneho ticketu # (+ SUBSCRIBE?)
+        Zobrazenie latest bets (+ SUBSCRIBE)
+                # Bude tam ZAPAS, Na ktory tim sa stavilo, aku ciastku (+ mozno ratio)
+
+        Zobrazenie vysledkov odohranych hier # (+ SUBSCRIBE kvoli zmenam)
+        Zobrazenie predoslych podanych ticketov # (+ SUBSCRIBE kvoli zmenam -> moze byt podany ticket)
+
+        # Synchronizacia medzi tabmi? - napr betting na viacerych taboch
+
+        Zobrazenie profilovych informacii - TOP RIGHT CORNER
+        Ked chceme editovat profile info
+        
+    Interakcie:
+
+        # Prihlasenie / odhlasenie
+
+        Vytvorenie bet / rusenie bet
+        Podanie ticketu / zrusenie ticketu
+
+        Editacia profilovych udajov
+
+"ADMIN" SPACE
+
+    Interakcie:
+        Pridat / zrusit hru
+        Pridat / zrusit zapas
+        Pridat zapas event -> Team scored or something = NOTIFY subscribed frontend ze nastal event
+
+AUTOMATIC
+
+    Notifications / Subscribes:
+
+        KEĎ niekto podá ticket - ZMENA KURZU
+                                 PRIDAŤ DO LATEST bets
+        
+        Ked skonci hra tak sa odstrani z live
