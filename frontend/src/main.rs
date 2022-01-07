@@ -3,11 +3,11 @@ use yew_router::prelude::*;
 
 mod components;
 mod pages;
-use crate::components::{
-    layout::Layout,
-    main::{live::Live, results::Results, upcoming::Upcoming},
+use crate::components::layout::Layout;
+use crate::pages::{
+    live_page::LivePage, not_found::NotFoundPage, results_page::ResultsPage,
+    upcoming_page::UpcomingPage,
 };
-use crate::pages::not_found::NotFoundPage;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
 pub enum Route {
@@ -54,19 +54,19 @@ impl Component for App {
 fn switch(routes: &Route) -> Html {
     match routes.clone() {
         Route::Live => {
-            html! { <Live /> }
+            html! { <LivePage /> }
         }
         Route::Upcoming => {
-            html! { <Upcoming /> }
+            html! { <UpcomingPage /> }
         }
         Route::Results => {
-            html! { <Results /> }
+            html! { <ResultsPage /> }
         }
         Route::NotFound => {
             html! { <NotFoundPage /> }
         }
         Route::Home => {
-            html! { <Live /> }
+            html! { <LivePage /> }
         }
     }
 }

@@ -1,6 +1,13 @@
 use yew::prelude::*;
 
-use crate::components::header::header::Header;
+use crate::components::{
+    header::header::Header,
+    sidebars::{
+        footer::Footer,
+        games::Games,
+        tickets::{latest_tickets::LatestTickets, ticket::Ticket},
+    },
+};
 pub enum Msg {}
 
 pub struct Layout {}
@@ -27,7 +34,19 @@ impl Component for Layout {
         html! {
             <>
                 <Header />
-                { ctx.props().children.clone() }
+                <main class="w-full flex-auto flex flex-row">
+                    <section class="w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2">
+                        <Games />
+                        <Footer />
+                    </section>
+                    <section class="w-8/12 p-2">
+                        { ctx.props().children.clone() }
+                    </section>
+                    <section class="w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2">
+                        <Ticket />
+                        <LatestTickets />
+                    </section>
+                </main>
             </>
         }
     }

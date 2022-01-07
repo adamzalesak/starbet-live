@@ -18,7 +18,7 @@ impl Component for Ticket {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-         <div>{"ticket"}</div>
+         <div class="bg-dark-blue text-white rounded-md p-2">{"Your ticket"}</div>
         }
     }
 }

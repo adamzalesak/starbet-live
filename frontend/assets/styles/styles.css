@@ -23,6 +23,9 @@
 body {
   height: 100vh;
   font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  
 }
 
 .bg-dark-blue {
@@ -57,4 +60,7 @@ body {
   background-color: var(--white);
 }
 
-
+.current_active_page a {
+  background-color: var(--white);
+  color: var(--black);
+}

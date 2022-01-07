@@ -6,18 +6,19 @@ use crate::Route;
 use super::date_time::DateTime;
 
 pub enum Msg {
-    setActive,
+    SetActive(Pages),
 }
 
-enum Tabs {
+#[derive(PartialEq)]
+pub enum Pages {
+    None,
     Live,
     Upcoming,
     Results,
 }
 
 pub struct Header {
-    is_logged: bool,
-    current_tab: Tabs,
+    current_page: Pages,
 }
 
 impl Component for Header {
@@ -25,42 +26,60 @@ impl Component for Header {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
+        // check currently active page
+        let path: String = ctx.link().location().unwrap().pathname();
+        let curr: Pages = match path.as_str() {
+            "/live" | "/live/" | "/" | "" => Pages::Live,
+            "/results" | "/results/" => Pages::Results,
+            "/upcoming" | "/upcoming/" => Pages::Upcoming,
+            _ => Pages::None,
+        };
         Self {
-            is_logged: false,
-            current_tab: Tabs::Live,
+            current_page: curr,
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        let history = ctx.link().location().unwrap().pathname();
-        false
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        log::info!("updating header");
+        match msg {
+            Msg::SetActive(page) => self.current_page = page,
+        }
+        true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <header class="bg-dark-blue flex flex-row justify-between text-white">
-                <Link<Route> to={Route::Home} classes="block w-4/12 md:w-3/12 transition-all p-3 my-auto">
-                    <img src="assets/icons/starbet-live-yellow.svg" alt="starbet live logo" />
-                </Link<Route>>
+                <div onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class="block w-4/12 md:w-3/12 transition-all my-auto">
+                    <Link<Route> to={Route::Home}>
+                        <img src="starbet-live-yellow.svg" alt="starbet live logo" class="p-3"/>
+                    </Link<Route>>
+                </div>
                 <div class="flex flex-col justify-between w-full">
                     <div class="text-center my-2 text-sm">
                         <DateTime />
                     </div>
                     <nav>
                         <ul>
-                            <Link<Route> to={Route::Live} classes={"inline-block bg-blue font-bold text-white py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
-                                { "Live" }
-                            </Link<Route>>
-                            <Link<Route> to={Route::Upcoming} classes="inline-block bg-blue font-bold text-white py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
-                                { "Upcoming" }
-                            </Link<Route>>
-                            <Link<Route> to={Route::Results} classes="inline-block bg-blue font-bold text-white py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
-                                { "Results" }
-                            </Link<Route>>
+                            <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class={if self.current_page == Pages::Live {"current_active_page"} else {""}}>
+                                <Link<Route> to={Route::Live} classes={"inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
+                                    { "Live" }
+                                </Link<Route>>
+                            </span>
+                            <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Upcoming))} class={if self.current_page == Pages::Upcoming {"current_active_page"} else {""}}>
+                                <Link<Route> to={Route::Upcoming} classes="inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                    { "Upcoming" }
+                                </Link<Route>>
+                            </span>
+                            <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Results))} class={if self.current_page == Pages::Results {"current_active_page"} else {""}}>
+                                <Link<Route> to={Route::Results} classes="inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                    { "Results" }
+                                </Link<Route>>
+                            </span>
                         </ul>
                     </nav>
                 </div>
-                <div class="my-auto p-3">
+                <div class="my-auto m-3">
                     <span>{"Login form"}</span>
                 </div>
             </header>

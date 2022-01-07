@@ -20,7 +20,6 @@
 //     pwd: String,
 // }
 
-
 // pub struct LoginForm {
 //     client: Arc<Client>,
 //     data: LoginFormData,

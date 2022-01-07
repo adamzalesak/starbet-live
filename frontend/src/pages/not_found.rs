@@ -20,7 +20,7 @@ impl Component for NotFoundPage {
         html! {
          <div class="h-max flex flex-col items-center justify-center mt-8 font-bold">
             <span class="text-9xl">{"404"}</span>
-            <span>{"Whoops, page not found"}</span>    
+            <span>{"Whoops, page not found"}</span>
         </div>
         }
     }

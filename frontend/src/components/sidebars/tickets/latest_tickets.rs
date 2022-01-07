@@ -2,9 +2,9 @@ use yew::prelude::*;
 
 pub enum Msg {}
 
-pub struct LatestTicket {}
+pub struct LatestTickets {}
 
-impl Component for LatestTicket {
+impl Component for LatestTickets {
     type Message = Msg;
     type Properties = ();
 
@@ -18,7 +18,7 @@ impl Component for LatestTicket {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-         <div>{"latest ticket"}</div>
+         <div class="bg-dark-blue text-white rounded-md  p-2">{"latest tickets"}</div>
         }
     }
 }
