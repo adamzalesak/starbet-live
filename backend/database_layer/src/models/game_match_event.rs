@@ -5,17 +5,17 @@ use crate::models::game_match::GameMatch;
 #[belongs_to(GameMatch)]
 #[table_name = "game_match_event"]
 pub struct GameMatchEvent {
-    id: i32,
-    game_match_id: i32,
-    event_type: String,
-    created_at: String,
-    overtime_until: Option<String>,
+    pub id: i32,
+    pub game_match_id: i32,
+    pub event_type: String,
+    pub created_at: String,
+    pub overtime_until: Option<String>,
 }
 
 #[derive(Insertable)]
 #[table_name = "game_match_event"]
 pub struct CreateGameMatchEvent<'a> {
-    game_match_id: i32,
-    event_type: &'a str,
-    created_at: &'a str,
+    pub game_match_id: i32,
+    pub event_type: &'a str,
+    pub created_at: &'a str,
 }

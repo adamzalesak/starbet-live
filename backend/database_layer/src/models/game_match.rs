@@ -7,24 +7,24 @@ use crate::models::{game::Game};
 #[belongs_to(Game)]
 #[table_name= "game_match"]
 pub struct GameMatch {
-    id: i32,
-    game_id: i32,
-    team_one_id: i32,
-    team_two_id: i32,
-    team_one_ratio: String,
-    team_two_ratio: String,
-    supposed_start_at: String,
-    state: String,
+    pub id: i32,
+    pub game_id: i32,
+    pub team_one_id: i32,
+    pub team_two_id: i32,
+    pub team_one_ratio: String,
+    pub team_two_ratio: String,
+    pub supposed_start_at: String,
+    pub state: String,
 }
 
 #[derive(Insertable)]
 #[table_name = "game_match"]
 pub struct CreateGameMatch<'a> {
-    game_id: i32,
-    team_one_id: i32,
-    team_two_id: i32,
-    team_one_ratio: &'a str,
-    team_two_ratio: &'a str,
-    supposed_start_at: &'a str,
-    state: &'a str,
+    pub game_id: i32,
+    pub team_one_id: i32,
+    pub team_two_id: i32,
+    pub team_one_ratio: &'a str,
+    pub team_two_ratio: &'a str,
+    pub supposed_start_at: &'a str,
+    pub state: &'a str,
 }

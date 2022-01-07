@@ -5,24 +5,24 @@ use crate::models::user::User;
 #[belongs_to(User)]
 #[table_name="user_address"]
 pub struct UserAddress {
-    id: i32,
-    user_id: i32,
-    street_name: String,
-    city: String,
-    area: String,
-    postal_code: String,
-    country: String,
-    valid_from: String,
+    pub id: i32,
+    pub user_id: i32,
+    pub street_name: String,
+    pub city: String,
+    pub area: String,
+    pub postal_code: String,
+    pub country: String,
+    pub valid_from: String,
 }
 
-// #[derive(Insertable)]
-// #[table_name = "user_address"]
-// pub struct CreateUserAddress<'a> {
-//     user_id: i32,
-//     street_name: &'a str,
-//     city: &'a str,
-//     area: &'a str,
-//     postal_code: &'a str,
-//     country: &'a str,
-//     valid_from: &'a str,
-// }
+#[derive(Insertable)]
+#[table_name = "user_address"]
+pub struct CreateUserAddress<'a> {
+    pub user_id: i32,
+    pub street_name: &'a str,
+    pub city: &'a str,
+    pub area: &'a str,
+    pub postal_code: &'a str,
+    pub country: &'a str,
+    pub valid_from: &'a str,
+}

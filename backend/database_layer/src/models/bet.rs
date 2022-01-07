@@ -7,22 +7,22 @@ use crate::models::{ticket::Ticket, game_match::GameMatch, team::Team};
 #[belongs_to(GameMatch)]
 #[table_name = "bet"]
 pub struct Bet {
-    id: i32,
-    game_match_id: i32,
-    ticket_id: i32,
-    team_id: i32,
-    bet_ratio: String,
-    bet_price: String,
-    created_at: String,
+    pub id: i32,
+    pub game_match_id: i32,
+    pub ticket_id: i32,
+    pub team_id: i32,
+    pub bet_ratio: String,
+    pub bet_price: String,
+    pub created_at: String,
 }
 
 #[derive(Insertable)]
 #[table_name = "bet"]
 pub struct CreateBet<'a> {
-    game_match_id: i32,
-    ticket_id: i32,
-    team_id: i32,
-    bet_ratio: &'a str,
-    bet_price: &'a str,
-    created_at: &'a str,
+    pub game_match_id: i32,
+    pub ticket_id: i32,
+    pub team_id: i32,
+    pub bet_ratio: &'a str,
+    pub bet_price: &'a str,
+    pub created_at: &'a str,
 }
