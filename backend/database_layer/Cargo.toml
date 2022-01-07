@@ -1,5 +1,5 @@
 [package]
-name = "database-layer"
+name = "database_layer"
 version = "0.1.0"
 edition = "2021"
 
