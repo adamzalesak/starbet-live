@@ -1,9 +1,9 @@
-use crate::schema::user_address;
 use crate::models::user::User;
+use crate::schema::user_address;
 
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
 #[belongs_to(User)]
-#[table_name="user_address"]
+#[table_name = "user_address"]
 pub struct UserAddress {
     pub id: i32,
     pub user_id: i32,

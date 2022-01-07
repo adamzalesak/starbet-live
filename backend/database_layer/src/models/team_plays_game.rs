@@ -1,5 +1,5 @@
+use crate::models::{game::Game, team::Team};
 use crate::schema::team_plays_game;
-use crate::models::{team::Team, game::Game};
 
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
 #[belongs_to(Team)]

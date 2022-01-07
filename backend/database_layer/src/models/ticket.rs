@@ -1,5 +1,5 @@
-use crate::schema::ticket;
 use crate::models::user::User;
+use crate::schema::ticket;
 
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
 #[belongs_to(User)]

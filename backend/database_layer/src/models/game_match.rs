@@ -1,11 +1,11 @@
-use crate::schema::{game_match};
-use crate::models::{game::Game};
+use crate::models::game::Game;
+use crate::schema::game_match;
 
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
 #[belongs_to(Team, foreign_key = team_one_id)]
 #[belongs_to(Team, foreign_key = team_two_id)]
 #[belongs_to(Game)]
-#[table_name= "game_match"]
+#[table_name = "game_match"]
 pub struct GameMatch {
     pub id: i32,
     pub game_id: i32,

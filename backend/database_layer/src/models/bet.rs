@@ -1,5 +1,5 @@
+use crate::models::{game_match::GameMatch, team::Team, ticket::Ticket};
 use crate::schema::bet;
-use crate::models::{ticket::Ticket, game_match::GameMatch, team::Team};
 
 #[derive(Identifiable, Queryable, Associations, PartialEq)]
 #[belongs_to(Ticket)]
