@@ -1,7 +1,10 @@
-use crate::schema::UserAddress;
+use crate::schema::user_address;
+use crate::models::user::User;
 
-#[derive(Queryable)]
-struct GetUserAddress {
+#[derive(Identifiable, Associations, Queryable, PartialEq)]
+#[belongs_to(User)]
+#[table_name="user_address"]
+pub struct UserAddress {
     id: i32,
     user_id: i32,
     street_name: String,
@@ -12,16 +15,14 @@ struct GetUserAddress {
     valid_from: String,
 }
 
-
-#[derive(Insertable)]
-#[table_name="UserAddress"]
-struct NewUserAddress<'a> {
-    id: i32,
-    user_id: i32,
-    street_name: &'a str,
-    city: &'a str,
-    area: &'a str,
-    postal_code: &'a str,
-    country: &'a str,
-    valid_from: &'a str,
-}
+// #[derive(Insertable)]
+// #[table_name = "user_address"]
+// pub struct CreateUserAddress<'a> {
+//     user_id: i32,
+//     street_name: &'a str,
+//     city: &'a str,
+//     area: &'a str,
+//     postal_code: &'a str,
+//     country: &'a str,
+//     valid_from: &'a str,
+// }

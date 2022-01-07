@@ -1,9 +1,9 @@
 table! {
-    Bet (id) {
+    bet (id) {
         id -> Int4,
-        match_id -> Nullable<Int4>,
-        ticket_id -> Nullable<Int4>,
-        team_id -> Nullable<Int4>,
+        game_match_id -> Int4,
+        ticket_id -> Int4,
+        team_id -> Int4,
         bet_ratio -> Text,
         bet_price -> Text,
         created_at -> Text,
@@ -11,37 +11,7 @@ table! {
 }
 
 table! {
-    Game (id) {
-        id -> Int4,
-        name -> Text,
-        logo -> Text,
-    }
-}
-
-table! {
-    Match (id) {
-        id -> Int4,
-        game_id -> Nullable<Int4>,
-        team_one_id -> Nullable<Int4>,
-        team_two_id -> Nullable<Int4>,
-        team_one_ratio -> Text,
-        team_two_ration -> Text,
-        supposed_start_at -> Text,
-        state -> Text,
-    }
-}
-
-table! {
-    MatchEvent (id) {
-        id -> Int4,
-        match_id -> Nullable<Int4>,
-        event_type -> Text,
-        created_at -> Text,
-    }
-}
-
-table! {
-    Team (id) {
+    game (id) {
         id -> Int4,
         name -> Text,
         description -> Text,
@@ -50,24 +20,55 @@ table! {
 }
 
 table! {
-    TeamPlaysGame (id) {
+    game_match (id) {
         id -> Int4,
-        team_id -> Nullable<Int4>,
-        game_id -> Nullable<Int4>,
+        game_id -> Int4,
+        team_one_id -> Int4,
+        team_two_id -> Int4,
+        team_one_ratio -> Text,
+        team_two_ratio -> Text,
+        supposed_start_at -> Text,
+        state -> Text,
     }
 }
 
 table! {
-    Ticket (id) {
+    game_match_event (id) {
         id -> Int4,
-        user_id -> Nullable<Int4>,
+        game_match_id -> Int4,
+        event_type -> Text,
+        created_at -> Text,
+    }
+}
+
+table! {
+    team (id) {
+        id -> Int4,
+        name -> Text,
+        description -> Text,
+        logo -> Text,
+    }
+}
+
+table! {
+    team_plays_game (id) {
+        id -> Int4,
+        team_id -> Int4,
+        game_id -> Int4,
+    }
+}
+
+table! {
+    ticket (id) {
+        id -> Int4,
+        user_id -> Int4,
         created_at -> Text,
         paid_at -> Nullable<Text>,
     }
 }
 
 table! {
-    User (id) {
+    user (id) {
         id -> Int4,
         first_name -> Text,
         last_name -> Text,
@@ -79,7 +80,7 @@ table! {
 }
 
 table! {
-    UserAddress (id) {
+    user_address (id) {
         id -> Int4,
         user_id -> Int4,
         street_name -> Text,
@@ -91,24 +92,24 @@ table! {
     }
 }
 
-joinable!(Bet -> Match (match_id));
-joinable!(Bet -> Team (team_id));
-joinable!(Bet -> Ticket (ticket_id));
-joinable!(Match -> Game (game_id));
-joinable!(MatchEvent -> Match (match_id));
-joinable!(TeamPlaysGame -> Game (game_id));
-joinable!(TeamPlaysGame -> Team (team_id));
-joinable!(Ticket -> User (user_id));
-joinable!(UserAddress -> User (user_id));
+joinable!(bet -> game_match (game_match_id));
+joinable!(bet -> team (team_id));
+joinable!(bet -> ticket (ticket_id));
+joinable!(game_match -> game (game_id));
+joinable!(game_match_event -> game_match (game_match_id));
+joinable!(team_plays_game -> game (game_id));
+joinable!(team_plays_game -> team (team_id));
+joinable!(ticket -> user (user_id));
+joinable!(user_address -> user (user_id));
 
 allow_tables_to_appear_in_same_query!(
-    Bet,
-    Game,
-    Match,
-    MatchEvent,
-    Team,
-    TeamPlaysGame,
-    Ticket,
-    User,
-    UserAddress,
+    bet,
+    game,
+    game_match,
+    game_match_event,
+    team,
+    team_plays_game,
+    ticket,
+    user,
+    user_address,
 );

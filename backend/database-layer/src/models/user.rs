@@ -1,7 +1,7 @@
-use crate::schema::User;
+use crate::schema::user;
 
 #[derive(Queryable)]
-struct GetUser {
+pub struct User {
     id: i32,
     first_name: String,
     last_name: String,
@@ -11,11 +11,9 @@ struct GetUser {
     photo: Option<String>,
 }
 
-
 #[derive(Insertable)]
-#[table_name="User"]
-struct NewUser<'a> {
-    id: i32,
+#[table_name = "user"]
+pub struct CreateUser<'a> {
     first_name: &'a str,
     last_name: &'a str,
     civil_id_number: &'a str,

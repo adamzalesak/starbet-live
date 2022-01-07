@@ -7,7 +7,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-diesel = { version = "1.4.4", features = [ "postgres" ] }
+bigdecimal = "0.3.0"
+diesel = { version = "1.4.4", features = [ "postgres", "r2d2" ] }
 dotenv = "0.15.0"
-serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = [ "serde" ] }
+serde = { version = "1.0", features = [ "derive" ] }
 tokio = { version = "1.15.0", features = [ "full" ] }

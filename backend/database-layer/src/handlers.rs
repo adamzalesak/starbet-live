@@ -1,1 +1,1 @@
-pub(crate) mod database_connection;
+pub mod database_connection;

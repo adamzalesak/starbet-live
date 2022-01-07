@@ -1,5 +1,5 @@
 -- User
-CREATE TABLE "User" (
+CREATE TABLE "user" (
     id SERIAL PRIMARY KEY,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
@@ -10,9 +10,9 @@ CREATE TABLE "User" (
 );
 
 -- User's address
-CREATE TABLE "UserAddress" (
+CREATE TABLE "user_address" (
     id SERIAL PRIMARY KEY,
-    "user_id" INTEGER REFERENCES "User" NOT NULL,
+    "user_id" INTEGER REFERENCES "user" NOT NULL,
     street_name TEXT NOT NULL,
     city TEXT NOT NULL,
     area TEXT NOT NULL,
@@ -22,14 +22,15 @@ CREATE TABLE "UserAddress" (
 );
 
 -- Game -> Like a category of matches
-CREATE TABLE "Game" (
+CREATE TABLE "game" (
     id SERIAL PRIMARY KEY,
     "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
     logo TEXT NOT NULL
 );
 
 -- Team which plays the game
-CREATE TABLE "Team" (
+CREATE TABLE "team" (
     id SERIAL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -37,46 +38,46 @@ CREATE TABLE "Team" (
 );
 
 -- teams can play multiple games, games have multiple teams that play them
-CREATE TABLE "TeamPlaysGame" (
+CREATE TABLE "team_plays_game" (
     id SERIAL PRIMARY KEY,
-    team_id INTEGER REFERENCES "Team",
-    game_id INTEGER REFERENCES "Game"
+    team_id INTEGER REFERENCES "team" NOT NULL,
+    game_id INTEGER REFERENCES "game" NOT NULL
 );
 
 -- Match that is played
-CREATE TABLE "Match" (
+CREATE TABLE "game_match" (
     id SERIAL PRIMARY KEY,
-    game_id INTEGER REFERENCES "Game",
-    team_one_id INTEGER REFERENCES "Team",
-    team_two_id INTEGER REFERENCES "Team",
+    game_id INTEGER REFERENCES "game" NOT NULL,
+    team_one_id INTEGER REFERENCES "team" NOT NULL,
+    team_two_id INTEGER REFERENCES "team" NOT NULL,
     team_one_ratio TEXT NOT NULL,
-    team_two_ration TEXT NOT NULL,
+    team_two_ratio TEXT NOT NULL,
     supposed_start_at TEXT NOT NULL,
     "state" TEXT NOT NULL
 );
 
 -- match has events which can happen
-CREATE TABLE "MatchEvent" (
+CREATE TABLE "game_match_event" (
     id SERIAL PRIMARY KEY,
-    match_id INTEGER REFERENCES "Match",
+    game_match_id INTEGER REFERENCES "game_match" NOT NULL,
     event_type TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
 
 -- Ticket containing multiple bets
-CREATE TABLE "Ticket" (
+CREATE TABLE "ticket" (
     id SERIAL PRIMARY KEY,
-    "user_id" INTEGER REFERENCES "User",
+    "user_id" INTEGER REFERENCES "user" NOT NULL,
     created_at TEXT NOT NULL,
     paid_at TEXT
 );
 
 -- Bet containing the 
-CREATE TABLE "Bet" (
+CREATE TABLE "bet" (
     id SERIAL PRIMARY KEY,
-    match_id INTEGER REFERENCES "Match",
-    ticket_id INTEGER REFERENCES "Ticket",
-    team_id INTEGER REFERENCES "Team",
+    game_match_id INTEGER REFERENCES "game_match" NOT NULL,
+    ticket_id INTEGER REFERENCES "ticket" NOT NULL,
+    team_id INTEGER REFERENCES "team" NOT NULL,
     bet_ratio TEXT NOT NULL,
     bet_price TEXT NOT NULL,
     created_at TEXT NOT NULL

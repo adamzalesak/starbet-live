@@ -1,2 +1,9 @@
-pub mod user;
-pub mod user_address;
+pub(crate) mod bet;
+pub(crate) mod game;
+pub(crate) mod game_match;
+pub(crate) mod game_match_event;
+pub(crate) mod team;
+pub(crate) mod team_plays_game;
+pub(crate) mod ticket;
+pub(crate) mod user;
+pub(crate) mod user_address;
