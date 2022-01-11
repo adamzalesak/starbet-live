@@ -5,4 +5,4 @@ frontend/target/
 .envrc
 .env
 **/target
-
+**/.DS_Store
