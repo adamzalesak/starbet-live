@@ -1,17 +1,16 @@
 use yew::prelude::*;
 
-use crate::components::main::matches::Matches;
+use super::matches_game::MatchesGame;
 
 pub enum Msg {}
+pub struct Matches { }
 
-pub struct LivePage {}
-
-impl Component for LivePage {
+impl Component for Matches {
     type Message = Msg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self {}
+        Self { }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
@@ -20,7 +19,11 @@ impl Component for LivePage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-          <Matches />
+            <ul class="flex flex-col gap-2">
+                <MatchesGame />
+                <MatchesGame />
+                <MatchesGame />
+            </ul>
         }
     }
 }

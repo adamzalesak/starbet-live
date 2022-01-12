@@ -28,6 +28,10 @@ body {
   
 }
 
+.text-yellow {
+  color: var(--yellow);
+}
+
 .bg-dark-blue {
   background-color: var(--dark-blue);
 }

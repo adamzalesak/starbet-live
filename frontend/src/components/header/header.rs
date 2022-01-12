@@ -52,7 +52,7 @@ impl Component for Header {
             <header class="bg-dark-blue flex flex-row justify-between text-white">
                 <div onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class="block w-4/12 md:w-3/12 transition-all my-auto">
                     <Link<Route> to={Route::Home}>
-                        <img src="starbet-live-yellow.svg" alt="starbet live logo" class="p-3"/>
+                        <img src="/starbet-live-yellow.svg" alt="starbet live logo" class="p-3"/>
                     </Link<Route>>
                 </div>
                 <div class="flex flex-col justify-between w-full">
