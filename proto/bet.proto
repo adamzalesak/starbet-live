@@ -1,0 +1,48 @@
+syntax = "proto3";
+package bet;
+
+import "google/protobuf/empty.proto";
+
+
+service BetService {
+    rpc ListBets (ListBetsRequest) returns (ListBetsReply);
+    rpc CreateBet (CreateBetRequest) returns (CreateBetReply);
+    rpc DeleteBet (DeleteBetRequest) returns (google.protobuf.Empty);
+
+    rpc ListTicketBets (ListTicketBetsRequest) returns (ListBetsReply);
+}
+
+message Bet {
+    int32 id = 1;
+    int32 ticket_id = 2;
+    int32 match_id = 3;
+    int32 team_id = 4;
+    float rate = 5;
+}
+
+message ListBetsRequest {
+    int32 limit = 1;
+}
+
+message ListBetsReply {
+    repeated Bet bets = 1;
+}
+
+message CreateBetRequest {
+    int32 ticket_id = 1;
+    int32 match_id = 2;
+    int32 team_id = 3;
+    float rate = 4;
+}
+
+message CreateBetReply {
+    int32 id = 1;
+}
+
+message DeleteBetRequest {
+    int32 id = 1;
+}
+
+message ListTicketBetsRequest {
+    int32 ticket_id = 1;
+}

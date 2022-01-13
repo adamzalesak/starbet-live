@@ -1,0 +1,51 @@
+syntax = "proto3";
+package game_match;
+
+import "google/protobuf/empty.proto";
+
+
+service GameMatchService {
+    rpc ListGameMatches (google.protobuf.Empty) returns (ListGameMatchesReply);
+    rpc CreateGameMatch (CreateGameMatchRequest) returns (CreateGameMatchReply);
+    rpc DeleteGameMatch (DeleteGameMatchRequest) returns (google.protobuf.Empty);
+
+    rpc ListGameGameMatches (ListGameGameMatchesRequest) returns (ListGameMatchesReply);
+}
+
+message GameMatch {
+    int32 id = 1;
+    int32 game_id = 2;
+    int32 team_one_id = 3;
+    int32 team_two_id = 4;
+    float team_one_rate = 5;
+    float team_two_rate = 6;
+    int32 start_ts = 7;
+}
+
+message ListGameMatchesReply {
+    repeated GameMatch game_matches = 1;
+}
+
+message CreateGameMatchRequest {
+    int32 game_id = 1;
+    int32 team_one_id = 2;
+    int32 team_two_id = 3;
+    float team_one_rate = 4;
+    float team_two_rate = 5;
+    int32 start_ts = 6;
+}
+
+message CreateGameMatchReply {
+    int32 id = 1;
+}
+
+message DeleteGameMatchRequest {
+    int32 id = 1;
+}
+
+message ListGameGameMatchesRequest {
+    int32 game_id = 1;
+}
+
+
+
