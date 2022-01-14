@@ -6,6 +6,7 @@ CREATE TABLE "user" (
     civil_id_number TEXT NOT NULL,
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
+    created_at TEXT NOT NULL,
     photo TEXT
 );
 
@@ -14,8 +15,9 @@ CREATE TABLE "user_address" (
     id SERIAL PRIMARY KEY,
     "user_id" INTEGER REFERENCES "user" NOT NULL,
     street_name TEXT NOT NULL,
+    street_number TEXT NOT NULL,
     city TEXT NOT NULL,
-    area TEXT NOT NULL,
+    area TEXT,
     postal_code TEXT NOT NULL,
     country TEXT NOT NULL,
     valid_from TEXT NOT NULL

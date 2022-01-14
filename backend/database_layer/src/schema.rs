@@ -75,6 +75,7 @@ table! {
         civil_id_number -> Text,
         email -> Text,
         phone_number -> Text,
+        created_at -> Text,
         photo -> Nullable<Text>,
     }
 }
@@ -84,8 +85,9 @@ table! {
         id -> Int4,
         user_id -> Int4,
         street_name -> Text,
+        street_number -> Text,
         city -> Text,
-        area -> Text,
+        area -> Nullable<Text>,
         postal_code -> Text,
         country -> Text,
         valid_from -> Text,

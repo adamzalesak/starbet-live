@@ -16,5 +16,5 @@ pub struct Ticket {
 pub struct CreateTicket<'a> {
     pub user_id: i32,
     pub created_at: &'a str,
-    pub paid_at: &'a str,
+    pub paid_at: Option<&'a str>,
 }

@@ -8,6 +8,7 @@ pub struct User {
     pub civil_id_number: String,
     pub email: String,
     pub phone_number: String,
+    pub created_at: String,
     pub photo: Option<String>,
 }
 
@@ -19,5 +20,6 @@ pub struct CreateUser<'a> {
     pub civil_id_number: &'a str,
     pub email: &'a str,
     pub phone_number: &'a str,
+    pub created_at: &'a str,
     pub photo: Option<&'a str>,
 }
