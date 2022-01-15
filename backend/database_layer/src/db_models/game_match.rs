@@ -1,4 +1,4 @@
-use crate::models::game::Game;
+use crate::db_models::game::Game;
 use crate::schema::game_match;
 
 #[derive(Identifiable, Associations, Queryable, PartialEq)]

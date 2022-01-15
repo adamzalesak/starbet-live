@@ -1,4 +1,4 @@
-use crate::models::{game_match::GameMatch, team::Team, ticket::Ticket};
+use crate::db_models::{game_match::GameMatch, team::Team, ticket::Ticket};
 use crate::schema::bet;
 
 #[derive(Identifiable, Queryable, Associations, PartialEq)]

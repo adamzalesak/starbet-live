@@ -22,7 +22,7 @@ fn initialize_pool(database_url: &str) -> Result<PgPool> {
 /// Returns
 /// - Ok(PgPool) = after successfull database connection and pool creation
 /// - Err(_) = after an error occurred
-pub async fn establish_connection(database_url: &str) -> Result<PgPool> {
+pub async fn db_connect_create_pool(database_url: &str) -> Result<PgPool> {
     PgConnection::establish(database_url)?;
     println!("Database connection has been successful.");
 

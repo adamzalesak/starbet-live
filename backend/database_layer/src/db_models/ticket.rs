@@ -1,4 +1,4 @@
-use crate::models::user::User;
+use crate::db_models::user::User;
 use crate::schema::ticket;
 
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
