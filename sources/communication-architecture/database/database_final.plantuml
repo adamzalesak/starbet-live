@@ -22,8 +22,9 @@ entity UserAddress {
     ---
     * user_id : <<FK>>
     * street_name: text
+    * street_number: text
     * city: text
-    * area: text
+    area: text
     * postal_code: text
     * country: text
     * valid_from: timestamp
