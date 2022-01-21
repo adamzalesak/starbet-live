@@ -37,8 +37,10 @@ impl Repo for PgUserAddressRepo {
     /// Returns
     /// ---
     /// - new User repo
-    fn new(pool: Arc<PgPool>) -> PgUserAddressRepo {
-        PgUserAddressRepo { pool }
+    fn new(pool: &Arc<PgPool>) -> PgUserAddressRepo {
+        PgUserAddressRepo {
+            pool: Arc::clone(pool),
+        }
     }
 
     /// Get a connection from the pool

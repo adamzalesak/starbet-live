@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 #[async_trait]
 pub trait Repo {
-    fn new(pool: Arc<PgPool>) -> Self;
+    fn new(pool: &Arc<PgPool>) -> Self;
 
     async fn get_connection(&self) -> anyhow::Result<PgPooledConnection>;
 }

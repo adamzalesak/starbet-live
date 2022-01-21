@@ -44,8 +44,10 @@ impl Repo for PgMatchRepo {
     /// Returns
     /// ---
     /// - new Team repo
-    fn new(pool: Arc<PgPool>) -> PgMatchRepo {
-        PgMatchRepo { pool }
+    fn new(pool: &Arc<PgPool>) -> PgMatchRepo {
+        PgMatchRepo {
+            pool: Arc::clone(pool),
+        }
     }
 
     /// Get a connection from the pool

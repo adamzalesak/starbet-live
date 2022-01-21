@@ -11,6 +11,7 @@ use crate::connection::PgPooledConnection;
 
 // type and structure imports
 use super::repo::Repo;
+use crate::db_access::team::TeamInfo;
 use crate::db_models::{
     game::{CreateGame, Game},
     team::Team,
@@ -23,12 +24,12 @@ use crate::schema::{
         table as game_table,
     },
     team::{
-        dsl::{id as team_id, team},
+        dsl::{id as team_id, logo as team_logo_url, name as team_name, team},
         table as team_table,
     },
     team_plays_game::{
         dsl::{
-            game_id as join_game_id, id as team_plays_game_id, team_id as join_team_id,
+            game_id as game_id_join, id as team_plays_game_id, team_id as team_id_join,
             team_plays_game,
         },
         table as team_plays_game_table,
@@ -53,8 +54,10 @@ impl Repo for PgGameRepo {
     /// Returns
     /// ---
     /// - new Game repo
-    fn new(pool: Arc<PgPool>) -> PgGameRepo {
-        PgGameRepo { pool }
+    fn new(pool: &Arc<PgPool>) -> PgGameRepo {
+        PgGameRepo {
+            pool: Arc::clone(pool),
+        }
     }
 
     /// Get a connection from the pool
@@ -74,7 +77,7 @@ pub trait GameRepo {
 
     async fn get_all(&self) -> anyhow::Result<Vec<GameInfo>>;
 
-    async fn get_teams_playing(&self, desired_game_id: i32) -> anyhow::Result<Vec<Team>>;
+    async fn get_teams_playing(&self, desired_game_id: i32) -> anyhow::Result<Vec<TeamInfo>>;
 
     async fn create<'a>(&self, new_game: CreateGame<'a>) -> anyhow::Result<i32>;
 }
@@ -121,8 +124,15 @@ impl GameRepo for PgGameRepo {
     /// - desired_game_id: game in which we are interested in
     ///
     ///
-    async fn get_teams_playing(&self, desired_game_id: i32) -> anyhow::Result<Vec<Team>> {
-        todo!()
+    async fn get_teams_playing(&self, desired_game_id: i32) -> anyhow::Result<Vec<TeamInfo>> {
+        let query_result: Vec<TeamInfo> = game_table
+            .find(desired_game_id)
+            .inner_join(team_plays_game_table.inner_join(team_table))
+            .distinct_on(team_id)
+            .select((team_id, team_name, team_logo_url))
+            .get_results(&self.get_connection().await?)?;
+
+        Ok(query_result)
     }
 
     /// Create a new Game record in the database
