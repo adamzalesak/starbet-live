@@ -19,7 +19,7 @@ impl CurrentTime {
     /// Returns
     /// - Ok(date) if the conversion was successful
     /// - Err(_) if an error occurred while parsing the input
-    pub fn load(input: &str) -> anyhow::Result<DateTime<Utc>> {
+    pub fn load_timestamp(input: &str) -> anyhow::Result<DateTime<Utc>> {
         Ok(input.parse::<DateTime<Utc>>()?)
     }
 }

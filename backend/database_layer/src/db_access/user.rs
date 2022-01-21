@@ -11,9 +11,11 @@ use crate::connection::PgPooledConnection;
 
 // type and structure imports
 use super::repo::Repo;
-use crate::db_models::ticket::Ticket;
-use crate::db_models::user::{CreateUser, User};
-use crate::db_models::user_address::UserAddress;
+use crate::db_models::{
+    ticket::Ticket,
+    user::{CreateUser, User},
+    user_address::UserAddress,
+};
 
 // schema imports
 use crate::schema::{
@@ -27,7 +29,7 @@ use crate::schema::{
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
-/// /// to work with User records
+/// to work with User records
 pub struct PgUserRepo {
     pub pool: Arc<PgPool>,
 }

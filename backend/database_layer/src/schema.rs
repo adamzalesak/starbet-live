@@ -38,6 +38,7 @@ table! {
         game_match_id -> Int4,
         event_type -> Text,
         created_at -> Text,
+        overtime_until -> Nullable<Text>,
     }
 }
 

@@ -63,7 +63,8 @@ CREATE TABLE "game_match_event" (
     id SERIAL PRIMARY KEY,
     game_match_id INTEGER REFERENCES "game_match" NOT NULL,
     event_type TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    overtime_until TEXT
 );
 
 -- Ticket containing multiple bets
