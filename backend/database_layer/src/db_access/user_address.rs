@@ -59,6 +59,8 @@ pub trait UserAddressRepo {
     async fn get(&self, desired_address_id: i32) -> anyhow::Result<UserAddress>;
 
     async fn create<'a>(&self, new_user: CreateUserAddress<'a>) -> anyhow::Result<i32>;
+
+    // async fn edit<'a>(&self, desired_address_id: i32, new_record: CreateUserAddress<'a>) -> Result<()>;
 }
 
 #[async_trait]
@@ -90,11 +92,11 @@ impl UserAddressRepo for PgUserAddressRepo {
     /// - Ok(id) with UserAddress id after successful creation
     /// - Err(_) if an error occurs
     async fn create<'a>(&self, new_address: CreateUserAddress<'a>) -> anyhow::Result<i32> {
-        let id: Result<i32, _> = insert_into(user_address_table)
+        let id: i32 = insert_into(user_address_table)
             .values(new_address)
             .returning(user_address_id)
-            .get_result(&self.get_connection().await?);
+            .get_result(&self.get_connection().await?)?;
 
-        Ok(id?)
+        Ok(id)
     }
 }

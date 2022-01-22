@@ -2,6 +2,8 @@ use async_trait::async_trait;
 use diesel::query_builder;
 use std::sync::Arc;
 
+use crate::db_models::team_plays_game;
+use crate::diesel::delete;
 use crate::diesel::insert_into;
 use crate::diesel::prelude::*;
 use crate::diesel::QueryDsl;
@@ -32,7 +34,7 @@ use crate::schema::{
         table as team_table,
     },
     team_plays_game::{
-        dsl::{game_id as game_id_join, team_id as team_id_join},
+        dsl::{game_id as game_id_join, id as join_id, team_id as team_id_join},
         table as team_plays_game_table,
     },
 };
@@ -75,6 +77,28 @@ impl Repo for PgTeamRepo {
     }
 }
 
+impl PgTeamRepo {
+    /// Check if the team belongs to the game or not
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the desired team
+    /// - desired_game_id: ID of the game we want to check the team belonging to
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(number) - number of records (if done correctly only getting a 1 or 0)
+    /// - Err(_) if an error occurred
+    async fn in_game(&self, desired_team_id: i32, desired_game_id: i32) -> anyhow::Result<usize> {
+        let number_of_rows: usize = team_plays_game_table
+            .filter(team_id_join.eq(desired_team_id))
+            .filter(game_id_join.eq(desired_game_id))
+            .execute(&self.get_connection().await?)?;
+
+        Ok(number_of_rows)
+    }
+}
+
 #[async_trait]
 pub trait TeamRepo {
     async fn get(&self, desired_team_id: i32) -> anyhow::Result<Team>;
@@ -84,6 +108,12 @@ pub trait TeamRepo {
     async fn games_played(&self, desired_team_id: i32) -> anyhow::Result<Vec<GameInfo>>;
 
     async fn add_to_game(&self, desired_team_id: i32, desired_game_id: i32) -> anyhow::Result<()>;
+
+    async fn remove_from_game(
+        &self,
+        desired_team_id: i32,
+        desired_game_id: i32,
+    ) -> anyhow::Result<()>;
 
     async fn create<'a>(&self, new_team: CreateTeam<'a>) -> anyhow::Result<i32>;
 }
@@ -163,11 +193,82 @@ impl TeamRepo for PgTeamRepo {
         Ok(query_result)
     }
 
+    /// Add a team into a list of teams that play the game
+    /// It is only possible, if the team is not already in the
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the team we want to add
+    /// - desired_game_id: ID of the game we want to add the team into
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the addition has been successful
+    /// - Err(_) if an error occurred while creating
     async fn add_to_game(&self, desired_team_id: i32, desired_game_id: i32) -> anyhow::Result<()> {
-        todo!()
+        // check whether the team is already playing the game, if it is, return an error
+        if self.in_game(desired_team_id, desired_game_id).await? != 0 {
+            anyhow::bail!("The team already plays the game!");
+        }
+
+        // add the team to the game
+        let _: usize = insert_into(team_plays_game_table)
+            .values(CreateTeamPlaysGame::new(desired_game_id, desired_team_id))
+            .execute(&self.get_connection().await?)?;
+
+        // all went well
+        Ok(())
     }
 
+    /// Remove a team from playing a certain game
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the team we want to add
+    /// - desired_game_id: ID of the game we want to add the team into
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the deletion has been successful
+    /// - Err(_) if an error occurred while deleting
+    async fn remove_from_game(
+        &self,
+        desired_team_id: i32,
+        desired_game_id: i32,
+    ) -> anyhow::Result<()> {
+        // check whether the team is playing the game, if it isnt, return an error
+        if self.in_game(desired_team_id, desired_game_id).await? == 0 {
+            anyhow::bail!("The team does not play the game!");
+        }
+
+        // remove the team from the game
+        let _: usize = delete(
+            team_plays_game_table
+                .filter(team_id_join.eq(desired_team_id))
+                .filter(game_id_join.eq(desired_game_id)),
+        )
+        .execute(&self.get_connection().await?)?;
+
+        // all went well
+        Ok(())
+    }
+
+    /// Create a new team
+    ///
+    /// Params
+    /// ---
+    /// - new_team: a write structure for creating a team
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(id) if the new team has been created successfully
+    /// - Err(_) if an error occurred
     async fn create<'a>(&self, new_team: CreateTeam<'a>) -> anyhow::Result<i32> {
-        todo!()
+        let query_result: i32 = insert_into(team_table)
+            .values(new_team)
+            .returning(team_id)
+            .get_result(&self.get_connection().await?)?;
+
+        Ok(query_result)
     }
 }

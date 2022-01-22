@@ -146,11 +146,11 @@ impl GameRepo for PgGameRepo {
     /// - Ok(id) with game id after successful creation
     /// - Err(_) if an error occurrs
     async fn create<'a>(&self, new_game: CreateGame<'a>) -> anyhow::Result<i32> {
-        let id: Result<i32, _> = insert_into(game_table)
+        let id: i32 = insert_into(game_table)
             .values(new_game)
             .returning(game_id)
-            .get_result(&self.get_connection().await?);
+            .get_result(&self.get_connection().await?)?;
 
-        Ok(id?)
+        Ok(id)
     }
 }

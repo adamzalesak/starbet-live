@@ -72,6 +72,8 @@ pub trait UserRepo {
     async fn current_ticket(&self, desired_user_id: i32) -> anyhow::Result<Option<Ticket>>;
 
     async fn create<'a>(&self, new_user: CreateUser<'a>) -> anyhow::Result<i32>;
+
+    // async fn edit<'a>(&self, edit_user: CreateUser<'a>) -> anyhow::Result<()>;
 }
 
 #[async_trait]
@@ -142,11 +144,11 @@ impl UserRepo for PgUserRepo {
     /// - Ok(id) with user id after successful creation
     /// - Err(_) if an error occurrs
     async fn create<'a>(&self, new_user: CreateUser<'a>) -> anyhow::Result<i32> {
-        let id: Result<i32, _> = insert_into(user_table)
+        let id: i32 = insert_into(user_table)
             .values(new_user)
             .returning(user_id)
-            .get_result(&self.get_connection().await?);
+            .get_result(&self.get_connection().await?)?;
 
-        Ok(id?)
+        Ok(id)
     }
 }

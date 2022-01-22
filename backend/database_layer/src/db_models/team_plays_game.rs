@@ -17,3 +17,12 @@ pub struct CreateTeamPlaysGame {
     pub team_id: i32,
     pub game_id: i32,
 }
+
+impl CreateTeamPlaysGame {
+    pub fn new(desired_game_id: i32, desired_team_id: i32) -> Self {
+        Self {
+            game_id: desired_game_id,
+            team_id: desired_team_id,
+        }
+    }
+}
