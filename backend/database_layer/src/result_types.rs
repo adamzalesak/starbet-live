@@ -1,2 +1,87 @@
-pub type GameInfo = (i32, String, String);
-pub type TeamInfo = (i32, String, String);
+/// Structure used for getting some fields of Game records from the database
+/// This is to limit the amout of traffic between the db and the backend
+pub struct GameInfo {
+    pub id: i32,
+    pub name: String,
+    pub logo_url: String,
+}
+
+impl GameInfo {
+    /// Create a new game info structure
+    ///
+    /// Params
+    /// ---
+    /// - id: game's ID
+    /// - name: game's name
+    /// - logo_url: game's logo
+    ///
+    /// Returns
+    /// ---
+    /// - new game info structure
+    pub fn new(id: i32, name: String, logo_url: String) -> Self {
+        Self { id, name, logo_url }
+    }
+
+    /// Create a vector of GameInfo from GameInfoRetrieve
+    ///
+    /// Params
+    /// ---
+    /// - teams: slice of GameInfoRetrieve
+    ///
+    /// Returns
+    /// ---
+    /// - vector of GameInfo
+    pub fn from_vector(teams: &[GameInfoRetrieve]) -> Vec<GameInfo> {
+        teams
+            .iter()
+            .map(|(id, name, logo_url)| Self::new(*id, name.clone(), logo_url.clone()))
+            .collect()
+    }
+}
+
+/// type alias for fields, that are retrieved from the db
+pub type GameInfoRetrieve = (i32, String, String);
+
+/// Structure used for getting some fields of Team records from the database
+/// This is to limit the amout of traffic between the db and the backend
+pub struct TeamInfo {
+    pub id: i32,
+    pub name: String,
+    pub logo_url: String,
+}
+
+impl TeamInfo {
+    /// Create a new team info structure
+    ///
+    /// Params
+    /// ---
+    /// - id: team's ID
+    /// - name: team's name
+    /// - logo_url: team's logo
+    ///
+    /// Returns
+    /// ---
+    /// - new team info structure
+    pub fn new(id: i32, name: String, logo_url: String) -> Self {
+        Self { id, name, logo_url }
+    }
+
+    /// Create a vector of TeamInfo from TeamInfoRetrieve
+    ///
+    /// Params
+    /// ---
+    /// - teams: slice of TeamInfoRetrieve
+    ///
+    /// Returns
+    /// ---
+    /// - vector of TeamInfo
+    pub fn from_vector(teams: &[TeamInfoRetrieve]) -> Vec<TeamInfo> {
+        teams
+            .iter()
+            .map(|(id, name, logo_url)| Self::new(*id, name.clone(), logo_url.clone()))
+            .collect()
+    }
+}
+
+/// type alias for fields, that are retrieved from the db
+pub type TeamInfoRetrieve = (i32, String, String);

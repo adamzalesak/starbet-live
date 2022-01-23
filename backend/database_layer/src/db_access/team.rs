@@ -15,7 +15,7 @@ use crate::db_models::{
     team::{CreateTeam, Team},
     team_plays_game::CreateTeamPlaysGame,
 };
-use crate::result_types::{GameInfo, TeamInfo};
+use crate::result_types::{GameInfo, GameInfoRetrieve, TeamInfo, TeamInfoRetrieve};
 
 // schema imports
 use crate::schema::{
@@ -209,7 +209,7 @@ impl TeamRepo for PgTeamRepo {
 
     /// Get all teams (OPT: that play a certain game)
     async fn get_all(&self, by_game_id: Option<i32>) -> anyhow::Result<Vec<TeamInfo>> {
-        let query_result: Vec<TeamInfo> = match by_game_id {
+        let query_result: Vec<TeamInfoRetrieve> = match by_game_id {
             Some(game_id_filter) => team
                 .order(team_name.asc())
                 .inner_join(team_plays_game_table)
@@ -222,19 +222,19 @@ impl TeamRepo for PgTeamRepo {
                 .get_results(&self.get_connection().await?)?,
         };
 
-        Ok(query_result)
+        Ok(TeamInfo::from_vector(&query_result))
     }
 
     /// Get a list of games which a certain team plays
     async fn games_played(&self, desired_team_id: i32) -> anyhow::Result<Vec<GameInfo>> {
-        let query_result: Vec<GameInfo> = team
+        let query_result: Vec<GameInfoRetrieve> = team
             .inner_join(team_plays_game_table.inner_join(game_table))
             .filter(team_id.eq(desired_team_id))
             .select((game_id, game_name, game_logo))
             .distinct_on(game_id)
             .get_results(&self.get_connection().await?)?;
 
-        Ok(query_result)
+        Ok(GameInfo::from_vector(&query_result))
     }
 
     /// Add a team into a list of teams that play the game

@@ -5,7 +5,7 @@ pub struct Game {
     pub id: i32,
     pub name: String,
     pub description: String,
-    pub logo: String,
+    pub logo_url: String,
 }
 
 #[derive(Insertable, AsChangeset)]

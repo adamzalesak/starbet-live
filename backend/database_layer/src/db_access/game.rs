@@ -8,6 +8,8 @@ use crate::diesel::{insert_into, update};
 
 use crate::connection::PgPool;
 use crate::connection::PgPooledConnection;
+use crate::result_types::GameInfoRetrieve;
+use crate::result_types::TeamInfoRetrieve;
 
 // type and structure imports
 use super::repo::Repo;
@@ -150,24 +152,24 @@ impl GameRepo for PgGameRepo {
 
     /// Get all game names and image urls
     async fn get_all(&self) -> anyhow::Result<Vec<GameInfo>> {
-        let query_result: Vec<GameInfo> = game
+        let query_result: Vec<GameInfoRetrieve> = game
             .order(game_name.asc())
             .select((game_id, game_name, game_logo))
             .get_results(&self.get_connection().await?)?;
 
-        Ok(query_result)
+        Ok(GameInfo::from_vector(&query_result))
     }
 
     /// Get all teams that are playing a specific game
     async fn get_teams_playing(&self, desired_game_id: i32) -> anyhow::Result<Vec<TeamInfo>> {
-        let query_result: Vec<TeamInfo> = game_table
+        let query_result: Vec<TeamInfoRetrieve> = game_table
             .find(desired_game_id)
             .inner_join(team_plays_game_table.inner_join(team_table))
             .distinct_on(team_id)
             .select((team_id, team_name, team_logo_url))
             .get_results(&self.get_connection().await?)?;
 
-        Ok(query_result)
+        Ok(TeamInfo::from_vector(&query_result))
     }
 
     /// Create a new Game record in the database
