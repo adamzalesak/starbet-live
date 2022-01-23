@@ -1,7 +1,7 @@
 use tonic::{Request, Response, Status};
 
 use crate::game::game_service_server::GameService;
-use crate::game::{CreateGameReply, CreateGameRequest, DeleteGameRequest, ListGamesReply};
+use crate::game::{CreateGameReply, CreateGameRequest, DeleteGameRequest, Game, ListGamesReply};
 
 pub struct MyGameService {}
 
@@ -16,7 +16,22 @@ impl GameService for MyGameService {
     async fn list_games(&self, request: Request<()>) -> Result<Response<ListGamesReply>, Status> {
         println!("[Server] Request from client: {:?}", &request);
 
-        let reply = ListGamesReply { games: vec![] };
+        let reply = ListGamesReply {
+            games: vec![
+                Game {
+                    id: 1,
+                    name: String::from("CS:GO"),
+                },
+                Game {
+                    id: 2,
+                    name: String::from("Dota 3"),
+                },
+                Game {
+                    id: 3,
+                    name: String::from("Kapitán Pix"),
+                },
+            ],
+        };
         Ok(Response::new(reply))
     }
 
