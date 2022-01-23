@@ -8,10 +8,20 @@ pub struct Game {
     pub logo: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, AsChangeset)]
 #[table_name = "game"]
 pub struct CreateGame<'a> {
     pub name: &'a str,
     pub description: &'a str,
     pub logo: &'a str,
+}
+
+impl<'a> CreateGame<'a> {
+    pub fn new(name: &'a str, description: &'a str, logo: &'a str) -> CreateGame<'a> {
+        CreateGame {
+            name,
+            description,
+            logo,
+        }
+    }
 }

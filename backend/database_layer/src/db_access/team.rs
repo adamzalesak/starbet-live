@@ -3,23 +3,22 @@ use diesel::query_builder;
 use std::sync::Arc;
 
 use crate::db_models::team_plays_game;
-use crate::diesel::delete;
-use crate::diesel::insert_into;
 use crate::diesel::prelude::*;
 use crate::diesel::QueryDsl;
 use crate::diesel::RunQueryDsl;
+use crate::diesel::{delete, insert_into, update};
 
 use crate::connection::PgPool;
 use crate::connection::PgPooledConnection;
 
 // type and structure imports
 use super::repo::Repo;
-use crate::db_access::game::GameInfo;
 use crate::db_models::{
     game::Game,
     team::{CreateTeam, Team},
     team_plays_game::{CreateTeamPlaysGame, TeamPlaysGame},
 };
+use crate::result_types::{GameInfo, TeamInfo};
 
 // schema imports
 use crate::schema::{
@@ -45,8 +44,6 @@ use crate::schema::{
 pub struct PgTeamRepo {
     pub pool: Arc<PgPool>,
 }
-
-pub type TeamInfo = (i32, String, String);
 
 #[async_trait]
 impl Repo for PgTeamRepo {
@@ -101,25 +98,6 @@ impl PgTeamRepo {
 
 #[async_trait]
 pub trait TeamRepo {
-    async fn get(&self, desired_team_id: i32) -> anyhow::Result<Team>;
-
-    async fn get_all(&self, by_game: Option<i32>) -> anyhow::Result<Vec<TeamInfo>>;
-
-    async fn games_played(&self, desired_team_id: i32) -> anyhow::Result<Vec<GameInfo>>;
-
-    async fn add_to_game(&self, desired_team_id: i32, desired_game_id: i32) -> anyhow::Result<()>;
-
-    async fn remove_from_game(
-        &self,
-        desired_team_id: i32,
-        desired_game_id: i32,
-    ) -> anyhow::Result<()>;
-
-    async fn create<'a>(&self, new_team: CreateTeam<'a>) -> anyhow::Result<i32>;
-}
-
-#[async_trait]
-impl TeamRepo for PgTeamRepo {
     /// Get a specific desired team record
     ///
     /// Params
@@ -130,13 +108,7 @@ impl TeamRepo for PgTeamRepo {
     /// ---
     /// - Ok(team) if the team has been found successfully
     /// - Err(_) if an error occurred
-    async fn get(&self, desired_team_id: i32) -> anyhow::Result<Team> {
-        let query_result: Team = team
-            .find(desired_team_id)
-            .get_result(&self.get_connection().await?)?;
-
-        Ok(query_result)
-    }
+    async fn get(&self, desired_team_id: i32) -> anyhow::Result<Team>;
 
     /// Get all teams (OPT: that play a certain game)
     ///
@@ -152,6 +124,95 @@ impl TeamRepo for PgTeamRepo {
     /// - Ok(Vec<TeamInfo>) if the query has ran successfully (either containing all teams,
     ///                     or just the teams that play a certain game)
     /// - Err(_) if an error has occurred
+    async fn get_all(&self, by_game: Option<i32>) -> anyhow::Result<Vec<TeamInfo>>;
+
+    /// Get a list of games which a certain team plays
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the desired team
+    ///
+    /// Returns
+    /// ---
+    /// GameInfo is a type alias for a touple containing (game_id, game_name, game_logo_url)
+    ///
+    /// - Ok(Vec<GameInfo>) if the query has been executed successfully
+    /// - Err(_) if an error occurred
+    async fn games_played(&self, desired_team_id: i32) -> anyhow::Result<Vec<GameInfo>>;
+
+    /// Add a team into a list of teams that play the game
+    /// It is only possible, if the team is not already in the
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the team we want to add
+    /// - desired_game_id: ID of the game we want to add the team into
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the addition has been successful
+    /// - Err(_) if an error occurred while creating
+    async fn add_to_game(&self, desired_team_id: i32, desired_game_id: i32) -> anyhow::Result<()>;
+
+    /// Remove a team from playing a certain game
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the team we want to add
+    /// - desired_game_id: ID of the game we want to add the team into
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the deletion has been successful
+    /// - Err(_) if an error occurred while deleting
+    async fn remove_from_game(
+        &self,
+        desired_team_id: i32,
+        desired_game_id: i32,
+    ) -> anyhow::Result<()>;
+
+    /// Edit the team information
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the desired team
+    /// - edited_team: a write structure with edited properties
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the team information has updated successfully
+    /// - Err(_) if an error occurred
+    async fn edit<'a>(
+        &self,
+        desired_team_id: i32,
+        edited_team: CreateTeam<'a>,
+    ) -> anyhow::Result<()>;
+
+    /// Create a new team
+    ///
+    /// Params
+    /// ---
+    /// - new_team: a write structure for creating a team
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(id) if the new team has been created successfully
+    /// - Err(_) if an error occurred
+    async fn create<'a>(&self, new_team: CreateTeam<'a>) -> anyhow::Result<i32>;
+}
+
+#[async_trait]
+impl TeamRepo for PgTeamRepo {
+    /// Get a specific desired team record
+    async fn get(&self, desired_team_id: i32) -> anyhow::Result<Team> {
+        let query_result: Team = team
+            .find(desired_team_id)
+            .get_result(&self.get_connection().await?)?;
+
+        Ok(query_result)
+    }
+
+    /// Get all teams (OPT: that play a certain game)
     async fn get_all(&self, by_game_id: Option<i32>) -> anyhow::Result<Vec<TeamInfo>> {
         let query_result: Vec<TeamInfo> = match by_game_id {
             Some(game_id_filter) => team
@@ -171,17 +232,6 @@ impl TeamRepo for PgTeamRepo {
     }
 
     /// Get a list of games which a certain team plays
-    ///
-    /// Params
-    /// ---
-    /// - desired_team_id: ID of the desired team
-    ///
-    /// Returns
-    /// ---
-    /// GameInfo is a type alias for a touple containing (game_id, game_name, game_logo_url)
-    ///
-    /// - Ok(Vec<GameInfo>) if the query has been executed successfully
-    /// - Err(_) if an error occurred
     async fn games_played(&self, desired_team_id: i32) -> anyhow::Result<Vec<GameInfo>> {
         let query_result: Vec<GameInfo> = team
             .inner_join(team_plays_game_table.inner_join(game_table))
@@ -194,17 +244,6 @@ impl TeamRepo for PgTeamRepo {
     }
 
     /// Add a team into a list of teams that play the game
-    /// It is only possible, if the team is not already in the
-    ///
-    /// Params
-    /// ---
-    /// - desired_team_id: ID of the team we want to add
-    /// - desired_game_id: ID of the game we want to add the team into
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(()) if the addition has been successful
-    /// - Err(_) if an error occurred while creating
     async fn add_to_game(&self, desired_team_id: i32, desired_game_id: i32) -> anyhow::Result<()> {
         // check whether the team is already playing the game, if it is, return an error
         if self.in_game(desired_team_id, desired_game_id).await? != 0 {
@@ -221,16 +260,6 @@ impl TeamRepo for PgTeamRepo {
     }
 
     /// Remove a team from playing a certain game
-    ///
-    /// Params
-    /// ---
-    /// - desired_team_id: ID of the team we want to add
-    /// - desired_game_id: ID of the game we want to add the team into
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(()) if the deletion has been successful
-    /// - Err(_) if an error occurred while deleting
     async fn remove_from_game(
         &self,
         desired_team_id: i32,
@@ -253,16 +282,20 @@ impl TeamRepo for PgTeamRepo {
         Ok(())
     }
 
+    /// Edit the team information
+    async fn edit<'a>(
+        &self,
+        desired_team_id: i32,
+        edited_team: CreateTeam<'a>,
+    ) -> anyhow::Result<()> {
+        let _ = update(team_table.find(desired_team_id))
+            .set(edited_team)
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
+    }
+
     /// Create a new team
-    ///
-    /// Params
-    /// ---
-    /// - new_team: a write structure for creating a team
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(id) if the new team has been created successfully
-    /// - Err(_) if an error occurred
     async fn create<'a>(&self, new_team: CreateTeam<'a>) -> anyhow::Result<i32> {
         let query_result: i32 = insert_into(team_table)
             .values(new_team)

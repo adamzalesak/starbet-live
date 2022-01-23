@@ -17,7 +17,7 @@ pub struct User {
 
 /// Write structure, used for inserting
 /// User records into the database
-#[derive(Insertable)]
+#[derive(Insertable, AsChangeset)]
 #[table_name = "user"]
 pub struct CreateUser<'a> {
     pub first_name: &'a str,

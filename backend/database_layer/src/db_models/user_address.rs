@@ -17,25 +17,24 @@ pub struct UserAddress {
     pub valid_from: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, AsChangeset)]
 #[table_name = "user_address"]
-pub struct CreateUserAddress<'a> {
+pub struct CreateUserAddress {
     pub user_id: i32,
-    pub street_name: &'a str,
-    pub street_number: &'a str,
-    pub city: &'a str,
-    pub area: Option<&'a str>,
-    pub postal_code: &'a str,
-    pub country: &'a str,
+    pub street_name: String,
+    pub street_number: String,
+    pub city: String,
+    pub area: Option<String>,
+    pub postal_code: String,
+    pub country: String,
     pub valid_from: String,
 }
 
-impl<'a> CreateUserAddress<'a> {
+impl CreateUserAddress {
     /// Creating the write structure for user address
     ///
     /// Params
     /// ---
-    /// - user_id: desired user to link the address to
     /// - street_name: user's address street name
     /// - street_number: user's address street number
     /// - city: user's address city
@@ -43,22 +42,44 @@ impl<'a> CreateUserAddress<'a> {
     /// - postal_code: user's address postal code
     /// - country: user's address country
     pub fn new(
-        user_id: i32,
-        street_name: &'a str,
-        street_number: &'a str,
-        city: &'a str,
-        area: Option<&'a str>,
-        postal_code: &'a str,
-        country: &'a str,
-    ) -> CreateUserAddress<'a> {
+        street_name: &str,
+        street_number: &str,
+        city: &str,
+        area: Option<String>,
+        postal_code: &str,
+        country: &str,
+    ) -> CreateUserAddress {
+        CreateUserAddress {
+            user_id: 0,
+            street_name: street_name.into(),
+            street_number: street_number.into(),
+            city: city.into(),
+            area: area.into(),
+            postal_code: postal_code.into(),
+            country: country.into(),
+            valid_from: "".into(),
+        }
+    }
+
+    /// Finish the UserAddress write structure to store it into the database
+    ///
+    /// Params
+    /// ---
+    /// - self: the original address created
+    /// - user_id: set the ID of the user this address belongs to
+    ///
+    /// Returns
+    /// ---
+    /// - a complete address write structure
+    pub fn store(&self, user_id: i32) -> CreateUserAddress {
         CreateUserAddress {
             user_id,
-            street_name,
-            street_number,
-            city,
-            area,
-            postal_code,
-            country,
+            street_name: self.street_name.clone(),
+            street_number: self.street_number.clone(),
+            city: self.city.clone(),
+            area: self.area.clone(),
+            postal_code: self.postal_code.clone(),
+            country: self.country.clone(),
             valid_from: CurrentTime::store(),
         }
     }
