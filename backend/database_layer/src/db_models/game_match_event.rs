@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::db_models::game_match::GameMatch;
 use crate::schema::game_match_event;
 use crate::type_storing::time_handling::CurrentTime;
@@ -37,22 +39,23 @@ pub enum GameMatchEventType {
     Ended,
 }
 
-impl GameMatchEventType {
-    /// Returns a text representation of a game event type to store in the database
+impl Display for GameMatchEventType {
+    /// Write a text representation of own type into whatever buffer it needs to
     ///
-    /// Returns
-    /// ---
-    /// - text representation of a game event type
-    pub fn to_string(&self) -> String {
-        match self {
-            GameMatchEventType::Upcoming => "Upcoming".into(),
-            GameMatchEventType::Live => "Live".into(),
-            GameMatchEventType::Cancelled => "Cancelled".into(),
-            GameMatchEventType::Overtime(_) => "Overtime".into(),
-            GameMatchEventType::Ended => "Ended".into(),
-        }
-    }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let self_string = match self {
+            GameMatchEventType::Upcoming => "Upcoming",
+            GameMatchEventType::Live => "Live",
+            GameMatchEventType::Cancelled => "Cancelled",
+            GameMatchEventType::Overtime(_) => "Overtime",
+            GameMatchEventType::Ended => "Ended",
+        };
 
+        write!(f, "{}", self_string)
+    }
+}
+
+impl GameMatchEventType {
     /// Returns a GameMatchEventType if the record in the database
     /// has been correctly stored
     ///
@@ -70,7 +73,9 @@ impl GameMatchEventType {
             "Live" => Ok(GameMatchEventType::Live),
             "Cancelled" => Ok(GameMatchEventType::Cancelled),
             "Overtime" => Ok(GameMatchEventType::Overtime(CurrentTime::load_timestamp(
-                &input.overtime_until.unwrap_or("Will not convert".into()),
+                &input
+                    .overtime_until
+                    .unwrap_or_else(|| String::from("Will not convert")),
             )?)),
             "Ended" => Ok(GameMatchEventType::Ended),
             _ => anyhow::bail!(

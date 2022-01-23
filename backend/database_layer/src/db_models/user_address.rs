@@ -54,7 +54,7 @@ impl CreateUserAddress {
             street_name: street_name.into(),
             street_number: street_number.into(),
             city: city.into(),
-            area: area.into(),
+            area,
             postal_code: postal_code.into(),
             country: country.into(),
             valid_from: "".into(),

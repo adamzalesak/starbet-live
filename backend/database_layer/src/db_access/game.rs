@@ -11,10 +11,7 @@ use crate::connection::PgPooledConnection;
 
 // type and structure imports
 use super::repo::Repo;
-use crate::db_models::{
-    game::{CreateGame, Game},
-    team::Team,
-};
+use crate::db_models::game::{CreateGame, Game};
 use crate::result_types::{GameInfo, TeamInfo};
 
 // schema imports
@@ -24,16 +21,10 @@ use crate::schema::{
         table as game_table,
     },
     team::{
-        dsl::{id as team_id, logo as team_logo_url, name as team_name, team},
+        dsl::{id as team_id, logo as team_logo_url, name as team_name},
         table as team_table,
     },
-    team_plays_game::{
-        dsl::{
-            game_id as game_id_join, id as team_plays_game_id, team_id as team_id_join,
-            team_plays_game,
-        },
-        table as team_plays_game_table,
-    },
+    team_plays_game::table as team_plays_game_table,
 };
 
 pub struct PgGameRepo {

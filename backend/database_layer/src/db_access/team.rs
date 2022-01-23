@@ -1,8 +1,6 @@
 use async_trait::async_trait;
-use diesel::query_builder;
 use std::sync::Arc;
 
-use crate::db_models::team_plays_game;
 use crate::diesel::prelude::*;
 use crate::diesel::QueryDsl;
 use crate::diesel::RunQueryDsl;
@@ -14,18 +12,15 @@ use crate::connection::PgPooledConnection;
 // type and structure imports
 use super::repo::Repo;
 use crate::db_models::{
-    game::Game,
     team::{CreateTeam, Team},
-    team_plays_game::{CreateTeamPlaysGame, TeamPlaysGame},
+    team_plays_game::CreateTeamPlaysGame,
 };
 use crate::result_types::{GameInfo, TeamInfo};
 
 // schema imports
 use crate::schema::{
     game::{
-        dsl::{
-            description as game_description, id as game_id, logo as game_logo, name as game_name,
-        },
+        dsl::{id as game_id, logo as game_logo, name as game_name},
         table as game_table,
     },
     team::{
@@ -33,7 +28,7 @@ use crate::schema::{
         table as team_table,
     },
     team_plays_game::{
-        dsl::{game_id as game_id_join, id as join_id, team_id as team_id_join},
+        dsl::{game_id as game_id_join, team_id as team_id_join},
         table as team_plays_game_table,
     },
 };
@@ -219,7 +214,6 @@ impl TeamRepo for PgTeamRepo {
                 .order(team_name.asc())
                 .inner_join(team_plays_game_table)
                 .filter(game_id_join.eq(game_id_filter))
-                .distinct_on(team_id)
                 .select((team_id, team_name, team_logo))
                 .get_results(&self.get_connection().await?)?,
             _ => team
