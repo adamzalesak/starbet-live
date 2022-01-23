@@ -278,7 +278,7 @@ async fn main() -> Result<()> {
     // say we want to edit the game?
     let csgo_edit_record = CreateGame::new(
         csgo.name.as_str(),
-        "Totally the least toxic game without russians, trust me bro", csgo.logo.as_str()
+        "Totally the least toxic game without russians, trust me bro", csgo.logo_url.as_str()
     );
 
     println!("-----");
@@ -298,23 +298,23 @@ async fn main() -> Result<()> {
     // this is actually an info type -> can possibly change it to be it's own structure to just generally
     // not use this as a tuple
     for game in games_in_db {
-        println!("Game[{}] {}", game.0, game.1);
+        println!("Game[{}] {}", game.id, game.name);
     }
 
     println!("-----");
 
     // now get all the teams on this website
     let all_teams: Vec<TeamInfo> = pg_team.get_all(None).await?;
-    for (team_id, team_name, _) in all_teams {
-        println!("Team [{}]: {}", team_id, team_name);
+    for team in all_teams {
+        println!("Team [{}]: {}", team.id, team.name);
     }
 
     println!("-----");
 
     // now let's focus on the teams that actually play league
     let play_league: Vec<TeamInfo> = pg_team.get_all(Some(league_id)).await?;
-    for (team_id, team_name, _) in play_league {
-        println!("Team [{}]: {}", team_id, team_name);
+    for team in play_league {
+        println!("Team [{}]: {}", team.id, team.name);
     }
 
     // if we remove fnatic from the game, only the cloud9 team will remain
@@ -323,8 +323,8 @@ async fn main() -> Result<()> {
     println!("-----");
 
     let play_league: Vec<TeamInfo> = pg_team.get_all(Some(league_id)).await?;
-    for (team_id, team_name, _) in play_league {
-        println!("Team [{}]: {}", team_id, team_name);
+    for team in play_league {
+        println!("Team [{}]: {}", team.id, team.name);
     }
 
     println!("-----");
@@ -340,8 +340,8 @@ async fn main() -> Result<()> {
     println!("-----");
 
     println!("Fnatic plays these games:");
-    for (game_id, game_name, _) in fnatic_games {
-        println!("Game [{}]: {}", game_id, game_name);
+    for game in fnatic_games {
+        println!("Game [{}]: {}", game.id, game.name);
     }
 
     println!("-----");
