@@ -137,30 +137,6 @@ pub trait UserRepo {
     /// - Err(_) if an error occurred
     async fn get_current_address(&self, desired_user_id: i32) -> anyhow::Result<UserAddress>;
 
-    /// Same as get_current_address but only the id is retrieved
-    ///
-    /// Params
-    /// ---
-    /// - desired_user_id: ID of the user we wish to get the address of
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(User) if the user could be found, their address exists and no error occurred while communicating with database
-    /// - Err(_) if an error occurred
-    async fn get_current_address_id(&self, desired_user_id: i32) -> anyhow::Result<i32>;
-
-    /// Edit user's current address
-    ///
-    /// Params
-    /// ---
-    /// - desired_user_id: ID of the user we wish to change the address of
-    /// - edited_address: new
-    async fn edit_current_address(
-        &self,
-        desired_user_id: i32,
-        edited_address: CreateUserAddress,
-    ) -> anyhow::Result<()>;
-
     /// Get User's current ticket
     ///
     /// Params
@@ -235,31 +211,6 @@ impl UserRepo for PgUserRepo {
             .first(&self.get_connection().await?)?;
 
         Ok(query_result)
-    }
-
-    /// Get user's current address' ID
-    async fn get_current_address_id(&self, desired_user_id: i32) -> anyhow::Result<i32> {
-        let query_result: i32 = user_address_table
-            .filter(user_id_address.eq(desired_user_id))
-            .order(valid_from.desc())
-            .select(user_address_id)
-            .get_result(&self.get_connection().await?)?;
-
-        Ok(query_result)
-    }
-
-    /// Edit user's current address
-    async fn edit_current_address(
-        &self,
-        desired_user_id: i32,
-        edited_address: CreateUserAddress,
-    ) -> anyhow::Result<()> {
-        let current_address_id = self.get_current_address_id(desired_user_id);
-        let _ = update(user_address_table.find(current_address_id.await?))
-            .set(edited_address.store(desired_user_id))
-            .execute(&self.get_connection().await?)?;
-
-        Ok(())
     }
 
     /// Get User's current ticket

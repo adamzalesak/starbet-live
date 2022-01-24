@@ -47,16 +47,16 @@ impl User {
     ///
     pub fn edit_user(
         &self,
-        change_first_name: Option<String>,
-        change_last_name: Option<String>,
-        change_civil_id_number: Option<String>,
-        change_email: Option<String>,
-        change_phone_number: Option<String>,
-        change_photo: Option<Option<String>>,
+        change_first_name: Option<&str>,
+        change_last_name: Option<&str>,
+        change_civil_id_number: Option<&str>,
+        change_email: Option<&str>,
+        change_phone_number: Option<&str>,
+        change_photo: Option<Option<&str>>,
     ) -> CreateUser {
         let store_photo = match change_photo {
-            Some(new_value) => new_value,
-            None => None,
+            Some(new_value) => new_value.map(|potential_slice| String::from(potential_slice)),
+            None => self.photo.clone(), // original data remains
         };
 
         // Create a new edit structure
@@ -83,9 +83,9 @@ impl User {
     /// Returns
     /// ---
     /// - either the old or the new parameter
-    fn store_change(original_parameter: &str, new_parameter: &Option<String>) -> String {
+    fn store_change(original_parameter: &str, new_parameter: &Option<&str>) -> String {
         match new_parameter {
-            Some(parameter) => parameter.clone(),
+            Some(change_parameter) => String::from(*change_parameter),
             None => String::from(original_parameter),
         }
     }
@@ -112,7 +112,7 @@ impl CreateUser {
         civil_id_number: &str,
         email: &str,
         phone_number: &str,
-        photo: Option<String>,
+        photo: Option<&str>,
     ) -> CreateUser {
         CreateUser {
             first_name: String::from(first_name),
@@ -121,7 +121,10 @@ impl CreateUser {
             email: String::from(email),
             phone_number: String::from(phone_number),
             created_at: CurrentTime::store(),
-            photo,
+            photo: match photo {
+                Some(content) => Some(String::from(content)),
+                None => None,
+            },
         }
     }
 
