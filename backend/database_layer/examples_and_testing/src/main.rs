@@ -14,7 +14,7 @@ use database_layer::{
         // fe. Pg_*_Repo = actual structure holding the reference to the db pool,
         // _*_Repo = contains all methods that could be performed with the repo, along w documentation
     },
-    // this module ↓ contains all models = structures that interact with the database and
+    // this module ↓ contains all models = structures that interact with the database
     db_models::{game::CreateGame, user::CreateUser, user_address::CreateUserAddress, team::CreateTeam},
     result_types::{GameInfo, TeamInfo},
 };
@@ -63,13 +63,13 @@ async fn main() -> Result<()> {
                 "ER125432",
                 "janko@matuska.sk",
                 "+421987654",
-                None,
+                Some("/photos/user_profile/user_id.png"), // hypotetically let's say that the user also has a profile photo
             ),
             CreateUserAddress::new(
                 "Listova",
                 "15/17",
                 "Brno",
-                Some("Jihomoravsky".into()), // the user has an area available, in this case -> "kraj"
+                Some("Jihomoravsky"), // the user has an area available, in this case -> "kraj"
                 "602 00",
                 "Czech republic",
             ),
@@ -87,7 +87,7 @@ async fn main() -> Result<()> {
                 "Banicka",
                 "40/b",
                 "Tvrdosin",
-                None, // the user has NO area available
+                Some("Zilinsky kraj"),
                 "120 58",
                 "Slovak republic",
             ),
@@ -143,6 +143,11 @@ async fn main() -> Result<()> {
          "Competetive online FPS game, which honestly is just another rip off of CSGO and Overwatch",
          ""
         ),
+        CreateGame::new(
+            "Overwatch",
+            "Basically the OG Valorant",
+            ""
+        )
     ];
 
     // to store created game ID's
@@ -164,6 +169,7 @@ async fn main() -> Result<()> {
         ),
         CreateTeam::new("Fnatic", "UK esports team", ""),
         CreateTeam::new("Natus Vincere", "Ukrainian esports team", ""), // Na'Vi plays a lot of games but i'll intentionally only let it play CSGO
+        CreateTeam::new("Dallas Fuel", "US esports team", ""),
     ];
 
     // store team id's
@@ -181,10 +187,12 @@ async fn main() -> Result<()> {
     let csgo_id = *game_ids.get(0).unwrap();
     let league_id = *game_ids.get(1).unwrap();
     let valorant_id = *game_ids.get(2).unwrap();
+    let overwatch_id = *game_ids.get(3).unwrap();
 
     let cloud9_id = *team_ids.get(0).unwrap();
     let fnatic_id = *team_ids.get(1).unwrap();
     let navi_id = *team_ids.get(2).unwrap();
+    let dallas_fuel_id = *team_ids.get(3).unwrap();
     
     // this is just to demonstrate
     pg_team.add_to_game(cloud9_id, csgo_id).await?;
@@ -196,6 +204,8 @@ async fn main() -> Result<()> {
 
     pg_team.add_to_game(cloud9_id, valorant_id).await?;
     pg_team.add_to_game(fnatic_id, valorant_id).await?;
+
+    pg_team.add_to_game(dallas_fuel_id, overwatch_id).await?;
 
     // pg_team.add_to_game(desired_team_id, desired_game_id)
 
@@ -209,68 +219,54 @@ async fn main() -> Result<()> {
     // lets say we want to get the "Hana" user
     let hana_id = *user_ids.get(1).unwrap();
     let hana = pg_user.get(hana_id).await?;
-    println!("User: \n[ name: {} {}\n  email: {}\n  civil id: {}\n  database id: {}\n]", hana.first_name, hana.last_name, hana.email, hana.civil_id_number, hana.id);
+    println!("User: \n[\n  name: {} {}\n  email: {}\n  civil id: {}\n  database id: {}\n]", hana.first_name, hana.last_name, hana.email, hana.civil_id_number, hana.id);
 
     println!("-----");
 
     // now lets edit hana's email, shall we?
-    // we might create an easier way to edit records as we go... we'll see about that
-    let hana_edit_record = CreateUser::new(
-        hana.first_name.as_str(),
-        hana.last_name.as_str(),
-        hana.civil_id_number.as_str(),
-        "han.kollarova@gmail.com",
-        hana.phone_number.as_str(),
-        hana.photo.as_deref(),
-    );
-
     // edit user (returns () on success)
-    pg_user.edit(hana.id, hana_edit_record).await?;
+    pg_user.edit(hana.id, hana.edit_user(
+        None,
+        None,
+        None,
+        Some("han.kollarova@gmail.com"),
+        None,
+        None
+    )).await?;
 
     // retrieve hana again, we see that she now has a new email address
     let hana = pg_user.get(hana_id).await?;
-    println!("User: \n[ name: {} {}\n  email: {}\n  civil id: {}\n  database id: {}\n]", hana.first_name, hana.last_name, hana.email, hana.civil_id_number, hana.id);
+    println!("User: \n[\n  name: {} {}\n  email: {}\n  civil id: {}\n  database id: {}\n]", hana.first_name, hana.last_name, hana.email, hana.civil_id_number, hana.id);
 
     // lets now get hana's address okay?
     let hana_address = pg_user.get_current_address(hana_id).await?;
-    println!("Hana's current address is:\n[ street name and number: {} {}\n  city: {}\n  country: {}\n  postal number: {}\n]", hana_address.street_name, hana_address.street_number, hana_address.city, hana_address.country, hana_address.postal_code);
+    println!("Hana's current address is:\n[\n  street name and number: {} {}\n  city: {}\n  area: {}\n  postal number: {}\n  country: {}\n]", hana_address.street_name, hana_address.street_number, hana_address.city, hana_address.area.clone().unwrap_or_else(|| "none".into()), hana_address.postal_code, hana_address.country);
 
     println!("-----");
 
-    // lets change the address completely
-    let hana_address_edit_record = CreateUserAddress::new(
-        "Botanicka",
-        "68a",
-        "Brno",
-        Some("Jihomoravsky".into()),
-        "602 00",
-        "Czech republic",
-    );
+    // we can add a new address, or just change the original one -> this is useful when you either have multiple billing addresses,
+    // or you move (possibly only to a different street). This can also help when there is an error with the originally created address
+    // -> just creates a new one
 
-    pg_user.edit_current_address(hana_id, hana_address_edit_record).await?;
-
-    // now we retrieve the current address
-    let hana_updated_address = pg_user.get_current_address(hana_id).await?;
-    println!("Hana's current address is:\n[ street name and number: {} {}\n  city: {}\n  country: {}\n  postal number: {}\n]", hana_updated_address.street_name, hana_updated_address.street_number, hana_updated_address.city, hana_updated_address.country, hana_updated_address.postal_code);
-
-    println!("-----");
-
-    // we can even add a new address -> this is useful when you either have multiple billing addresses,
-    // or you move, so rather than editing an old address, you just add a new one
-    // NOTE -> maybe the only thing we actually want to do is to always just add a new address instead of editing one.
-    // we can talk about this and i can erase the option to edit an address
-
-    let hana_new_address = CreateUserAddress::new("Dubcekova", "11", "Ziar nad Hronom", Some("Banskobystricky".into()), "96501", "Slovak republic");
-    let _ = pg_user.add_new_address(hana_id, hana_new_address).await?;
+    // let hana_new_address = CreateUserAddress::new("Dubcekova", "11", "Ziar nad Hronom", Some("Banskobystricky".into()), "96501", "Slovak republic");
+    let _ = pg_user.add_new_address(hana_id, hana_address.edit_address(
+        Some("Hlinkova"),
+        Some("12"),
+        None,
+        Some(None), // we have just removed the area from the address -> note: if NONE was put here, the original area would remain
+        None,
+        None,
+    )).await?;
 
     // now if we check what is hana's new address, it is the new address we have added
-    let hana_new_address = pg_user.get_current_address(hana_id).await?;
-    println!("Hana's new (current) address is:\n[ street name and number: {} {}\n  city: {}\n  country: {}\n  postal number: {}\n]", hana_new_address.street_name, hana_new_address.street_number, hana_new_address.city, hana_new_address.country, hana_new_address.postal_code);
+    let hana_address = pg_user.get_current_address(hana_id).await?;
+    println!("Hana's current address is:\n[\n  street name and number: {} {}\n  city: {}\n  area: {}\n  postal number: {}\n  country: {}\n]", hana_address.street_name, hana_address.street_number, hana_address.city, hana_address.area.clone().unwrap_or_else(|| "none".into()), hana_address.postal_code, hana_address.country);
 
     println!("-----");
 
     // now onto games and teams
     // we want to focus on csgo
+    println!("RETRIEVE ONE GAME RECORD");
     let csgo = pg_game.get(csgo_id).await?;
 
     println!("The game is {} and its description is: {}", csgo.name, csgo.description);
@@ -282,7 +278,7 @@ async fn main() -> Result<()> {
     );
 
     println!("-----");
-
+    println!("EDIT AND RETRIEVE ONE GAME RECORD");
     // edit the csgo game description
     pg_game.edit(csgo.id, csgo_edit_record).await?;
 
@@ -291,6 +287,7 @@ async fn main() -> Result<()> {
     println!("The game is {} and its description is: {}", csgo_edited.name, csgo_edited.description);
 
     println!("-----");
+    println!("RETRIEVE ALL GAMES (automatically ordered by name, as overwatch is before valorant)");
 
     // so now, lets get all the games that are currently in the system!
     let games_in_db: Vec<GameInfo> = pg_game.get_all().await?;
@@ -302,6 +299,7 @@ async fn main() -> Result<()> {
     }
 
     println!("-----");
+    println!("RETRIEVE ALL TEAMS (again, ordered by name by default)");
 
     // now get all the teams on this website
     let all_teams: Vec<TeamInfo> = pg_team.get_all(None).await?;
@@ -310,7 +308,7 @@ async fn main() -> Result<()> {
     }
 
     println!("-----");
-
+    println!("TEAMS THAT PLAY LEAGUE OF LEGENDS");
     // now let's focus on the teams that actually play league
     let play_league: Vec<TeamInfo> = pg_team.get_all(Some(league_id)).await?;
     for team in play_league {
@@ -321,6 +319,7 @@ async fn main() -> Result<()> {
     pg_team.remove_from_game(fnatic_id, league_id).await?;
 
     println!("-----");
+    println!("AFTER REMOVAL OF FNATIC FROM LEAGUE");
 
     let play_league: Vec<TeamInfo> = pg_team.get_all(Some(league_id)).await?;
     for team in play_league {
@@ -346,10 +345,10 @@ async fn main() -> Result<()> {
 
     println!("-----");
 
-    // now let's try to add fnatic to csgo again!we remove fnatic from the game again?
+    // now let's try to remove fnatic from the game again?
     let cant_do_that = pg_team.add_to_game(fnatic_id, csgo_id).await;
 
-    println!("Can add fnatic to csgo again? {}", cant_do_that.is_ok());
+    println!("Can we add fnatic to csgo again? {}", cant_do_that.is_ok());
 
     Ok(())
 }
