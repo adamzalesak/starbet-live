@@ -34,15 +34,15 @@ impl Component for Layout {
         html! {
             <>
                 <Header />
-                <main class="w-full flex-auto flex flex-row">
-                    <section class="w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2">
+                <main class="w-full flex-auto flex flex-row overflow-auto">
+                    <section class="w-3/12 lg:w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2">
                         <Games />
                         <Footer />
                     </section>
-                    <section class="w-8/12 p-2">
+                    <section class="w-6/12 lg:w-8/12 p-2 overflow-auto">
                         { ctx.props().children.clone() }
                     </section>
-                    <section class="w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2">
+                    <section class="w-3/12 lg:w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2">
                         <Ticket />
                         <LatestTickets />
                     </section>

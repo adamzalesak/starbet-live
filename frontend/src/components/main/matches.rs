@@ -19,7 +19,8 @@ impl Component for Matches {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <ul class="flex flex-col gap-2">
+            <ul class="flex flex-col gap-2 overflow-auto">
+                <MatchesGame />
                 <MatchesGame />
                 <MatchesGame />
                 <MatchesGame />

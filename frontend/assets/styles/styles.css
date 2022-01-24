@@ -22,10 +22,11 @@
 
 body {
   height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   font-size: 16px;
   display: flex;
   flex-direction: column;
-  
 }
 
 .text-yellow {
@@ -67,4 +68,8 @@ body {
 .current_active_page a {
   background-color: var(--white);
   color: var(--black);
+}
+
+.border-dark-blue {
+  border-color: var(--dark-blue);
 }

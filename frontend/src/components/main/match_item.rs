@@ -18,28 +18,28 @@ impl Component for MatchItem {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <div class="px-2 bg-white rounded-md flex flex-col md:flex-row md:gap-2 pb-2">
+            <div class="px-2 bg-white rounded-md flex flex-col lg:flex-row lg:gap-2 pb-2 relative">
                 <div class="w-1/3">
-                    <div class="absolute">
-                        <span class="font-bold">{"Fnatic"}</span>
+                    <div class="font-bold absolute">
+                        <span>{"Fnatic"}</span>
                         {" "}
-                        <span class="font-bold text-yellow">{"13 kills - 17 kills"}</span>
+                        <span class="text-yellow">{"13 kills - 17 kills"}</span>
                         {" "}
-                        <span class="font-bold">{"SKT T1"}</span>
+                        <span>{"SKT T1"}</span>
                     </div>
                     <div class="mt-5 w-full">{"Time -> 25:31"}</div>
                 </div>
-                <div class="w-full md:w-2/3">
+                <div class="w-full lg:w-2/3">
                     <div class="text-center">{"Winner"}</div>
                     <div class="flex gap-5">
-                        <div class="bg-light-grey rounded-md w-full p-1 px-3 flex gap-1 justify-between cursor-pointer">
+                        <button class="bg-light-grey rounded-md w-full p-1 px-3 flex gap-1 justify-between cursor-pointer">
                             <span class="font-bold">{"Fnatic"}</span>
                             <span>{"2.15"}</span>
-                        </div>
-                        <div class="bg-light-grey rounded-md w-full p-1 px-3 flex gap-1 justify-between cursor-pointer">
+                        </button>
+                        <button class="bg-light-grey rounded-md w-full p-1 px-3 flex gap-1 justify-between cursor-pointer">
                             <span class="font-bold">{"SKT T1"}</span>
                             <span>{"1.63"}</span>
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>

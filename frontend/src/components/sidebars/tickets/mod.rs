@@ -1,3 +1,3 @@
 pub mod latest_tickets;
-pub mod latestticketsitem;
+pub mod latest_tickets_item;
 pub mod ticket;
