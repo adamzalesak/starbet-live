@@ -9,7 +9,7 @@ service GameMatchService {
     rpc CreateGameMatch (CreateGameMatchRequest) returns (CreateGameMatchReply);
     rpc DeleteGameMatch (DeleteGameMatchRequest) returns (google.protobuf.Empty);
 
-    rpc ListGameGameMatches (ListGameGameMatchesRequest) returns (ListGameMatchesReply);
+    rpc ListGameMatches (ListGameMatchesRequest) returns (ListGameMatchesReply);
 }
 
 message GameMatch {
@@ -43,7 +43,7 @@ message DeleteGameMatchRequest {
     int32 id = 1;
 }
 
-message ListGameGameMatchesRequest {
+message ListGameMatchesRequest {
     int32 game_id = 1;
 }
 

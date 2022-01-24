@@ -2,8 +2,8 @@ use tonic::{Request, Response, Status};
 
 use crate::game_match::game_match_service_server::GameMatchService;
 use crate::game_match::{
-    CreateGameMatchReply, CreateGameMatchRequest, DeleteGameMatchRequest,
-    ListGameGameMatchesRequest, ListGameMatchesReply,
+    CreateGameMatchReply, CreateGameMatchRequest, DeleteGameMatchRequest, ListGameMatchesReply,
+    ListGameMatchesRequest,
 };
 
 pub struct MyGameMatchService {}
@@ -49,7 +49,7 @@ impl GameMatchService for MyGameMatchService {
 
     async fn list_game_game_matches(
         &self,
-        request: Request<ListGameGameMatchesRequest>,
+        request: Request<ListGameMatchesRequest>,
     ) -> Result<Response<ListGameMatchesReply>, Status> {
         println!("[Server] Request from client: {:?}", &request);
 
