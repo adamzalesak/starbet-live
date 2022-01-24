@@ -88,9 +88,9 @@ pub trait UserRepo {
     /// ---
     /// - Ok(new_user_id, new_address_id) with user id and address id after successful creation
     /// - Err(_) if an error occurrs
-    async fn create<'a>(
+    async fn create(
         &self,
-        new_user: CreateUser<'a>,
+        new_user: CreateUser,
         new_user_address: CreateUserAddress,
     ) -> anyhow::Result<(i32, i32)>;
 
@@ -106,11 +106,7 @@ pub trait UserRepo {
     /// ---
     /// - Ok(()) if the operation has been done successfully
     /// - Err(_) if an error occurrs
-    async fn edit<'a>(
-        &self,
-        desired_user_id: i32,
-        edited_record: CreateUser<'a>,
-    ) -> anyhow::Result<()>;
+    async fn edit(&self, desired_user_id: i32, edited_record: CreateUser) -> anyhow::Result<()>;
 
     /// Add a new address for the user
     ///
@@ -190,9 +186,9 @@ impl UserRepo for PgUserRepo {
     }
 
     /// Create a new user in the database
-    async fn create<'a>(
+    async fn create(
         &self,
-        new_user: CreateUser<'a>,
+        new_user: CreateUser,
         new_user_address: CreateUserAddress,
     ) -> anyhow::Result<(i32, i32)> {
         let new_user_id: i32 = insert_into(user_table)
@@ -206,11 +202,7 @@ impl UserRepo for PgUserRepo {
     }
 
     /// Edit User's information
-    async fn edit<'a>(
-        &self,
-        desired_user_id: i32,
-        edited_record: CreateUser<'a>,
-    ) -> anyhow::Result<()> {
+    async fn edit(&self, desired_user_id: i32, edited_record: CreateUser) -> anyhow::Result<()> {
         let _ = update(user_table.find(desired_user_id))
             .set(edited_record)
             .execute(&self.get_connection().await?)?;
