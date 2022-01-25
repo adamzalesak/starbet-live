@@ -1,5 +1,6 @@
 use crate::db_models::game::Game;
 use crate::schema::game_match;
+use diesel::sql_types::{Integer, Text};
 
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
 #[belongs_to(Team, foreign_key = team_one_id)]

@@ -50,31 +50,25 @@ impl UserAddress {
 
         CreateUserAddress {
             user_id: 0,
-            street_name: UserAddress::store_change(&self.street_name, &change_street_name),
-            street_number: UserAddress::store_change(&self.street_number, &change_street_number),
-            city: UserAddress::store_change(&self.city, &change_city),
+            street_name: change_street_name.map_or_else(
+                || self.street_name.clone(),
+                |new_street_name| String::from(new_street_name),
+            ),
+            street_number: change_street_number.map_or_else(
+                || self.street_number.clone(),
+                |new_street_number| String::from(new_street_number),
+            ),
+            city: change_city.map_or_else(|| self.city.clone(), |new_city| String::from(new_city)),
             area: store_area,
-            postal_code: UserAddress::store_change(&self.postal_code, &change_postal_code),
-            country: UserAddress::store_change(&self.country, &change_country),
+            postal_code: change_postal_code.map_or_else(
+                || self.postal_code.clone(),
+                |new_postal_code| String::from(new_postal_code),
+            ),
+            country: change_country.map_or_else(
+                || self.country.clone(),
+                |new_country| String::from(new_country),
+            ),
             valid_from: "".into(),
-        }
-    }
-
-    /// Store a change -> either just copy the original parameter,
-    /// or get a new one
-    ///
-    /// Params
-    /// ---
-    /// - original_parameter: reference to the original parameter
-    /// - new_parameter: optional new parameter -> takes the place of the original parameter
-    ///
-    /// Returns
-    /// ---
-    /// - either the old or the new parameter
-    fn store_change(original_parameter: &str, new_parameter: &Option<&str>) -> String {
-        match new_parameter {
-            Some(change_parameter) => String::from(*change_parameter),
-            None => String::from(original_parameter),
         }
     }
 }

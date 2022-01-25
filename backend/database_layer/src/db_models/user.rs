@@ -1,5 +1,6 @@
 use crate::schema::user;
 use crate::type_storing::time_handling::CurrentTime;
+use chrono::{DateTime, Utc};
 
 /// Read structure, used for data mapping of
 /// User record from the database
@@ -10,6 +11,7 @@ pub struct User {
     pub last_name: String,
     pub civil_id_number: String,
     pub email: String,
+    pub date_of_birth: String,
     pub phone_number: String,
     pub created_at: String,
     pub photo: Option<String>,
@@ -24,6 +26,7 @@ pub struct CreateUser {
     pub last_name: String,
     pub civil_id_number: String,
     pub email: String,
+    pub date_of_birth: String,
     pub phone_number: String,
     pub created_at: String,
     pub photo: Option<String>,
@@ -42,6 +45,7 @@ impl User {
     /// - change_last_name: ability to change the last name
     /// - change_civil_id_number: ability to change the cvil id number
     /// - change_email: ability to change the email address
+    /// - change_date_of_birth: ability to change the date of birth
     /// - change_phone_number: ability to change the phone number
     /// - change_photo: ability to change the profile photo
     ///
@@ -51,6 +55,7 @@ impl User {
         change_last_name: Option<&str>,
         change_civil_id_number: Option<&str>,
         change_email: Option<&str>,
+        change_date_of_birth: Option<DateTime<Utc>>,
         change_phone_number: Option<&str>,
         change_photo: Option<Option<&str>>,
     ) -> CreateUser {
@@ -62,32 +67,31 @@ impl User {
         // Create a new edit structure
         // `store_change` stores any change a user might wanted to apply
         CreateUser::edit(
-            User::store_change(&self.first_name, &change_first_name),
-            User::store_change(&self.last_name, &change_last_name),
-            User::store_change(&self.civil_id_number, &change_civil_id_number),
-            User::store_change(&self.email, &change_email),
-            User::store_change(&self.phone_number, &change_phone_number),
+            // User::store_change(&self.first_name, &change_first_name),
+            change_first_name.map_or_else(
+                || self.first_name.clone(),
+                |new_first_name| String::from(new_first_name),
+            ),
+            change_last_name.map_or_else(
+                || self.last_name.clone(),
+                |new_last_name| String::from(new_last_name),
+            ),
+            change_civil_id_number.map_or_else(
+                || self.civil_id_number.clone(),
+                |new_civil_id_number| String::from(new_civil_id_number),
+            ),
+            change_email.map_or_else(|| self.email.clone(), |new_email| String::from(new_email)),
+            change_date_of_birth.map_or_else(
+                || self.date_of_birth.clone(),
+                |new_date_of_birth| new_date_of_birth.to_string(),
+            ),
+            change_phone_number.map_or_else(
+                || self.phone_number.clone(),
+                |new_phone_number| String::from(new_phone_number),
+            ),
             self.created_at.clone(),
             store_photo,
         )
-    }
-
-    /// Store a change -> either just copy the original parameter,
-    /// or get a new one
-    ///
-    /// Params
-    /// ---
-    /// - original_parameter: reference to the original parameter
-    /// - new_parameter: optional new parameter -> takes the place of the original parameter
-    ///
-    /// Returns
-    /// ---
-    /// - either the old or the new parameter
-    fn store_change(original_parameter: &str, new_parameter: &Option<&str>) -> String {
-        match new_parameter {
-            Some(change_parameter) => String::from(*change_parameter),
-            None => String::from(original_parameter),
-        }
     }
 }
 
@@ -100,6 +104,7 @@ impl CreateUser {
     /// - last_name: last name of the user
     /// - civil_id_number: user's civil id number
     /// - email: user's email
+    /// - date_of_birth: user's birth date
     /// - phone_number: user's phone number
     /// - photo: optional - url to the photo
     ///
@@ -111,6 +116,7 @@ impl CreateUser {
         last_name: &str,
         civil_id_number: &str,
         email: &str,
+        date_of_birth: DateTime<Utc>,
         phone_number: &str,
         photo: Option<&str>,
     ) -> CreateUser {
@@ -119,6 +125,7 @@ impl CreateUser {
             last_name: String::from(last_name),
             civil_id_number: String::from(civil_id_number),
             email: String::from(email),
+            date_of_birth: date_of_birth.to_string(),
             phone_number: String::from(phone_number),
             created_at: CurrentTime::store(),
             photo: match photo {
@@ -150,6 +157,7 @@ impl CreateUser {
         last_name: String,
         civil_id_number: String,
         email: String,
+        date_of_birth: String,
         phone_number: String,
         created_at: String,
         photo: Option<String>,
@@ -159,6 +167,7 @@ impl CreateUser {
             last_name,
             civil_id_number,
             email,
+            date_of_birth,
             phone_number,
             created_at,
             photo,

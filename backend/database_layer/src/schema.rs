@@ -74,6 +74,7 @@ table! {
         first_name -> Text,
         last_name -> Text,
         civil_id_number -> Text,
+        date_of_birth -> Text,
         email -> Text,
         phone_number -> Text,
         created_at -> Text,
