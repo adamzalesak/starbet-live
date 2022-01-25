@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::Utc;
 use dotenv::dotenv;
 use std::env;
 use std::sync::Arc;
@@ -10,12 +11,12 @@ use database_layer::{
     db_access::{
         repo::Repo, // contains basic implementation for the repo (for us, the interest is in the 'new' method)
         // all tables / records have their own module
-        user::{PgUserRepo, UserRepo}, game::{PgGameRepo, GameRepo}, team::{PgTeamRepo, TeamRepo},
+        user::{PgUserRepo, UserRepo}, game::{PgGameRepo, GameRepo}, team::{PgTeamRepo, TeamRepo}, game_match::{PgMatchRepo, MatchRepo},
         // fe. Pg_*_Repo = actual structure holding the reference to the db pool,
         // _*_Repo = contains all methods that could be performed with the repo, along w documentation
     },
     // this module ↓ contains all models = structures that interact with the database
-    db_models::{game::CreateGame, user::CreateUser, user_address::CreateUserAddress, team::CreateTeam},
+    db_models::{game::CreateGame, user::CreateUser, user_address::CreateUserAddress, team::CreateTeam, game_match_event::GameMatchEventType},
     result_types::{GameInfo, TeamInfo},
 };
 
@@ -37,6 +38,9 @@ async fn main() -> Result<()> {
 
     // creating a team repository 
     let pg_team = PgTeamRepo::new(&database_connection_pool); 
+
+    // creating a game_match repository
+    let pg_game_match = PgMatchRepo::new(&database_connection_pool);
 
     //
     // ==============================================================================================
@@ -62,6 +66,7 @@ async fn main() -> Result<()> {
                 "Matuska",
                 "ER125432",
                 "janko@matuska.sk",
+                Utc::now(),
                 "+421987654",
                 Some("/photos/user_profile/user_id.png"), // hypotetically let's say that the user also has a profile photo
             ),
@@ -80,6 +85,7 @@ async fn main() -> Result<()> {
                 "Kollarova",
                 "EB123597",
                 "kollarovahan@gmail.com",
+                Utc::now(),
                 "+421902456789",
                 None,
             ),
@@ -98,6 +104,7 @@ async fn main() -> Result<()> {
                 "Hronska",
                 "EB458796",
                 "annamariahronska@gmail.com",
+                Utc::now(),
                 "+421958012345",
                 None,
             ),
@@ -231,6 +238,7 @@ async fn main() -> Result<()> {
         None,
         Some("han.kollarova@gmail.com"),
         None,
+        None,
         None
     )).await?;
 
@@ -349,6 +357,13 @@ async fn main() -> Result<()> {
     let cant_do_that = pg_team.add_to_game(fnatic_id, csgo_id).await;
 
     println!("Can we add fnatic to csgo again? {}", cant_do_that.is_ok());
+
+    println!("-----");
+
+    println!("{}", csgo_id);
+    let all_matches = pg_game_match.get_all_show(Some(GameMatchEventType::Upcoming), Some(1)).await?;
+
+    println!("{:?}", all_matches);
 
     Ok(())
 }
