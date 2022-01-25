@@ -18,7 +18,7 @@ impl Component for LatestTickets {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-         <div class="bg-dark-blue text-white rounded-md  p-2">{"latest tickets"}</div>
+         <div class="bg-dark-blue text-white rounded-md p-2 h-2/6">{"latest tickets"}</div>
         }
     }
 }
