@@ -79,9 +79,9 @@ impl Component for Ticket {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
          <div class="bg-dark-blue text-white rounded-md p-1 h-4/6 max-h-full">
-            <div class="bg-light-grey rounded-md p-1 text-black flex flex-col h-full">
-                <div class="font-bold text-center mb-3 mt-1 bg-dark-blue">{"Current ticket"}</div>
-                <ul class="overflow-auto mb-auto">
+            <div class="bg-light-grey rounded-md text-black flex flex-col h-full">
+                <div class="font-bold text-center pt-1 pb-3 bg-dark-blue text-white">{"Current ticket"}</div>
+                <ul class="overflow-auto m-1 mb-auto bg-light-grey">
                     {
                         if self.bets.len() == 0 {
                             html!{ <div>{"Your current ticket is empty!"}</div>}
@@ -94,7 +94,7 @@ impl Component for Ticket {
                     }
                 </ul>
 
-                <form class="mt-1" onsubmit={ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit })} >
+                <form class="m-1" onsubmit={ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit })} >
                     <div class="text-sm">{ "Number of matches: " }{ self.bets.len() }</div>
                     <input type="number"
                         min="1.0"

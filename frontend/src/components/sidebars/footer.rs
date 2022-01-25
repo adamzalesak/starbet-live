@@ -24,13 +24,13 @@ impl Component for Footer {
             <div class="bg-dark-blue text-white text-center text-sm rounded-md p-2">
                 <span class="block my-2">{"© Starbet Live 2021"}</span>
                 <div class="flex flex-col my-2"> 
-                    <Link<Route> to={Route::Home} classes={"underline my-1"}>
+                    <Link<Route> to={Route::About} classes={"underline my-1"}>
                         {"About"}
                     </Link<Route>>
-                    <Link<Route> to={Route::Home} classes={"underline my-1"}>
+                    <Link<Route> to={Route::PrivacyPolicy} classes={"underline my-1"}>
                         {"Privacy Policy"}
                     </Link<Route>>
-                    <Link<Route> to={Route::Home} classes={"underline my-1"}>
+                    <Link<Route> to={Route::Contact} classes={"underline my-1"}>
                         {"Contact"}
                     </Link<Route>>
                 </div>

@@ -52,7 +52,6 @@ impl Store for TicketStore {
                 link.send_message(Action::RemoveBet(id));
             }
             TicketRequest::SubmitTicket => {
-                // link.send_message(Action::RemovePost(id));
             }
             TicketRequest::ChangeTicketValue(value) => {
                 link.send_message(Action::SetTicketValue(value));

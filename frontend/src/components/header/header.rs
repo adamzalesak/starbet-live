@@ -1,3 +1,4 @@
+use super::login_form::LoginForm;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -34,9 +35,7 @@ impl Component for Header {
             "/upcoming" | "/upcoming/" => Pages::Upcoming,
             _ => Pages::None,
         };
-        Self {
-            current_page: curr,
-        }
+        Self { current_page: curr }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -49,7 +48,7 @@ impl Component for Header {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <header class="bg-dark-blue flex flex-row justify-between text-white">
-                <div onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class="block w-4/12 md:w-3/12 transition-all my-auto">
+                <div onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class="block w-60 transition-all my-auto">
                     <Link<Route> to={Route::Home}>
                         <img src="/starbet-live-yellow.svg" alt="starbet live logo" class="p-3"/>
                     </Link<Route>>
@@ -58,28 +57,42 @@ impl Component for Header {
                     <div class="text-center my-2 text-sm">
                         <DateTime />
                     </div>
-                    <nav>
-                        <ul>
-                            <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class={if self.current_page == Pages::Live {"current_active_page"} else {""}}>
-                                <Link<Route> to={Route::Live} classes={"inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
-                                    { "Live" }
-                                </Link<Route>>
-                            </span>
-                            <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Upcoming))} class={if self.current_page == Pages::Upcoming {"current_active_page"} else {""}}>
-                                <Link<Route> to={Route::Upcoming} classes="inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
-                                    { "Upcoming" }
-                                </Link<Route>>
-                            </span>
-                            <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Results))} class={if self.current_page == Pages::Results {"current_active_page"} else {""}}>
-                                <Link<Route> to={Route::Results} classes="inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
-                                    { "Results" }
-                                </Link<Route>>
-                            </span>
-                        </ul>
-                    </nav>
+                    
+                    {
+                        // render navigation only when necessary 
+                        if self.current_page != Pages::None {
+                            html! {
+                                <nav>
+                                    <ul>
+                                        <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class={if self.current_page == Pages::Live {"current_active_page"} else {""}}>
+                                            <Link<Route> to={Route::Live} classes={"inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
+                                                { "Live" }
+                                            </Link<Route>>
+                                        </span>
+                                        <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Upcoming))} class={if self.current_page == Pages::Upcoming {"current_active_page"} else {""}}>
+                                            <Link<Route> to={Route::Upcoming} classes="inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                                { "Upcoming" }
+                                            </Link<Route>>
+                                        </span>
+                                        <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Results))} class={if self.current_page == Pages::Results {"current_active_page"} else {""}}>
+                                            <Link<Route> to={Route::Results} classes="inline-block bg-blue font-bold py-1 px-5 md:px-10 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                                { "Results" }
+                                            </Link<Route>>
+                                        </span>
+                                    </ul>
+                                </nav>
+                            }
+                        }
+                        else {
+                            html!{}
+                        }
+                    }
                 </div>
                 <div class="my-auto m-3">
-                    <span>{"Login form"}</span>
+                    <LoginForm />
+                    <Link<Route> to={Route::Registration} classes="">
+                        { "Join" }
+                    </Link<Route>>
                 </div>
             </header>
         }

@@ -1,8 +1,9 @@
-use crate::components::layout::Layout;
+use crate::components::{header::header::Header, layout::Layout};
 use crate::pages::{
-    live_page::LivePage, not_found::NotFoundPage, results_page::ResultsPage,
-    upcoming_page::UpcomingPage,
+    about_page::AboutPage, contact_page::ContactPage, live_page::LivePage, not_found::NotFoundPage,
+    privacy_policy_page::PrivacyPolicyPage, results_page::ResultsPage, upcoming_page::UpcomingPage,
 };
+use pages::registration_page::RegistrationPage;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -19,6 +20,14 @@ pub enum Route {
     Upcoming,
     #[at("/results")]
     Results,
+    #[at("/registration")]
+    Registration,
+    #[at("/about")]
+    About,
+    #[at("/privacy-policy")]
+    PrivacyPolicy,
+    #[at("/contact")]
+    Contact,
     #[at("/")]
     Home,
     #[not_found]
@@ -45,9 +54,7 @@ impl Component for App {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <BrowserRouter>
-                <Layout>
-                    <Switch<Route> render={Switch::render(switch)} />
-                </Layout>
+                <Switch<Route> render={Switch::render(switch)} />
             </BrowserRouter>
         }
     }
@@ -55,20 +62,60 @@ impl Component for App {
 
 fn switch(routes: &Route) -> Html {
     match routes.clone() {
-        Route::Live => {
-            html! { <LivePage /> }
+        Route::Live | Route::Home => {
+            html! {
+            <Layout>
+                <LivePage />
+            </Layout>}
         }
         Route::Upcoming => {
-            html! { <UpcomingPage /> }
+            html! {
+                <Layout>
+                    <UpcomingPage />
+                </Layout>
+            }
         }
         Route::Results => {
-            html! { <ResultsPage /> }
+            html! {
+                <Layout>
+                    <ResultsPage />
+                </Layout>
+            }
+        }
+        Route::Registration => {
+            html! { <RegistrationPage /> }
+        }
+        Route::About => {
+            html! {
+                <>
+                    <Header />
+                    <AboutPage />
+                </>
+            }
+        }
+        Route::PrivacyPolicy => {
+            html! {
+                <>
+                    <Header />
+                    <PrivacyPolicyPage />
+                </>
+            }
+        }
+        Route::Contact => {
+            html! {
+                <>
+                    <Header />
+                    <ContactPage />
+                </>
+            }
         }
         Route::NotFound => {
-            html! { <NotFoundPage /> }
-        }
-        Route::Home => {
-            html! { <LivePage /> }
+            html! {
+                <>
+                    <Header />
+                    <NotFoundPage />
+                </>
+            }
         }
     }
 }
