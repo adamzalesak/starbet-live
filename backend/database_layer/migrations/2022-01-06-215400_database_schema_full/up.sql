@@ -4,6 +4,7 @@ CREATE TABLE "user" (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     civil_id_number TEXT NOT NULL,
+    date_of_birth TEXT NOT NULL,
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
     created_at TEXT NOT NULL,
