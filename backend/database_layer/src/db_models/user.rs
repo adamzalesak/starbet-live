@@ -49,6 +49,10 @@ impl User {
     /// - change_phone_number: ability to change the phone number
     /// - change_photo: ability to change the profile photo
     ///
+    /// Returns
+    /// ---
+    /// - new edited user structure
+    #[allow(clippy::too_many_arguments)]
     pub fn edit_user(
         &self,
         change_first_name: Option<&str>,
@@ -60,7 +64,7 @@ impl User {
         change_photo: Option<Option<&str>>,
     ) -> CreateUser {
         let store_photo = match change_photo {
-            Some(new_value) => new_value.map(|potential_slice| String::from(potential_slice)),
+            Some(new_value) => new_value.map(String::from),
             None => self.photo.clone(), // original data remains
         };
 
@@ -68,27 +72,15 @@ impl User {
         // `store_change` stores any change a user might wanted to apply
         CreateUser::edit(
             // User::store_change(&self.first_name, &change_first_name),
-            change_first_name.map_or_else(
-                || self.first_name.clone(),
-                |new_first_name| String::from(new_first_name),
-            ),
-            change_last_name.map_or_else(
-                || self.last_name.clone(),
-                |new_last_name| String::from(new_last_name),
-            ),
-            change_civil_id_number.map_or_else(
-                || self.civil_id_number.clone(),
-                |new_civil_id_number| String::from(new_civil_id_number),
-            ),
-            change_email.map_or_else(|| self.email.clone(), |new_email| String::from(new_email)),
+            change_first_name.map_or_else(|| self.first_name.clone(), String::from),
+            change_last_name.map_or_else(|| self.last_name.clone(), String::from),
+            change_civil_id_number.map_or_else(|| self.civil_id_number.clone(), String::from),
+            change_email.map_or_else(|| self.email.clone(), String::from),
             change_date_of_birth.map_or_else(
                 || self.date_of_birth.clone(),
                 |new_date_of_birth| new_date_of_birth.to_string(),
             ),
-            change_phone_number.map_or_else(
-                || self.phone_number.clone(),
-                |new_phone_number| String::from(new_phone_number),
-            ),
+            change_phone_number.map_or_else(|| self.phone_number.clone(), String::from),
             self.created_at.clone(),
             store_photo,
         )
@@ -111,6 +103,7 @@ impl CreateUser {
     /// Returns
     /// ---
     /// - new CreateUser structure (used for database insertion)
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         first_name: &str,
         last_name: &str,
@@ -128,10 +121,7 @@ impl CreateUser {
             date_of_birth: date_of_birth.to_string(),
             phone_number: String::from(phone_number),
             created_at: CurrentTime::store(),
-            photo: match photo {
-                Some(content) => Some(String::from(content)),
-                None => None,
-            },
+            photo: photo.map(String::from),
         }
     }
 
@@ -152,6 +142,7 @@ impl CreateUser {
     /// Returns
     /// ---
     /// - new CreateUser structure (used for database UPDATE)
+    #[allow(clippy::too_many_arguments)]
     fn edit(
         first_name: String,
         last_name: String,

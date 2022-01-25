@@ -44,30 +44,19 @@ impl UserAddress {
     ) -> CreateUserAddress {
         // create the needed type
         let store_area = match change_area {
-            Some(value) => value.map(|content| String::from(content)),
+            Some(value) => value.map(String::from),
             None => self.area.clone(), // original data remains
         };
 
         CreateUserAddress {
             user_id: 0,
-            street_name: change_street_name.map_or_else(
-                || self.street_name.clone(),
-                |new_street_name| String::from(new_street_name),
-            ),
-            street_number: change_street_number.map_or_else(
-                || self.street_number.clone(),
-                |new_street_number| String::from(new_street_number),
-            ),
-            city: change_city.map_or_else(|| self.city.clone(), |new_city| String::from(new_city)),
+            street_name: change_street_name.map_or_else(|| self.street_name.clone(), String::from),
+            street_number: change_street_number
+                .map_or_else(|| self.street_number.clone(), String::from),
+            city: change_city.map_or_else(|| self.city.clone(), String::from),
             area: store_area,
-            postal_code: change_postal_code.map_or_else(
-                || self.postal_code.clone(),
-                |new_postal_code| String::from(new_postal_code),
-            ),
-            country: change_country.map_or_else(
-                || self.country.clone(),
-                |new_country| String::from(new_country),
-            ),
+            postal_code: change_postal_code.map_or_else(|| self.postal_code.clone(), String::from),
+            country: change_country.map_or_else(|| self.country.clone(), String::from),
             valid_from: "".into(),
         }
     }
@@ -110,7 +99,7 @@ impl CreateUserAddress {
             street_name: street_name.into(),
             street_number: street_number.into(),
             city: city.into(),
-            area: area.map(|content| String::from(content)),
+            area: area.map(String::from),
             postal_code: postal_code.into(),
             country: country.into(),
             valid_from: "".into(),
