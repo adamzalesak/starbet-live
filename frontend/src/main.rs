@@ -1,13 +1,15 @@
-use yew::prelude::*;
-use yew_router::prelude::*;
-
-mod components;
-mod pages;
 use crate::components::layout::Layout;
 use crate::pages::{
     live_page::LivePage, not_found::NotFoundPage, results_page::ResultsPage,
     upcoming_page::UpcomingPage,
 };
+use yew::prelude::*;
+use yew_router::prelude::*;
+
+mod agents;
+mod components;
+mod pages;
+mod types;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
 pub enum Route {

@@ -40,7 +40,6 @@ impl Component for Header {
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
-        log::info!("updating header");
         match msg {
             Msg::SetActive(page) => self.current_page = page,
         }
