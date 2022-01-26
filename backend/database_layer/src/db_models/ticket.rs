@@ -1,7 +1,7 @@
 use crate::db_models::user::User;
 use crate::schema::ticket;
 
-#[derive(Identifiable, Associations, Queryable, PartialEq)]
+#[derive(Identifiable, Associations, Queryable, PartialEq, Clone)]
 #[belongs_to(User)]
 #[table_name = "ticket"]
 pub struct Ticket {

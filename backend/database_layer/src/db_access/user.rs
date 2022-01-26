@@ -19,14 +19,7 @@ use crate::db_models::{
 };
 
 // schema imports
-use crate::schema::{
-    ticket::dsl::{created_at as ticket_created_at, paid_at, ticket, user_id as user_id_ticket},
-    user::{dsl::id as user_id, table as user_table},
-    user_address::dsl::{
-        id as user_address_id, user_address as user_address_table, user_id as user_id_address,
-        valid_from,
-    },
-};
+use crate::schema::{ticket, user, user_address};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -154,7 +147,7 @@ pub trait UserRepo {
 impl UserRepo for PgUserRepo {
     /// Get a user from the database
     async fn get(&self, desired_id: i32) -> anyhow::Result<User> {
-        let query_result: User = user_table
+        let query_result: User = user::table
             .find(desired_id)
             .get_result(&self.get_connection().await?)?;
 
@@ -167,9 +160,9 @@ impl UserRepo for PgUserRepo {
         new_user: CreateUser,
         new_user_address: CreateUserAddress,
     ) -> anyhow::Result<(i32, i32)> {
-        let new_user_id: i32 = insert_into(user_table)
+        let new_user_id: i32 = insert_into(user::table)
             .values(new_user)
-            .returning(user_id)
+            .returning(user::id)
             .get_result(&self.get_connection().await?)?;
 
         let new_user_address_id = self.add_new_address(new_user_id, new_user_address).await?;
@@ -179,7 +172,7 @@ impl UserRepo for PgUserRepo {
 
     /// Edit User's information
     async fn edit(&self, desired_user_id: i32, edited_record: CreateUser) -> anyhow::Result<()> {
-        let _ = update(user_table.find(desired_user_id))
+        let _ = update(user::table.find(desired_user_id))
             .set(edited_record)
             .execute(&self.get_connection().await?)?;
 
@@ -195,9 +188,9 @@ impl UserRepo for PgUserRepo {
     ) -> anyhow::Result<i32> {
         let store_address = new_address.store(desired_user_id);
 
-        let query_result: i32 = insert_into(user_address_table)
+        let query_result: i32 = insert_into(user_address::table)
             .values(store_address)
-            .returning(user_address_id)
+            .returning(user_address::id)
             .get_result(&self.get_connection().await?)?;
 
         Ok(query_result)
@@ -205,9 +198,9 @@ impl UserRepo for PgUserRepo {
 
     /// Get user's current address
     async fn get_current_address(&self, desired_user_id: i32) -> anyhow::Result<UserAddress> {
-        let query_result: UserAddress = user_address_table
-            .filter(user_id_address.eq(desired_user_id))
-            .order(valid_from.desc())
+        let query_result: UserAddress = user_address::table
+            .filter(user_address::user_id.eq(desired_user_id))
+            .order(user_address::valid_from.desc())
             .first(&self.get_connection().await?)?;
 
         Ok(query_result)
@@ -215,13 +208,16 @@ impl UserRepo for PgUserRepo {
 
     /// Get User's current ticket
     async fn get_current_ticket(&self, desired_user_id: i32) -> anyhow::Result<Option<Ticket>> {
-        let query_result: Option<Ticket> = ticket
-            .filter(user_id_ticket.eq(desired_user_id))
-            .filter(paid_at.is_null())
-            .order(ticket_created_at.desc())
-            .first(&self.get_connection().await?)
-            .optional()?;
+        let query_result: Vec<Ticket> = ticket::table
+            .filter(ticket::user_id.eq(desired_user_id))
+            .filter(ticket::paid_at.is_null())
+            .order(ticket::created_at.desc())
+            .get_results(&self.get_connection().await?)?;
 
-        Ok(query_result)
+        match query_result.len() {
+            0 => Ok(None),
+            1 => Ok(Some(query_result[0].clone())),
+            _ => anyhow::bail!("Internal inconsistency -> multiple open tickets for the user! Please, contact your administrator."),
+        }
     }
 }

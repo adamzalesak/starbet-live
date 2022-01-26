@@ -17,17 +17,7 @@ use crate::db_models::game::{CreateGame, Game};
 use crate::result_types::{GameInfo, TeamInfo};
 
 // schema imports
-use crate::schema::{
-    game::{
-        dsl::{game, id as game_id, logo as game_logo, name as game_name},
-        table as game_table,
-    },
-    team::{
-        dsl::{id as team_id, logo as team_logo_url, name as team_name},
-        table as team_table,
-    },
-    team_plays_game::table as team_plays_game_table,
-};
+use crate::schema::{game, team, team_plays_game};
 
 pub struct PgGameRepo {
     pub pool: Arc<PgPool>,
@@ -130,7 +120,7 @@ pub trait GameRepo {
 impl GameRepo for PgGameRepo {
     /// Get details about one specific game
     async fn get(&self, desired_game_id: i32) -> anyhow::Result<Game> {
-        let query_result: Game = game
+        let query_result: Game = game::table
             .find(desired_game_id)
             .get_result(&self.get_connection().await?)?;
 
@@ -143,7 +133,7 @@ impl GameRepo for PgGameRepo {
         desired_game_id: i32,
         edited_game: CreateGame<'a>,
     ) -> anyhow::Result<()> {
-        let _ = update(game_table.find(desired_game_id))
+        let _ = update(game::table.find(desired_game_id))
             .set(edited_game)
             .execute(&self.get_connection().await?)?;
 
@@ -152,9 +142,9 @@ impl GameRepo for PgGameRepo {
 
     /// Get all game names and image urls
     async fn get_all(&self) -> anyhow::Result<Vec<GameInfo>> {
-        let query_result: Vec<GameInfoRetrieve> = game
-            .order(game_name.asc())
-            .select((game_id, game_name, game_logo))
+        let query_result: Vec<GameInfoRetrieve> = game::table
+            .order(game::name.asc())
+            .select((game::id, game::name, game::logo))
             .get_results(&self.get_connection().await?)?;
 
         Ok(GameInfo::from_vector(&query_result))
@@ -162,11 +152,11 @@ impl GameRepo for PgGameRepo {
 
     /// Get all teams that are playing a specific game
     async fn get_teams_playing(&self, desired_game_id: i32) -> anyhow::Result<Vec<TeamInfo>> {
-        let query_result: Vec<TeamInfoRetrieve> = game_table
+        let query_result: Vec<TeamInfoRetrieve> = game::table
             .find(desired_game_id)
-            .inner_join(team_plays_game_table.inner_join(team_table))
-            .distinct_on(team_id)
-            .select((team_id, team_name, team_logo_url))
+            .inner_join(team_plays_game::table.inner_join(team::table))
+            .distinct_on(team::id)
+            .select((team::id, team::name, team::logo))
             .get_results(&self.get_connection().await?)?;
 
         Ok(TeamInfo::from_vector(&query_result))
@@ -174,9 +164,9 @@ impl GameRepo for PgGameRepo {
 
     /// Create a new Game record in the database
     async fn create<'a>(&self, new_game: CreateGame<'a>) -> anyhow::Result<i32> {
-        let id: i32 = insert_into(game_table)
+        let id: i32 = insert_into(game::table)
             .values(new_game)
-            .returning(game_id)
+            .returning(game::id)
             .get_result(&self.get_connection().await?)?;
 
         Ok(id)

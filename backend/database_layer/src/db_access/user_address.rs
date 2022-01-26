@@ -13,10 +13,7 @@ use super::repo::Repo;
 use crate::db_models::user_address::{CreateUserAddress, UserAddress};
 
 // schema imports
-use crate::schema::user_address::{
-    dsl::{id as user_address_id, user_address},
-    table as user_address_table,
-};
+use crate::schema::user_address;
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -100,7 +97,7 @@ pub trait UserAddressRepo {
 impl UserAddressRepo for PgUserAddressRepo {
     /// Get UserAddress record specified by id
     async fn get(&self, desired_address_id: i32) -> anyhow::Result<UserAddress> {
-        let query_result: UserAddress = user_address
+        let query_result: UserAddress = user_address::table
             .find(desired_address_id)
             .get_result(&self.get_connection().await?)?;
 
@@ -109,9 +106,9 @@ impl UserAddressRepo for PgUserAddressRepo {
 
     /// Create a new UserAddress
     async fn create(&self, new_address: CreateUserAddress) -> anyhow::Result<i32> {
-        let id: i32 = insert_into(user_address_table)
+        let id: i32 = insert_into(user_address::table)
             .values(new_address)
-            .returning(user_address_id)
+            .returning(user_address::id)
             .get_result(&self.get_connection().await?)?;
 
         Ok(id)
@@ -123,7 +120,7 @@ impl UserAddressRepo for PgUserAddressRepo {
         desired_address_id: i32,
         edited_address: CreateUserAddress,
     ) -> anyhow::Result<()> {
-        let _ = update(user_address_table.find(desired_address_id))
+        let _ = update(user_address::table.find(desired_address_id))
             .set(edited_address)
             .execute(&self.get_connection().await?)?;
 
