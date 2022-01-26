@@ -3,13 +3,14 @@ use chrono::format;
 use diesel::sql_query;
 use std::sync::Arc;
 
-use crate::diesel::insert_into;
 use crate::diesel::prelude::*;
 use crate::diesel::QueryDsl;
 use crate::diesel::RunQueryDsl;
+use crate::diesel::{insert_into, update};
 
 use crate::connection::PgPool;
 use crate::connection::PgPooledConnection;
+use crate::schema::game_match_event::event_type;
 
 // type and structure imports
 use super::repo::Repo;
@@ -20,7 +21,7 @@ use crate::db_models::{
 use crate::result_types::GameMatchShow;
 
 // schema imports
-use crate::schema::{game, game_match, game_match_event, team};
+use crate::schema::{game, game_match, game_match_event, team, team_plays_game};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -104,15 +105,81 @@ pub trait MatchRepo {
         // filter_by_team: Option<i32>,
     ) -> anyhow::Result<Vec<GameMatchShow>>;
 
-    async fn create<'a>(&self, new_match: CreateGameMatch<'a>);
+    /// Create a new game match structure (and set the latest event of the match to upcoming)
+    /// Additionally, it checks that both teams are playing the chosen game
+    ///
+    /// Params
+    /// ---
+    /// - new_match: write structure for creating a new game match
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(id) if the match could be created -> both teams exist, game exists and both teams play the game
+    /// - Err(_) if an error occurrs or some bounds were not satisfied
+    async fn create<'a>(&self, new_match: CreateGameMatch<'a>) -> anyhow::Result<i32>;
 
-    async fn update_game_state(
+    /// Update the state for chosen match
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the match
+    /// - desired_new_state: what to update the state to
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the update was successful
+    /// - Err(_) if an error has occurred
+    async fn update_match_state(
         &self,
         desired_match_id: i32,
         desired_new_state: String,
     ) -> anyhow::Result<()>;
 
-    async fn create_event(&self, desired_match_id: i32) -> anyhow::Result<()>;
+    /// Create an event for the match
+    /// Fails if such event already exists
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the match we want to create an event for
+    /// - desired_event_type: the event we wish to store
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the event has been created successfully
+    async fn create_event(
+        &self,
+        desired_match_id: i32,
+        desired_event_type: GameMatchEventType,
+    ) -> anyhow::Result<i32>;
+
+    /// Edit an event
+    /// It is possible to edit events -> Live, Overtime
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the match we need to edit the events of
+    /// - which_event: Which event type we want to target
+    /// - new_value: new value of the event that will be updated in the database
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the event has been updated successfully
+    /// - Err(_) if an error occurred, or a wrong event_type has been selected, or the event does not exist
+    async fn edit_event(
+        &self,
+        desired_match_id: i32,
+        which_event: GameMatchEventType,
+        new_value: CreateGameMatchEvent,
+    ) -> anyhow::Result<()>;
+
+    /// Delete an event type -> in special cases, we wish to delete an event
+    /// Supported event types -> all except the `Upcoming` type
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the match we need to delete the event of
+    /// - which_event: what event type
+    async fn delete_event(&self, desired_match_id: i32, which_event: GameMatchEventType);
 }
 
 #[async_trait]
@@ -244,19 +311,110 @@ impl MatchRepo for PgMatchRepo {
         Ok(result)
     }
 
-    async fn create<'a>(&self, new_match: CreateGameMatch<'a>) {
-        todo!()
+    /// Create a new game match structure (and set the latest event of the match to upcoming)
+    /// Additionally, it checks that both teams are playing the chosen game
+    async fn create<'a>(&self, new_match: CreateGameMatch<'a>) -> anyhow::Result<i32> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+        // Check if both teams are playing the game
+        let both_teams_play_the_game: usize = team_plays_game::table
+            .filter(
+                team_plays_game::team_id
+                    .eq(new_match.team_one_id)
+                    .and(team_plays_game::game_id.eq(new_match.game_id)),
+            )
+            .or_filter(
+                team_plays_game::team_id
+                    .eq(new_match.team_two_id)
+                    .and(team_plays_game::game_id.eq(new_match.game_id)),
+            )
+            .execute(&connection)?;
+
+        // possible results
+        match both_teams_play_the_game {
+            0 => anyhow::bail!("None of the teams selected is playing this game"),
+            1 => anyhow::bail!("One of the teams selected is not playing this game"),
+            2 => {}
+            _ => anyhow::bail!("Internal error!!! More occurrences of the same team playing the game multiple times!"),
+        }
+
+        // create the game match
+        let query_result: i32 = insert_into(game_match::table)
+            .values(new_match)
+            .returning(game_match::id)
+            .get_result(&connection)?;
+
+        // create an upcoming event for the new match
+        self.create_event(query_result, GameMatchEventType::Upcoming)
+            .await?;
+
+        Ok(query_result)
     }
 
-    async fn update_game_state(
+    /// Update the state for chosen match
+    async fn update_match_state(
         &self,
         desired_match_id: i32,
         desired_new_state: String,
     ) -> anyhow::Result<()> {
+        let _ = update(game_match::table.find(desired_match_id))
+            .set(game_match::state.eq(desired_new_state))
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
+    }
+
+    /// Create an event for the match
+    /// Fails if such event already exists
+    async fn create_event(
+        &self,
+        desired_match_id: i32,
+        desired_event_type: GameMatchEventType,
+    ) -> anyhow::Result<i32> {
+        // obtain connection
+        let connection: PgPooledConnection = self.get_connection().await?;
+
+        // find if an event already exists
+        let exists: usize = game_match_event::table
+            .filter(
+                game_match_event::game_match_id
+                    .eq(desired_match_id)
+                    .and(game_match_event::event_type.eq(desired_event_type.to_string())),
+            )
+            .execute(&connection)?;
+
+        // what to do with an already existing event?
+        match exists {
+            0 => {}
+            1 => anyhow::bail!("The event you wish to create already exists!"),
+            _ => anyhow::bail!("Internal error! More than 1 events of the same type exist"),
+        }
+
+        // create an event
+        let query_result: i32 = insert_into(game_match_event::table)
+            .values(CreateGameMatchEvent::new(
+                desired_match_id,
+                desired_event_type,
+            ))
+            .returning(game_match_event::id)
+            .get_result(&connection)?;
+
+        Ok(query_result)
+    }
+
+    /// Edit an event
+    /// It is possible to edit events -> Live, Overtime
+    async fn edit_event(
+        &self,
+        desired_match_id: i32,
+        which_event: GameMatchEventType,
+        new_value: CreateGameMatchEvent,
+    ) -> anyhow::Result<()> {
         todo!()
     }
 
-    async fn create_event(&self, desired_match_id: i32) -> anyhow::Result<()> {
+    /// Delete an event type -> in special cases, we wish to delete an event
+    /// Supported event types -> all except the `Upcoming` type
+    async fn delete_event(&self, desired_match_id: i32, which_event: GameMatchEventType) {
         todo!()
     }
 }
