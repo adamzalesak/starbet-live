@@ -1,4 +1,4 @@
-use super::login_form::LoginForm;
+use crate::components::auth::login_form::LoginForm;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -57,9 +57,9 @@ impl Component for Header {
                     <div class="text-center my-2 text-sm">
                         <DateTime />
                     </div>
-                    
+
                     {
-                        // render navigation only when necessary 
+                        // render navigation only when necessary
                         if self.current_page != Pages::None {
                             html! {
                                 <nav>
