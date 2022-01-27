@@ -103,7 +103,7 @@ impl Component for Ticket {
                         class="block w-6/12 rounded-md p-1"
                         onchange={ctx.link().callback(Msg::ChangeValue)}
                         />
-                    <button type="submit" class="bg-yellow w-full rounded-t-md p-1 font-bold mt-1">{self.ticket_value}{" €"}</button>
+                    <button type="submit" class="bg-yellow w-full rounded-t-md p-1 font-bold mt-1 transition-all">{self.ticket_value}{" €"}</button>
                     <div class="flex flex-row justify-between text-sm bg-dark-yellow rounded-b-md p-1">
                         <span>{"Rate: "}{self.rate}</span>
                         <span>{"ev.win: "}{self.ticket_value * self.rate}{"€"}</span>

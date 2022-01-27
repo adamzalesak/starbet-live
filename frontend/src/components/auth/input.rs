@@ -93,7 +93,7 @@ pub fn text_input(props: &Props) -> Html {
         if flag || !(*was_touched_copy) {
             error_msg.set(String::new());
         } else {
-            error_msg.set("Enter a valid ".to_owned() + &label_copy.to_lowercase());
+            error_msg.set(format!("Enter a valid {}", &label_copy.to_lowercase()));
         }
 
         is_valid.set(flag);
@@ -103,7 +103,7 @@ pub fn text_input(props: &Props) -> Html {
     let onblur = Callback::from(move |_| {
         was_touched.set(true);
         if !(*is_valid_copy) && required {
-            error_msg_copy.set("Enter a valid ".to_owned() + &label_copy2.to_lowercase());
+            error_msg_copy.set(format!("Enter a valid {}", &label_copy2.to_lowercase()));
         } else {
             error_msg_copy.set(String::new());
         }
@@ -111,15 +111,15 @@ pub fn text_input(props: &Props) -> Html {
 
     html! {
         <div class="flex flex-col mt-2 mb-1">
-            <label class={"font-medium mb-1".to_owned() + if required {" required_input"} else {" "}}>{label}{":"}</label>
+            <label class={format!("font-medium mb-1 {}", if required {"required_input"} else {""})}>{label}{":"}</label>
             <input
                 type={input_type.to_string()}
                 // {value}
                 {oninput}
                 {onblur}
                 {placeholder}
-                class={"border border-dark-blue focus:outline-none p-1 rounded-md".to_owned()
-                            + if !error_msg_copy2.is_empty() {" bg-danger-light border-danger"} else {""}}
+                class={format!("border border-dark-blue focus:outline-none p-1 rounded-md {}",
+                            if !error_msg_copy2.is_empty() {"bg-danger-light border-danger"} else {""})}
             />
             {
                 if !(*error_msg_copy2).is_empty() {

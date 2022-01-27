@@ -1,5 +1,7 @@
 use crate::{
-    components::{auth::registration_form::RegistrationForm, header::date_time::DateTime},
+    components::{
+        auth::registration_form::RegistrationForm, footer::Footer, header::date_time::DateTime,
+    },
     Route,
 };
 use yew::prelude::*;
@@ -33,6 +35,7 @@ impl Component for RegistrationPage {
                     </div>
                 </header>
                 <RegistrationForm />
+                <Footer squared_design={false} />
             </>
         }
     }

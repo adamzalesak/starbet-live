@@ -1,12 +1,10 @@
 use yew::prelude::*;
 
 use crate::components::{
+    footer::Footer,
+    games::Games,
     header::header::Header,
-    sidebars::{
-        footer::Footer,
-        games::Games,
-        tickets::{latest_tickets::LatestTickets, ticket::Ticket},
-    },
+    tickets::{latest_tickets::LatestTickets, ticket::Ticket},
 };
 pub enum Msg {}
 

@@ -1,4 +1,5 @@
 use yew::prelude::*;
+use crate::components::footer::Footer;
 
 pub enum Msg {}
 
@@ -18,7 +19,10 @@ impl Component for PrivacyPolicyPage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-         <div class="w-full lg:w-8/12 p-2 sm:w-10/12 overflow-auto mx-auto transition-all">{"Privacy policy page"}</div>
+            <>
+                <div class="w-full lg:w-8/12 p-2 sm:w-10/12 overflow-auto mx-auto transition-all">{"Privacy policy page"}</div>
+                <Footer squared_design={false} />
+            </>
         }
     }
 }
