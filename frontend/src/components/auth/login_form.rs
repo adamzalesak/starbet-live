@@ -1,42 +1,81 @@
-use anyhow::anyhow;
-use reqwest::{Client, StatusCode};
+use crate::{
+    components::auth::input::{InputType, TextInput},
+    types::users::{Field, UserLoginFormData},
+    Route,
+};
+use log::info;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use std::time::Duration;
 use yew::prelude::*;
-// use yew::services::{Task, TimeoutService};
-use yewtil::future::LinkFuture;
-
-#[derive(PartialEq)]
-enum SubmitResult {
-    None,
-    Success,
-    Error,
-}
+use yew_router::prelude::Link;
 
 #[derive(Serialize, Deserialize, Clone)]
 
-pub struct LoginForm {}
+pub struct LoginForm {
+    data: UserLoginFormData,
+}
 
-pub enum Msg {}
+pub enum Msg {
+    Submit,
+    SetEmail((String, Field, bool)),
+    SetPassword((String, Field, bool)),
+}
 
 impl Component for LoginForm {
     type Message = Msg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self {}
+        Self {
+            data: UserLoginFormData::new(),
+        }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
-        false
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        match msg {
+            Msg::Submit => {
+                if self.data.email.is_empty() || self.data.password.is_empty() {
+                    return false;
+                }
+                info!("Submiting login form");
+            }
+            Msg::SetEmail((new_data, _, _)) => self.data.email = new_data,
+            Msg::SetPassword((new_data, _, _)) => self.data.password = new_data,
+        }
+        true
     }
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <>
-                <form>
-
+                <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) }
+                        class="flex flex-row gap-1 text-black login" >
+                    <div class="flex flex-col gap-1 lg:flex-row">
+                        <TextInput
+                            input_type={InputType::Email}
+                            field={Field::Email}
+                            label="Email address"
+                            placeholder="EMAIL"
+                            on_change={ctx.link().callback(Msg::SetEmail)}
+                            required={false}
+                        />
+                        <TextInput
+                            input_type={InputType::Password}
+                            field={Field::Password}
+                            label="Password"
+                            placeholder="PASSWORD"
+                            on_change={ctx.link().callback(Msg::SetPassword)}
+                            required={false}
+                        />
+                    </div>
+                    <div class="flex flex-row gap-1">
+                        <button type="submit"
+                                class="bg-light-grey uppercase font-thin p-1 rounded-md transition-all">
+                            {"Login"}
+                        </button>
+                        <Link<Route> to={Route::Registration} classes="bg-yellow font-thin p-1 rounded-md uppercase text-black transition-all">
+                            { "Join" }
+                        </Link<Route>>
+                    </div>
                 </form>
 
             </>

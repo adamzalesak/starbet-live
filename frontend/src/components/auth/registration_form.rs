@@ -73,152 +73,136 @@ impl Component for RegistrationForm {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <>
-                <div class="w-full h-full lg:w-8/12 py-3 px-5 sm:w-10/12 mx-auto overflow-auto bg-light-grey transition-all ">
-                    <div class="text-center font-bold">
-                        {"Enter your contact information"}
+            <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) } >
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <TextInput
+                            field={Field::FirstName}
+                            label="First name"
+                            placeholder="Marc"
+                            // value={self.data.first_name.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            field={Field::LastName}
+                            label="Last name"
+                            placeholder="Barrow"
+                            // value={self.data.last_name.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            field={Field::CivilIdNumber}
+                            label="Civil Id Number"
+                            placeholder="XY837923"
+                            // value={self.data.civil_id_number.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        // date input doesn't have proper validation
+                        <TextInput
+                            input_type={InputType::Date}
+                            field={Field::DateOfBirth}
+                            label="Date Of Birth"
+                            placeholder="hahah"
+                            // value={self.data.date_of_birth.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            input_type={InputType::Email}
+                            field={Field::Email}
+                            label="Email address"
+                            placeholder="marcbarrow@email.com"
+                            // value={self.data.email.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            field={Field::PhoneNumber}
+                            label="Phone number"
+                            placeholder="+420 913 328 857"
+                            // value={self.data.phone_number.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            input_type={InputType::Password}
+                            field={Field::Password}
+                            label="Password"
+                            placeholder="******"
+                            // value={self.data.phone_number.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            input_type={InputType::Password}
+                            field={Field::PasswordConfirmation}
+                            label="Password confirmation"
+                            placeholder="******"
+                            // value={self.data.phone_number.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
                     </div>
-                    <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) } >
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <TextInput
-                                    field={Field::FirstName}
-                                    label="First name"
-                                    placeholder="Marc"
-                                    // value={self.data.first_name.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-
-                                <TextInput
-                                    field={Field::LastName}
-                                    label="Last name"
-                                    placeholder="Barrow"
-                                    // value={self.data.last_name.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-
-                                <TextInput
-                                    field={Field::CivilIdNumber}
-                                    label="Civil Id Number"
-                                    placeholder="XY837923"
-                                    // value={self.data.civil_id_number.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-
-                                // date input doesn't have proper validation
-                                <TextInput
-                                    input_type={InputType::Date}
-                                    field={Field::DateOfBirth}
-                                    label="Date Of Birth"
-                                    placeholder="hahah"
-                                    // value={self.data.date_of_birth.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-
-                                <TextInput
-                                    input_type={InputType::Email}
-                                    field={Field::Email}
-                                    label="Email"
-                                    placeholder="marcbarrow@email.com"
-                                    // value={self.data.email.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-                                <TextInput
-                                    field={Field::PhoneNumber}
-                                    label="Phone number"
-                                    placeholder="+420 913 328 857"
-                                    // value={self.data.phone_number.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-                                <TextInput
-                                    input_type={InputType::Password}
-                                    field={Field::Password}
-                                    label="Password"
-                                    placeholder="******"
-                                    // value={self.data.phone_number.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-                                <TextInput
-                                    input_type={InputType::Password}
-                                    field={Field::PasswordConfirmation}
-                                    label="Password confirmation"
-                                    placeholder="******"
-                                    // value={self.data.phone_number.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-                            </div>
-                            <div>
-                                <TextInput
-                                    field={Field::StreetName}
-                                    label="Street name"
-                                    placeholder="Eagle Drive"
-                                    // value={self.data.street_name.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-
-                                <TextInput
-                                    field={Field::StreetNumber}
-                                    label="Street number"
-                                    placeholder="1218"
-                                    // value={self.data.street_number.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-
-                                <TextInput
-                                    field={Field::City}
-                                    label="City"
-                                    placeholder="Southfield"
-                                    // value={self.data.city.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-
-                                <TextInput
-                                    field={Field::Area}
-                                    label="Area"
-                                    placeholder=""
-                                    // value={self.data.area.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                    required={false}
-                                />
-
-                                <TextInput
-                                    field={Field::PostalCode}
-                                    label="Postal code"
-                                    placeholder="48034"
-                                    // value={self.data.postal_code.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-                                <TextInput
-                                    field={Field::Country}
-                                    label="Country"
-                                    placeholder="United States"
-                                    // value={self.data.country.clone()}
-                                    on_change={ctx.link().callback(Msg::SetData)}
-                                />
-                                <div class="">
-                                    <input type="checkbox" id="conditions" name="conditions" value="conditions" required={true} />
-                                    <label for="conditions">{" Accept conditions"}</label>
-                                </div>
-                            </div>
+                    <div>
+                        <TextInput
+                            field={Field::StreetName}
+                            label="Street name"
+                            placeholder="Eagle Drive"
+                            // value={self.data.street_name.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            field={Field::StreetNumber}
+                            label="Street number"
+                            placeholder="1218"
+                            // value={self.data.street_number.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            field={Field::City}
+                            label="City"
+                            placeholder="Southfield"
+                            // value={self.data.city.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            field={Field::Area}
+                            label="Area"
+                            placeholder=""
+                            // value={self.data.area.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                            required={false}
+                        />
+                        <TextInput
+                            field={Field::PostalCode}
+                            label="Postal code"
+                            placeholder="48034"
+                            // value={self.data.postal_code.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <TextInput
+                            field={Field::Country}
+                            label="Country"
+                            placeholder="United States"
+                            // value={self.data.country.clone()}
+                            on_change={ctx.link().callback(Msg::SetData)}
+                        />
+                        <div class="">
+                            <input type="checkbox" id="conditions" name="conditions" value="conditions" required={true} />
+                            <label for="conditions">{" Accept conditions"}</label>
                         </div>
-                        {
-                            if !self.error.is_empty() {
-                                html! {
-                                    <div class="text-danger text-center mx-auto my-1">
-                                        <div class="inline-block bg-danger-light py-2 px-3 rounded-md">{self.error.clone()}</div>
-                                    </div>
-                                }
-                            } else {
-                                html! {}
-                            }
-                        }
-                        <button type="submit" class="block mx-auto my-1 w-6/12 lg:w-4/12 py-2 px-3 bg-yellow font-bold rounded-md transition-all">
-                            {"Register"}
-                        </button>
-                    </form>
-
+                    </div>
                 </div>
-            </>
+                {
+                    if !self.error.is_empty() {
+                        html! {
+                            <div class="text-danger text-center mx-auto my-1">
+                                <div class="inline-block bg-danger-light py-2 px-3 rounded-md">{self.error.clone()}</div>
+                            </div>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+                <button type="submit" class="block mx-auto my-1 w-6/12 lg:w-4/12 py-2 px-3 bg-yellow font-bold rounded-md transition-all">
+                    {"Register"}
+                </button>
+            </form>
         }
     }
 }

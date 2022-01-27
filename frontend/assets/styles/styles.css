@@ -103,6 +103,33 @@ body {
 }
 
 .required_input:after {
-  content:" *";
+  content: ' *';
   color: var(--danger);
+}
+
+.login div:first-child div {
+  margin: 0;
+  width: 9rem;
+}
+
+.login label {
+  display: none;
+}
+
+.login input {
+  border-color: var(--white);
+}
+
+.login button:hover,
+.login a:hover {
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.header-logo {
+  min-width: 12rem;
+}
+
+.footer-link:hover {
+  color: var(--yellow);
 }

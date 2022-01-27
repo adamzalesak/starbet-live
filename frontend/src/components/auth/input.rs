@@ -64,6 +64,7 @@ pub fn text_input(props: &Props) -> Html {
         required,
     } = props.clone();
 
+    let field_copy = field.clone();
     let label_copy = label.clone();
     let label_copy2 = label.clone();
     let input_type_copy = input_type.clone();
@@ -111,8 +112,13 @@ pub fn text_input(props: &Props) -> Html {
 
     html! {
         <div class="flex flex-col mt-2 mb-1">
-            <label class={format!("font-medium mb-1 {}", if required {"required_input"} else {""})}>{label}{":"}</label>
+        
+            <label for={format!("{:?}", field_copy)} class={format!("font-medium mb-1 {}", if required {"required_input"} else {""})}>
+                {label}{":"}
+            </label>     
+
             <input
+                id={format!("{:?}", field_copy)}
                 type={input_type.to_string()}
                 // {value}
                 {oninput}

@@ -38,13 +38,13 @@ impl Component for Footer {
                     <div class={format!("font-medium {}", if *squared_design {"m-2"} else {"m-1"})}>
                         {"© Starbet Live 2022"}
                     </div>
-                    <Link<Route> to={Route::About} classes={"underline m-1"}>
+                    <Link<Route> to={Route::About} classes={"underline m-1 transition-all footer-link"}>
                         {"About"}
                     </Link<Route>>
-                    <Link<Route> to={Route::PrivacyPolicy} classes={"underline m-1"}>
+                    <Link<Route> to={Route::PrivacyPolicy} classes={"underline m-1 transition-all footer-link"}>
                         {"Privacy Policy"}
                     </Link<Route>>
-                    <Link<Route> to={Route::Contact} classes={"underline m-1"}>
+                    <Link<Route> to={Route::Contact} classes={"underline m-1 transition-all footer-link"}>
                         {"Contact"}
                     </Link<Route>>
                 </div>

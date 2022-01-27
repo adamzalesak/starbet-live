@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-// structs for collecting data from the registration form and its correctness
+// structs for collecting data from the registration or login form and its correctness
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -27,6 +27,14 @@ pub struct UserAddressRegistrationFormData {
     pub country: (String, bool),
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct UserLoginFormData {
+    pub email: String,
+    pub password: String,
+}
+
+// Enum represents individual fields in user's forms
 #[derive(Debug, Clone, PartialEq)]
 pub enum Field {
     FirstName,
@@ -91,5 +99,14 @@ impl UserAddressRegistrationFormData {
             && self.city.1
             && self.postal_code.1
             && self.country.1
+    }
+}
+
+impl UserLoginFormData {
+    pub fn new() -> Self {
+        Self {
+            email: String::new(),
+            password: String::new(),
+        }
     }
 }
