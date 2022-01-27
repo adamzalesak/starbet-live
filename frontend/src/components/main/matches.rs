@@ -3,14 +3,14 @@ use yew::prelude::*;
 use super::matches_game::MatchesGame;
 
 pub enum Msg {}
-pub struct Matches { }
+pub struct Matches {}
 
 impl Component for Matches {
     type Message = Msg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self { }
+        Self {}
     }
 
     fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {

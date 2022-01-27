@@ -11,7 +11,6 @@ pub struct BetInfo {
     pub bet_team: String,
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct BetInfoWrapper {
@@ -27,7 +26,6 @@ pub struct TicketInfo {
     pub bets: Vec<BetInfo>,
     // pub created_at: DateTime<Utc>,
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]

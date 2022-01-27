@@ -44,8 +44,6 @@ impl Component for TicketItem {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        
-
         html! {
             <li class="rounded-md border border-dark-blue p-1 mb-1">
                 <div class="font-bold flex flex-row justify-between">

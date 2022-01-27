@@ -49,6 +49,10 @@ body {
   background-color: var(--yellow);
 }
 
+.bg-yellow:hover {
+  background-color: var(--dark-yellow);
+}
+
 .bg-dark-yellow {
   background-color: var(--dark-yellow);
 }
@@ -96,4 +100,9 @@ body {
 
 .border-danger {
   border-color: var(--danger);
+}
+
+.required_input:after {
+  content:" *";
+  color: var(--danger);
 }

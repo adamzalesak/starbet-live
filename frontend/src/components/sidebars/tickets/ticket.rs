@@ -49,18 +49,17 @@ impl Component for Ticket {
         match msg {
             // check if value is type of f32, otherwise wet bet_value to 1.0
             Msg::ChangeValue(data) => {
-                let value = match get_value_from_event(data) {
-                    val => match val.parse::<f32>() {
-                        Ok(value) => value,
-                        _ => 1.0,
-                    },
+                let val = get_value_from_event(data);
+                let value = match val.parse::<f32>() {
+                    Ok(value) => value,
+                    _ => 1.0,
                 };
                 self.ticket_store
                     .send(TicketRequest::ChangeTicketValue(value))
             }
             Msg::Submit => {
                 self.ticket_store.send(TicketRequest::SubmitTicket);
-            },
+            }
             Msg::TicketStore(state) => {
                 info!("Received update");
 
@@ -83,7 +82,7 @@ impl Component for Ticket {
                 <div class="font-bold text-center pt-1 pb-3 bg-dark-blue text-white">{"Current ticket"}</div>
                 <ul class="overflow-auto m-1 mb-auto bg-light-grey">
                     {
-                        if self.bets.len() == 0 {
+                        if self.bets.is_empty() {
                             html!{ <div>{"Your current ticket is empty!"}</div>}
                         } else {
                             html! {}
@@ -102,7 +101,7 @@ impl Component for Ticket {
                         id="amount"
                         placeholder="1.0"
                         class="block w-6/12 rounded-md p-1"
-                        onchange={ctx.link().callback(|data: Event| Msg::ChangeValue(data))}
+                        onchange={ctx.link().callback(Msg::ChangeValue)}
                         />
                     <button type="submit" class="bg-yellow w-full rounded-t-md p-1 font-bold mt-1">{self.ticket_value}{" €"}</button>
                     <div class="flex flex-row justify-between text-sm bg-dark-yellow rounded-b-md p-1">

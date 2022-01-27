@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use log::info;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::UnwrapThrowExt;
 use web_sys::Event;
@@ -32,16 +31,19 @@ impl Display for InputType {
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
-    pub field: Field,
+    pub field: Field, // form's field eg email, password....
     #[prop_or(InputType::Text)]
     pub input_type: InputType,
     pub label: String,
     #[prop_or_default]
     pub placeholder: String,
-    pub value: String,
-    pub on_change: Callback<(String, Field)>,
+    // pub value: String,
+    pub on_change: Callback<(String, Field, bool)>,
+    #[prop_or(true)]
+    pub required: bool,
 }
 
+// parsing function
 fn get_value_from_input_event(e: InputEvent) -> String {
     let event: Event = e.dyn_into().unwrap_throw();
     let event_target = event.target().unwrap_throw();
@@ -57,8 +59,9 @@ pub fn text_input(props: &Props) -> Html {
         input_type,
         label,
         placeholder,
-        value,
+        // value,
         on_change,
+        required,
     } = props.clone();
 
     let label_copy = label.clone();
@@ -77,32 +80,29 @@ pub fn text_input(props: &Props) -> Html {
 
     let oninput = Callback::from(move |input_event: InputEvent| {
         let temp_value = get_value_from_input_event(input_event);
-        let flag: bool;
-        match input_type_copy {
-            InputType::Email => {
-                flag = temp_value.contains("@") && temp_value.contains(".");
-            }
-            InputType::Password => {
-                flag = temp_value.trim().len() >= 6;
-            }
-            InputType::Text => {
-                flag = temp_value.trim().len() > 2 && temp_value.trim().len() <= 32;
-            }
-            InputType::Date => flag = true,
-        }
+        let flag = match required {
+            false => true,
+            _ => match input_type_copy {
+                InputType::Email => temp_value.contains('@') && temp_value.contains('.'),
+                InputType::Password => temp_value.trim().len() >= 6,
+                InputType::Text => temp_value.trim().len() > 2 && temp_value.trim().len() <= 32,
+                InputType::Date => !temp_value.trim().is_empty(),
+            },
+        };
 
-        if flag || (!flag && !(*was_touched_copy)) {
+        if flag || !(*was_touched_copy) {
             error_msg.set(String::new());
         } else {
             error_msg.set("Enter a valid ".to_owned() + &label_copy.to_lowercase());
         }
+
         is_valid.set(flag);
-        on_change.emit((temp_value.clone(), field.clone()));
+        on_change.emit((temp_value, field.clone(), flag));
     });
 
     let onblur = Callback::from(move |_| {
         was_touched.set(true);
-        if !(*is_valid_copy) {
+        if !(*is_valid_copy) && required {
             error_msg_copy.set("Enter a valid ".to_owned() + &label_copy2.to_lowercase());
         } else {
             error_msg_copy.set(String::new());
@@ -111,10 +111,10 @@ pub fn text_input(props: &Props) -> Html {
 
     html! {
         <div class="flex flex-col mt-2 mb-1">
-            <label class="font-bold mb-1">{label}{":"}</label>
+            <label class={"font-medium mb-1".to_owned() + if required {" required_input"} else {" "}}>{label}{":"}</label>
             <input
                 type={input_type.to_string()}
-                {value}
+                // {value}
                 {oninput}
                 {onblur}
                 {placeholder}
@@ -123,7 +123,7 @@ pub fn text_input(props: &Props) -> Html {
             />
             {
                 if !(*error_msg_copy2).is_empty() {
-                    html! {<p class="text-sm text-danger">{error_msg_copy2.to_string()}</p>}
+                    html! { <div class="text-sm text-danger">{ error_msg_copy2.to_string() }</div> }
                 } else {
                     html! {}
                 }

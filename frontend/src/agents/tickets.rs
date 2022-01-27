@@ -51,14 +51,13 @@ impl Store for TicketStore {
             TicketRequest::DeleteBet(id) => {
                 link.send_message(Action::RemoveBet(id));
             }
-            TicketRequest::SubmitTicket => {
-            }
+            TicketRequest::SubmitTicket => {}
             TicketRequest::ChangeTicketValue(value) => {
                 link.send_message(Action::SetTicketValue(value));
             }
         }
     }
-    
+
     // store's operations
     fn reduce(&mut self, msg: Self::Action) {
         match msg {
@@ -74,4 +73,3 @@ impl Store for TicketStore {
         }
     }
 }
-

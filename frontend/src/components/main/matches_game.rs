@@ -2,16 +2,16 @@ use yew::prelude::*;
 
 use super::match_item::MatchItem;
 
-pub enum Msg { }
+pub enum Msg {}
 
-pub struct MatchesGame { }
+pub struct MatchesGame {}
 
 impl Component for MatchesGame {
     type Message = Msg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self { }
+        Self {}
     }
 
     fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
