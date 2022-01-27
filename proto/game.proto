@@ -1,19 +1,18 @@
 syntax = "proto3";
 package game;
 
-import "google/protobuf/empty.proto";
-
-
 service GameService {
-    rpc ListGames (google.protobuf.Empty) returns (ListGamesReply);
+    rpc ListGames (ListGamesRequest) returns (ListGamesReply);
     rpc CreateGame (CreateGameRequest) returns (CreateGameReply);
-    rpc DeleteGame (DeleteGameRequest) returns (google.protobuf.Empty);
+    rpc DeleteGame (DeleteGameRequest) returns (DeleteGameReply);
 }
 
 message Game {
     int32 id = 1;
     string name = 2;
 }
+
+message ListGamesRequest {}
 
 message ListGamesReply {
     repeated Game games = 1;
@@ -30,6 +29,8 @@ message CreateGameReply {
 message DeleteGameRequest {
     int32 id = 1;
 }
+
+message DeleteGameReply {}
 
 
 

@@ -4,48 +4,50 @@ package game_match;
 import "google/protobuf/empty.proto";
 
 
-service GameMatchService {
-    rpc ListGameMatches (google.protobuf.Empty) returns (ListGameMatchesReply);
-    rpc CreateGameMatch (CreateGameMatchRequest) returns (CreateGameMatchReply);
-    rpc DeleteGameMatch (DeleteGameMatchRequest) returns (google.protobuf.Empty);
+service MatchService {
+    rpc ListMatches (ListMatchesRequest) returns (ListMatchesReply);
+    rpc CreateMatch (CreateMatchRequest) returns (CreateMatchReply);
+    rpc DeleteMatch (DeleteMatchRequest) returns (DeleteMatchReply);
 
-    rpc ListGameMatches (ListGameMatchesRequest) returns (ListGameMatchesReply);
+    rpc ListGamesMatches (ListGamesMatchesRequest) returns (ListMatchesReply);
 }
 
-message GameMatch {
+message Match {
     int32 id = 1;
     int32 game_id = 2;
     int32 team_one_id = 3;
     int32 team_two_id = 4;
-    float team_one_rate = 5;
-    float team_two_rate = 6;
+    float team_one_ratio = 5;
+    float team_two_ratio = 6;
     int32 start_ts = 7;
 }
 
-message ListGameMatchesReply {
-    repeated GameMatch game_matches = 1;
+message ListMatchesRequest {}
+
+message ListMatchesReply {
+    repeated Match game_matches = 1;
 }
 
-message CreateGameMatchRequest {
+message CreateMatchRequest {
     int32 game_id = 1;
     int32 team_one_id = 2;
     int32 team_two_id = 3;
-    float team_one_rate = 4;
-    float team_two_rate = 5;
+    float team_one_ratio = 4;
+    float team_two_ratio = 5;
     int32 start_ts = 6;
 }
 
-message CreateGameMatchReply {
+message CreateMatchReply {
     int32 id = 1;
 }
 
-message DeleteGameMatchRequest {
+message DeleteMatchRequest {
     int32 id = 1;
 }
 
-message ListGameMatchesRequest {
+message DeleteMatchReply {}
+
+message ListGamesMatchesRequest {
     int32 game_id = 1;
 }
-
-
 

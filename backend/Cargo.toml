@@ -5,12 +5,6 @@ edition = "2018"
 
 [dependencies]
 anyhow = "*"
-
-tonic = "0.6"
-tonic-web = "0.2"
-prost = "0.9"
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "time"] }
-tokio-stream = "0.1"
-
-[build-dependencies]
-tonic-build = "0.6"
+dotenv = "0.15.0"
+grpc_layer = { path = "grpc_layer" }
+tokio = { version = "1.15.0", features = [ "full" ] }
