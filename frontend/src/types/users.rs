@@ -24,6 +24,23 @@ pub struct UserAddressRegistrationFormData {
     pub country: String,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Field {
+    FirstName,
+    LastName,
+    Password,
+    CivilIdNumber,
+    DateOfBirth,
+    Email,
+    PhoneNumber,
+    StreetName,
+    StreetNumber,
+    City,
+    Area,
+    PostalCode,
+    Country,
+}
+
 impl UserRegistrationFormData {
     pub fn new() -> Self {
         Self {

@@ -1,3 +1,6 @@
+use std::fmt::Display;
+
+use log::info;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::UnwrapThrowExt;
 use web_sys::Event;
@@ -5,22 +8,44 @@ use web_sys::HtmlInputElement;
 use web_sys::InputEvent;
 use yew::prelude::*;
 
+use crate::types::users::Field;
+
+#[derive(Clone, PartialEq)]
+pub enum InputType {
+    Text,
+    Email,
+    Date,
+    Password,
+}
+
+impl Display for InputType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let result = match self {
+            InputType::Text => "text",
+            InputType::Email => "email",
+            InputType::Password => "password",
+            InputType::Date => "date",
+        };
+        write!(f, "{}", result)
+    }
+}
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
-    #[prop_or("text".to_string())]
-    pub input_type: String,
+    pub field: Field,
+    #[prop_or(InputType::Text)]
+    pub input_type: InputType,
     pub label: String,
     #[prop_or_default]
     pub placeholder: String,
     pub value: String,
-    pub on_change: Callback<String>,
+    pub on_change: Callback<(String, Field)>,
 }
 
 fn get_value_from_input_event(e: InputEvent) -> String {
     let event: Event = e.dyn_into().unwrap_throw();
     let event_target = event.target().unwrap_throw();
     let target: HtmlInputElement = event_target.dyn_into().unwrap_throw();
-    web_sys::console::log_1(&target.value().into());
     target.value()
 }
 
@@ -28,6 +53,7 @@ fn get_value_from_input_event(e: InputEvent) -> String {
 #[function_component(TextInput)]
 pub fn text_input(props: &Props) -> Html {
     let Props {
+        field,
         input_type,
         label,
         placeholder,
@@ -35,14 +61,73 @@ pub fn text_input(props: &Props) -> Html {
         on_change,
     } = props.clone();
 
+    let label_copy = label.clone();
+    let label_copy2 = label.clone();
+    let input_type_copy = input_type.clone();
+
+    let error_msg = use_state(|| String::new());
+    let error_msg_copy = error_msg.clone();
+    let error_msg_copy2 = (*error_msg).to_string();
+
+    let was_touched = use_state(|| false);
+    let was_touched_copy = was_touched.clone();
+
+    let is_valid = use_state(|| false);
+    let is_valid_copy = is_valid.clone();
+
     let oninput = Callback::from(move |input_event: InputEvent| {
-        on_change.emit(get_value_from_input_event(input_event));
+        let temp_value = get_value_from_input_event(input_event);
+        let flag: bool;
+        match input_type_copy {
+            InputType::Email => {
+                flag = temp_value.contains("@") && temp_value.contains(".");
+            }
+            InputType::Password => {
+                flag = temp_value.trim().len() >= 6;
+            }
+            InputType::Text => {
+                flag = temp_value.trim().len() > 2 && temp_value.trim().len() <= 32;
+            }
+            InputType::Date => flag = true,
+        }
+
+        if flag || (!flag && !(*was_touched_copy)) {
+            error_msg.set(String::new());
+        } else {
+            error_msg.set("Enter a valid ".to_owned() + &label_copy.to_lowercase());
+        }
+        is_valid.set(flag);
+        on_change.emit((temp_value.clone(), field.clone()));
+    });
+
+    let onblur = Callback::from(move |_| {
+        was_touched.set(true);
+        if !(*is_valid_copy) {
+            error_msg_copy.set("Enter a valid ".to_owned() + &label_copy2.to_lowercase());
+        } else {
+            error_msg_copy.set(String::new());
+        }
     });
 
     html! {
-        <>
-            <label>{label}</label>
-            <input type={input_type} {value} {oninput} {placeholder} />
-        </>
+        <div class="flex flex-col mt-2 mb-1">
+            <label class="font-bold mb-1">{label}{":"}</label>
+            <input
+                type={input_type.to_string()}
+                {value}
+                {oninput}
+                {onblur}
+                {placeholder}
+                class={"border border-dark-blue focus:outline-none p-1 rounded-md".to_owned()
+                            + if !error_msg_copy2.is_empty() {" bg-danger-light border-danger"} else {""}}
+            />
+            {
+                if !(*error_msg_copy2).is_empty() {
+                    html! {<p class="text-sm text-danger">{error_msg_copy2.to_string()}</p>}
+                } else {
+                    html! {}
+                }
+            }
+        </div>
     }
 }
