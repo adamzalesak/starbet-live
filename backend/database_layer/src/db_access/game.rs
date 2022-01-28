@@ -1,15 +1,8 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use crate::diesel::prelude::*;
-use crate::diesel::QueryDsl;
-use crate::diesel::RunQueryDsl;
-use crate::diesel::{insert_into, update};
-
-use crate::connection::PgPool;
-use crate::connection::PgPooledConnection;
-use crate::result_types::GameInfoRetrieve;
-use crate::result_types::TeamInfoRetrieve;
+use crate::connection::{PgPool, PgPooledConnection};
+use crate::diesel::{insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
 
 // type and structure imports
 use super::repo::Repo;
@@ -77,11 +70,7 @@ pub trait GameRepo {
     /// ---
     /// - Ok(()) if the update was successful
     /// - Err(_) if an error occurred
-    async fn edit<'a>(
-        &self,
-        desired_game_id: i32,
-        edited_game: CreateGame<'a>,
-    ) -> anyhow::Result<()>;
+    async fn edit(&self, desired_game_id: i32, edited_game: CreateGame) -> anyhow::Result<()>;
 
     /// Get all game names, id's and image urls
     ///
@@ -113,11 +102,30 @@ pub trait GameRepo {
     /// ---
     /// - Ok(id) with game id after successful creation
     /// - Err(_) if an error occurrs
-    async fn create<'a>(&self, new_game: CreateGame<'a>) -> anyhow::Result<i32>;
+    async fn create(&self, new_game: CreateGame) -> anyhow::Result<i32>;
 }
 
 #[async_trait]
 impl GameRepo for PgGameRepo {
+    /// Create a new Game record in the database
+    async fn create(&self, new_game: CreateGame) -> anyhow::Result<i32> {
+        let id: i32 = insert_into(game::table)
+            .values(new_game)
+            .returning(game::id)
+            .get_result(&self.get_connection().await?)?;
+
+        Ok(id)
+    }
+
+    /// Edit a certain game specified by id
+    async fn edit(&self, desired_game_id: i32, edited_game: CreateGame) -> anyhow::Result<()> {
+        let _ = update(game::table.find(desired_game_id))
+            .set(edited_game)
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
+    }
+
     /// Get details about one specific game
     async fn get(&self, desired_game_id: i32) -> anyhow::Result<Game> {
         let query_result: Game = game::table
@@ -127,48 +135,25 @@ impl GameRepo for PgGameRepo {
         Ok(query_result)
     }
 
-    /// Edit a certain game specified by id
-    async fn edit<'a>(
-        &self,
-        desired_game_id: i32,
-        edited_game: CreateGame<'a>,
-    ) -> anyhow::Result<()> {
-        let _ = update(game::table.find(desired_game_id))
-            .set(edited_game)
-            .execute(&self.get_connection().await?)?;
-
-        Ok(())
-    }
-
     /// Get all game names and image urls
     async fn get_all(&self) -> anyhow::Result<Vec<GameInfo>> {
-        let query_result: Vec<GameInfoRetrieve> = game::table
+        let query_result: Vec<GameInfo> = game::table
             .order(game::name.asc())
             .select((game::id, game::name, game::logo))
             .get_results(&self.get_connection().await?)?;
 
-        Ok(GameInfo::from_vector(&query_result))
+        Ok(query_result)
     }
 
     /// Get all teams that are playing a specific game
     async fn get_teams_playing(&self, desired_game_id: i32) -> anyhow::Result<Vec<TeamInfo>> {
-        let query_result: Vec<TeamInfoRetrieve> = game::table
+        let query_result: Vec<TeamInfo> = game::table
             .find(desired_game_id)
             .inner_join(team_plays_game::table.inner_join(team::table))
             .distinct_on(team::id)
             .select((team::id, team::name, team::logo))
             .get_results(&self.get_connection().await?)?;
 
-        Ok(TeamInfo::from_vector(&query_result))
-    }
-
-    /// Create a new Game record in the database
-    async fn create<'a>(&self, new_game: CreateGame<'a>) -> anyhow::Result<i32> {
-        let id: i32 = insert_into(game::table)
-            .values(new_game)
-            .returning(game::id)
-            .get_result(&self.get_connection().await?)?;
-
-        Ok(id)
+        Ok(query_result)
     }
 }

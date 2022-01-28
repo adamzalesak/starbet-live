@@ -65,7 +65,7 @@ CREATE TABLE "game_match_event" (
     game_match_id INTEGER REFERENCES "game_match" NOT NULL,
     event_type TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    overtime_until TEXT
+    until TEXT
 );
 
 -- Ticket containing multiple bets
@@ -73,6 +73,7 @@ CREATE TABLE "ticket" (
     id SERIAL PRIMARY KEY,
     "user_id" INTEGER REFERENCES "user" NOT NULL,
     created_at TEXT NOT NULL,
+    price TEXT NOT NULL,
     paid_at TEXT
 );
 
@@ -83,6 +84,6 @@ CREATE TABLE "bet" (
     ticket_id INTEGER REFERENCES "ticket" NOT NULL,
     team_id INTEGER REFERENCES "team" NOT NULL,
     bet_ratio TEXT NOT NULL,
-    bet_price TEXT NOT NULL,
+    bet_state TEXT NOT NULL,
     created_at TEXT NOT NULL
 );

@@ -2,11 +2,11 @@ use std::fmt::Display;
 
 use crate::db_models::game_match::GameMatch;
 use crate::schema::game_match_event;
-use crate::type_storing::time_handling::CurrentTime;
+use crate::type_storing::time_handling::TimeHandling;
 use chrono::{DateTime, Utc};
 
 /// Read structure, used for data mapping of
-/// GameMatchEvent record from the database
+/// `game_match_event` record from the database
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
 #[belongs_to(GameMatch)]
 #[table_name = "game_match_event"]
@@ -15,37 +15,36 @@ pub struct GameMatchEvent {
     pub game_match_id: i32,
     pub event_type: String,
     pub created_at: String,
-    pub overtime_until: Option<String>,
+    pub until: Option<String>,
 }
 
 /// Write structure, used for inserting
-/// GameMatchEvent records into the database
+/// `game_match_event` records into the database
 #[derive(Insertable)]
 #[table_name = "game_match_event"]
 pub struct CreateGameMatchEvent {
     pub game_match_id: i32,
     pub event_type: String,
     pub created_at: String,
-    pub overtime_until: Option<String>,
+    pub until: Option<String>,
 }
 
-/// Structure capturing possible GameMatch event types
+/// Structure capturing possible `game_match_event` types
 #[derive(PartialEq)]
 pub enum GameMatchEventType {
     Upcoming,
-    Live,
+    Live(DateTime<Utc>),
     Cancelled,
     Overtime(DateTime<Utc>),
     Ended,
 }
 
 impl Display for GameMatchEventType {
-    /// Write a text representation of own type into whatever buffer it needs to
-    ///
+    /// Implement the display trait for converting the enum and writing the result to the database
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let self_string = match self {
             GameMatchEventType::Upcoming => "Upcoming",
-            GameMatchEventType::Live => "Live",
+            GameMatchEventType::Live(_) => "Live",
             GameMatchEventType::Cancelled => "Cancelled",
             GameMatchEventType::Overtime(_) => "Overtime",
             GameMatchEventType::Ended => "Ended",
@@ -55,26 +54,27 @@ impl Display for GameMatchEventType {
     }
 }
 
-impl GameMatchEventType {
-    /// Returns a GameMatchEventType if the record in the database
-    /// has been correctly stored
-    ///
-    /// Params
-    /// ---
-    /// - input: a game match event record, loaded from the database
+impl GameMatchEvent {
+    /// Convert the string representation of the `game_match_event` state into the enum
     ///
     /// Returns
     /// ---
-    /// - Ok(type) - GameMatchEventType if the type has been stored successfully
-    /// - Err(_) - if an error occurrs while parsing the structure from the database
-    pub fn from_record(input: GameMatchEvent) -> anyhow::Result<GameMatchEventType> {
-        match input.event_type.as_ref() {
+    /// - Ok(state) - `GameMatchEventType` if the state has been stored and retrieved successfully
+    /// - Err(_) - otherwise
+    pub fn extract_event(&self) -> anyhow::Result<GameMatchEventType> {
+        match self.event_type.as_ref() {
             "Upcoming" => Ok(GameMatchEventType::Upcoming),
-            "Live" => Ok(GameMatchEventType::Live),
+            "Live" => Ok(GameMatchEventType::Overtime(TimeHandling::load_timestamp(
+                &self
+                    .until
+                    .clone()
+                    .unwrap_or_else(|| String::from("Will not convert")),
+            )?)),
             "Cancelled" => Ok(GameMatchEventType::Cancelled),
-            "Overtime" => Ok(GameMatchEventType::Overtime(CurrentTime::load_timestamp(
-                &input
-                    .overtime_until
+            "Overtime" => Ok(GameMatchEventType::Overtime(TimeHandling::load_timestamp(
+                &self
+                    .until
+                    .clone()
                     .unwrap_or_else(|| String::from("Will not convert")),
             )?)),
             "Ended" => Ok(GameMatchEventType::Ended),
@@ -86,7 +86,7 @@ impl GameMatchEventType {
 }
 
 impl CreateGameMatchEvent {
-    /// Create a new insert structure for game event in the database
+    /// Create a new `game_match_event` insert structure
     ///
     /// Params
     /// ---
@@ -95,18 +95,18 @@ impl CreateGameMatchEvent {
     ///
     /// Returns
     /// ---
-    /// - new insert structure for creating the
+    /// - new `game_match_event` insert structure
     pub fn new(game_match_id: i32, event_type: GameMatchEventType) -> Self {
-        let overtime_until = match event_type {
-            GameMatchEventType::Overtime(until) => Some(until.to_string()),
-            _ => None,
-        };
-
         CreateGameMatchEvent {
             game_match_id,
             event_type: event_type.to_string(),
-            created_at: CurrentTime::store(),
-            overtime_until,
+            created_at: TimeHandling::store(),
+            until: match event_type {
+                GameMatchEventType::Live(until) | GameMatchEventType::Overtime(until) => {
+                    Some(until.to_string())
+                }
+                _ => None,
+            },
         }
     }
 }

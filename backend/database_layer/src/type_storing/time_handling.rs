@@ -1,9 +1,9 @@
 use chrono::{DateTime, Utc};
 
 /// empty struct for importing all time handling methods
-pub struct CurrentTime {}
+pub struct TimeHandling {}
 
-impl CurrentTime {
+impl TimeHandling {
     /// Create and encode a current timestamp into text format
     /// used for storing in the database
     ///

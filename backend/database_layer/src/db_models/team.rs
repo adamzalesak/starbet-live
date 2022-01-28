@@ -1,5 +1,7 @@
 use crate::schema::team;
 
+/// Read structure, used for data mapping of
+/// `team` record from the database
 #[derive(Queryable)]
 pub struct Team {
     pub id: i32,
@@ -8,20 +10,33 @@ pub struct Team {
     pub logo: String,
 }
 
+/// Write structure, used for inserting
+/// `team` records into the database
 #[derive(Insertable, AsChangeset)]
 #[table_name = "team"]
-pub struct CreateTeam<'a> {
-    pub name: &'a str,
-    pub description: &'a str,
-    pub logo: &'a str,
+pub struct CreateTeam {
+    pub name: String,
+    pub description: String,
+    pub logo: String,
 }
 
-impl<'a> CreateTeam<'a> {
-    pub fn new(name: &'a str, description: &'a str, logo: &'a str) -> Self {
+impl CreateTeam {
+    /// Create a new `team` insert structure
+    ///
+    /// Params
+    /// ---
+    /// - name: name of the team we wish to create
+    /// - description: team description
+    /// - logo: path to the team's logo
+    ///
+    /// Returns
+    /// ---
+    /// - new `team` insert structure
+    pub fn new(name: &str, description: &str, logo: &str) -> Self {
         Self {
-            name,
-            description,
-            logo,
+            name: String::from(name),
+            description: String::from(description),
+            logo: String::from(logo),
         }
     }
 }

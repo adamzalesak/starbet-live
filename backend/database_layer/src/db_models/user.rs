@@ -1,9 +1,9 @@
 use crate::schema::user;
-use crate::type_storing::time_handling::CurrentTime;
+use crate::type_storing::time_handling::TimeHandling;
 use chrono::{DateTime, Utc};
 
 /// Read structure, used for data mapping of
-/// User record from the database
+/// `user` record from the database
 #[derive(Queryable)]
 pub struct User {
     pub id: i32,
@@ -18,7 +18,7 @@ pub struct User {
 }
 
 /// Write structure, used for inserting
-/// User records into the database
+/// `user` records into the database
 #[derive(Insertable, AsChangeset)]
 #[table_name = "user"]
 pub struct CreateUser {
@@ -33,7 +33,7 @@ pub struct CreateUser {
 }
 
 impl User {
-    /// Create a new edit record where each parameter of the user structure apart from the `id`
+    /// Create a new `user` update record where each parameter of the user structure apart from the `id`
     /// and `created_at` can be modified
     ///
     /// Params
@@ -51,7 +51,7 @@ impl User {
     ///
     /// Returns
     /// ---
-    /// - new edited user structure
+    /// - new `user` update structure
     #[allow(clippy::too_many_arguments)]
     pub fn edit_user(
         &self,
@@ -63,32 +63,30 @@ impl User {
         change_phone_number: Option<&str>,
         change_photo: Option<Option<&str>>,
     ) -> CreateUser {
-        let store_photo = match change_photo {
-            Some(new_value) => new_value.map(String::from),
-            None => self.photo.clone(), // original data remains
-        };
-
-        // Create a new edit structure
-        // `store_change` stores any change a user might wanted to apply
-        CreateUser::edit(
-            // User::store_change(&self.first_name, &change_first_name),
-            change_first_name.map_or_else(|| self.first_name.clone(), String::from),
-            change_last_name.map_or_else(|| self.last_name.clone(), String::from),
-            change_civil_id_number.map_or_else(|| self.civil_id_number.clone(), String::from),
-            change_email.map_or_else(|| self.email.clone(), String::from),
-            change_date_of_birth.map_or_else(
+        // Create a new update structure
+        CreateUser {
+            first_name: change_first_name.map_or_else(|| self.first_name.clone(), String::from),
+            last_name: change_last_name.map_or_else(|| self.last_name.clone(), String::from),
+            civil_id_number: change_civil_id_number
+                .map_or_else(|| self.civil_id_number.clone(), String::from),
+            email: change_email.map_or_else(|| self.email.clone(), String::from),
+            date_of_birth: change_date_of_birth.map_or_else(
                 || self.date_of_birth.clone(),
                 |new_date_of_birth| new_date_of_birth.to_string(),
             ),
-            change_phone_number.map_or_else(|| self.phone_number.clone(), String::from),
-            self.created_at.clone(),
-            store_photo,
-        )
+            phone_number: change_phone_number
+                .map_or_else(|| self.phone_number.clone(), String::from),
+            created_at: self.created_at.clone(),
+            photo: match change_photo {
+                Some(new_value) => new_value.map(String::from),
+                None => self.photo.clone(), // original data remains
+            },
+        }
     }
 }
 
 impl CreateUser {
-    /// Creating the write structure for user record
+    /// Create a new `user` insert structure
     ///
     /// Params
     /// ---
@@ -102,7 +100,7 @@ impl CreateUser {
     ///
     /// Returns
     /// ---
-    /// - new CreateUser structure (used for database insertion)
+    /// - new `user` insert structure
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         first_name: &str,
@@ -120,48 +118,8 @@ impl CreateUser {
             email: String::from(email),
             date_of_birth: date_of_birth.to_string(),
             phone_number: String::from(phone_number),
-            created_at: CurrentTime::store(),
+            created_at: TimeHandling::store(),
             photo: photo.map(String::from),
-        }
-    }
-
-    /// Function used when editing a record -> creating a new edit structure to
-    /// edit the database record
-    ///
-    ///
-    /// Params
-    /// ---
-    /// - first_name: first name of the user
-    /// - last_name: last name of the user
-    /// - civil_id_number: user's civil id number
-    /// - email: user's email
-    /// - phone_number: user's phone number
-    /// - created_at: allowing the original creation time to be untouched
-    /// - photo: optional - url to the photo
-    ///
-    /// Returns
-    /// ---
-    /// - new CreateUser structure (used for database UPDATE)
-    #[allow(clippy::too_many_arguments)]
-    fn edit(
-        first_name: String,
-        last_name: String,
-        civil_id_number: String,
-        email: String,
-        date_of_birth: String,
-        phone_number: String,
-        created_at: String,
-        photo: Option<String>,
-    ) -> CreateUser {
-        CreateUser {
-            first_name,
-            last_name,
-            civil_id_number,
-            email,
-            date_of_birth,
-            phone_number,
-            created_at,
-            photo,
         }
     }
 }

@@ -5,7 +5,7 @@ table! {
         ticket_id -> Int4,
         team_id -> Int4,
         bet_ratio -> Text,
-        bet_price -> Text,
+        bet_state -> Text,
         created_at -> Text,
     }
 }
@@ -38,7 +38,7 @@ table! {
         game_match_id -> Int4,
         event_type -> Text,
         created_at -> Text,
-        overtime_until -> Nullable<Text>,
+        until -> Nullable<Text>,
     }
 }
 
@@ -64,6 +64,7 @@ table! {
         id -> Int4,
         user_id -> Int4,
         created_at -> Text,
+        price -> Text,
         paid_at -> Nullable<Text>,
     }
 }

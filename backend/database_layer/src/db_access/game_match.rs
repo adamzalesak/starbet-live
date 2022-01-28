@@ -1,38 +1,32 @@
 use async_trait::async_trait;
-use chrono::format;
-use diesel::sql_query;
 use std::sync::Arc;
 
-use crate::diesel::prelude::*;
-use crate::diesel::QueryDsl;
-use crate::diesel::RunQueryDsl;
-use crate::diesel::{insert_into, update};
-
-use crate::connection::PgPool;
-use crate::connection::PgPooledConnection;
-use crate::schema::game_match_event::event_type;
+use crate::connection::{PgPool, PgPooledConnection};
+use crate::diesel::{delete, insert_into, prelude::*, sql_query, update, QueryDsl, RunQueryDsl};
+use crate::type_storing::time_handling::TimeHandling;
+use chrono::{DateTime, Duration, Utc};
 
 // type and structure imports
 use super::repo::Repo;
 use crate::db_models::{
-    game_match::{CreateGameMatch, GameMatch},
+    game_match::{CreateGameMatch, GameMatch, GameMatchUpdate},
     game_match_event::{CreateGameMatchEvent, GameMatchEvent, GameMatchEventType},
 };
 use crate::result_types::GameMatchShow;
 
 // schema imports
-use crate::schema::{game, game_match, game_match_event, team, team_plays_game};
+use crate::schema::{bet, game_match, game_match_event, team_plays_game};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
-/// to work with Match records
+/// to work with GameMatch records
 pub struct PgMatchRepo {
     pub pool: Arc<PgPool>,
 }
 
 #[async_trait]
 impl Repo for PgMatchRepo {
-    /// Create a new Team repo with a reference to an initialized pool.
+    /// Create a new Match repo with a reference to an initialized pool.
     ///
     /// Params
     /// ---
@@ -61,6 +55,33 @@ impl Repo for PgMatchRepo {
 
 #[async_trait]
 pub trait MatchRepo {
+    /// Create a new game match structure (and set the latest event of the match to upcoming)
+    /// Additionally, it checks that both teams are playing the chosen game
+    ///
+    /// Params
+    /// ---
+    /// - new_match: write structure for creating a new game match
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(id) if the match could be created -> both teams exist, game exists and both teams play the game
+    /// - Err(_) if an error occurrs or some bounds were not satisfied
+    async fn create(&self, new_match: CreateGameMatch) -> anyhow::Result<i32>;
+
+    /// Delete a game match
+    /// Only possible if the match is "`Upcoming`" and there are no bets tied to the match yet.
+    /// Deleting the match does not work, if the match is about to start in 5 seconds
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the match we wish to delete
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(GameMatchEvent) if successful to preserve the content of the deleted item
+    /// - Err(_) if any error occurrs
+    async fn delete(&self, desired_match_id: i32) -> anyhow::Result<GameMatch>;
+
     /// Get a desired match by its ID
     ///
     /// Params
@@ -98,41 +119,30 @@ pub trait MatchRepo {
     /// ---
     /// - Ok(Vec<GameMatch>) on successful matches retrieval
     /// - Err(_) if an error has occurred
-    async fn get_all_show(
+    async fn get_all_show_info(
         &self,
         filter_by_time_period: Option<GameMatchEventType>,
         filter_by_game: Option<i32>,
-        // filter_by_team: Option<i32>,
     ) -> anyhow::Result<Vec<GameMatchShow>>;
 
-    /// Create a new game match structure (and set the latest event of the match to upcoming)
-    /// Additionally, it checks that both teams are playing the chosen game
+    /// Update a match record.
+    /// Update ratios, possibly the supposed start and the shown state of the match
+    /// Fails, if the supposed start is less than 2 seconds away
+    /// TODO! solve this thing
     ///
     /// Params
     /// ---
-    /// - new_match: write structure for creating a new game match
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(id) if the match could be created -> both teams exist, game exists and both teams play the game
-    /// - Err(_) if an error occurrs or some bounds were not satisfied
-    async fn create<'a>(&self, new_match: CreateGameMatch<'a>) -> anyhow::Result<i32>;
-
-    /// Update the state for chosen match
-    ///
-    /// Params
-    /// ---
-    /// - desired_match_id: ID of the match
-    /// - desired_new_state: what to update the state to
+    /// - desired_match_id: ID of the match we wish to update the info of
+    /// - edited_info: structure containing info that needs to be updated.
     ///
     /// Returns
     /// ---
     /// - Ok(()) if the update was successful
     /// - Err(_) if an error has occurred
-    async fn update_match_state(
+    async fn update_info(
         &self,
         desired_match_id: i32,
-        desired_new_state: String,
+        edited_info: GameMatchUpdate,
     ) -> anyhow::Result<()>;
 
     /// Create an event for the match
@@ -146,11 +156,24 @@ pub trait MatchRepo {
     /// Returns
     /// ---
     /// - Ok(()) if the event has been created successfully
+    /// - Err(_) if an error occurred or the event we wish to create already exists
     async fn create_event(
         &self,
         desired_match_id: i32,
         desired_event_type: GameMatchEventType,
     ) -> anyhow::Result<i32>;
+
+    /// Get the newest event of the match
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the desired match
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(newest_event) with the latest event
+    /// - Err(_) if there was an internal consistency error / connection error etc
+    async fn newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent>;
 
     /// Edit an event
     /// It is possible to edit events -> Live, Overtime
@@ -158,32 +181,107 @@ pub trait MatchRepo {
     /// Params
     /// ---
     /// - desired_match_id: ID of the match we need to edit the events of
-    /// - which_event: Which event type we want to target
-    /// - new_value: new value of the event that will be updated in the database
+    /// - edited_event: new value of the event that will be updated in the database
     ///
     /// Returns
     /// ---
     /// - Ok(()) if the event has been updated successfully
     /// - Err(_) if an error occurred, or a wrong event_type has been selected, or the event does not exist
-    async fn edit_event(
+    async fn edit_event_time(
         &self,
         desired_match_id: i32,
-        which_event: GameMatchEventType,
-        new_value: CreateGameMatchEvent,
+        new_time: DateTime<Utc>,
     ) -> anyhow::Result<()>;
 
-    /// Delete an event type -> in special cases, we wish to delete an event
-    /// Supported event types -> all except the `Upcoming` type
-    ///
-    /// Params
-    /// ---
-    /// - desired_match_id: ID of the match we need to delete the event of
-    /// - which_event: what event type
-    async fn delete_event(&self, desired_match_id: i32, which_event: GameMatchEventType);
+    // /// Delete an event -> in special cases, we wish to delete an event
+    // /// Supported event types -> all except the `Upcoming` type
+    // ///
+    // /// Params
+    // /// ---
+    // /// - desired_match_id: ID of the match we need to delete the event of
+    // /// - which_event: what event type
+    // async fn delete_newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent>;
 }
 
 #[async_trait]
 impl MatchRepo for PgMatchRepo {
+    /// Create a new game match structure (and set the latest event of the match to upcoming)
+    /// Additionally, it checks that both teams are playing the chosen game
+    async fn create(&self, new_match: CreateGameMatch) -> anyhow::Result<i32> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+        // Check if both teams are playing the game
+        let both_teams_play_the_game: usize = team_plays_game::table
+            .filter(
+                team_plays_game::team_id
+                    .eq(new_match.team_one_id)
+                    .and(team_plays_game::game_id.eq(new_match.game_id)),
+            )
+            .or_filter(
+                team_plays_game::team_id
+                    .eq(new_match.team_two_id)
+                    .and(team_plays_game::game_id.eq(new_match.game_id)),
+            )
+            .execute(&connection)?;
+
+        // possible results
+        match both_teams_play_the_game {
+            0 => anyhow::bail!("None of the teams selected is playing this game"),
+            1 => anyhow::bail!("One of the teams selected is not playing this game"),
+            2 => {}
+            _ => anyhow::bail!("Internal error!!! More occurrences of the same team playing the game multiple times!"),
+        }
+
+        // create the game match
+        let query_result: i32 = insert_into(game_match::table)
+            .values(new_match)
+            .returning(game_match::id)
+            .get_result(&connection)?;
+
+        // create an upcoming event for the new match
+        self.create_event(query_result, GameMatchEventType::Upcoming)
+            .await?;
+
+        Ok(query_result)
+    }
+
+    /// Delete a game match
+    /// Only possible if the match is upcoming and there are no bets tied to the match yet.
+    /// Deleting the match does not work, if the match is about to start in 5 seconds
+    async fn delete(&self, desired_match_id: i32) -> anyhow::Result<GameMatch> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+
+        let any_bets: usize = bet::table
+            .filter(bet::game_match_id.eq(desired_match_id))
+            .execute(&connection)?;
+
+        // there are bets placed on the match
+        if any_bets > 0 {
+            anyhow::bail!("Cannot delete a game match, if there are bets placed on it!");
+        }
+
+        let to_be_removed: GameMatch = game_match::table
+            .find(desired_match_id)
+            .get_result(&connection)?;
+
+        // cannot delete an already starting
+        if TimeHandling::load_timestamp(&to_be_removed.supposed_start_at)?
+            < (Utc::now() + Duration::seconds(2))
+        {
+            anyhow::bail!("Cannot delete a game match, if it is about to start!");
+        }
+
+        // remove all events first
+        let _ = delete(
+            game_match_event::table.filter(game_match_event::game_match_id.eq(desired_match_id)),
+        )
+        .execute(&connection);
+
+        // remove the match
+        let _ = delete(game_match::table.find(desired_match_id)).execute(&connection)?;
+
+        Ok(to_be_removed)
+    }
+
     /// Get a desired match by its ID
     async fn get(&self, desired_match_id: i32) -> anyhow::Result<GameMatch> {
         let query_result: GameMatch = game_match::table
@@ -233,7 +331,7 @@ impl MatchRepo for PgMatchRepo {
 
     /// Get all matches, optionally we can filter by the time period (upcoming),
     /// filter by the team and filter by the game
-    async fn get_all_show(
+    async fn get_all_show_info(
         &self,
         filter_by_time_period: Option<GameMatchEventType>,
         filter_by_game: Option<i32>,
@@ -305,62 +403,38 @@ impl MatchRepo for PgMatchRepo {
             filter_string
         );
 
+        // run query
         let result: Vec<GameMatchShow> =
             sql_query(query_string).get_results(&self.get_connection().await?)?;
 
         Ok(result)
     }
 
-    /// Create a new game match structure (and set the latest event of the match to upcoming)
-    /// Additionally, it checks that both teams are playing the chosen game
-    async fn create<'a>(&self, new_match: CreateGameMatch<'a>) -> anyhow::Result<i32> {
-        let connection: PgPooledConnection = self.get_connection().await?;
-        // Check if both teams are playing the game
-        let both_teams_play_the_game: usize = team_plays_game::table
-            .filter(
-                team_plays_game::team_id
-                    .eq(new_match.team_one_id)
-                    .and(team_plays_game::game_id.eq(new_match.game_id)),
-            )
-            .or_filter(
-                team_plays_game::team_id
-                    .eq(new_match.team_two_id)
-                    .and(team_plays_game::game_id.eq(new_match.game_id)),
-            )
-            .execute(&connection)?;
-
-        // possible results
-        match both_teams_play_the_game {
-            0 => anyhow::bail!("None of the teams selected is playing this game"),
-            1 => anyhow::bail!("One of the teams selected is not playing this game"),
-            2 => {}
-            _ => anyhow::bail!("Internal error!!! More occurrences of the same team playing the game multiple times!"),
+    /// TODO!
+    /// Update a match record.
+    /// Update ratios, possibly the supposed start and the shown state of the match
+    /// Fails, if the supposed start is less than 2 seconds away
+    async fn update_info(
+        &self,
+        _desired_match_id: i32,
+        edited_match: GameMatchUpdate,
+    ) -> anyhow::Result<()> {
+        // if there is a request for the time change and that time change is less than 2 seconds away,
+        // this method will produce error informing about an incorrect operation.
+        if edited_match.supposed_start_at.is_some()
+            && edited_match.supposed_start_at.unwrap() < Utc::now() + Duration::seconds(2)
+        {
+            anyhow::bail!("Cannot change the match to start in less than 5 seconds from now!");
         }
 
-        // create the game match
-        let query_result: i32 = insert_into(game_match::table)
-            .values(new_match)
-            .returning(game_match::id)
-            .get_result(&connection)?;
+        // let table = update(game_match::table.find(desired_match_id));
 
-        // create an upcoming event for the new match
-        self.create_event(query_result, GameMatchEventType::Upcoming)
-            .await?;
+        // let _ = match edited_match.supposed_start_at {
+        //     Some(new_start) => table.set(()).execute(&self.get_connection().await?)?,
+        //     None => {}
+        // };
 
-        Ok(query_result)
-    }
-
-    /// Update the state for chosen match
-    async fn update_match_state(
-        &self,
-        desired_match_id: i32,
-        desired_new_state: String,
-    ) -> anyhow::Result<()> {
-        let _ = update(game_match::table.find(desired_match_id))
-            .set(game_match::state.eq(desired_new_state))
-            .execute(&self.get_connection().await?)?;
-
-        Ok(())
+        todo!()
     }
 
     /// Create an event for the match
@@ -401,20 +475,49 @@ impl MatchRepo for PgMatchRepo {
         Ok(query_result)
     }
 
-    /// Edit an event
-    /// It is possible to edit events -> Live, Overtime
-    async fn edit_event(
-        &self,
-        desired_match_id: i32,
-        which_event: GameMatchEventType,
-        new_value: CreateGameMatchEvent,
-    ) -> anyhow::Result<()> {
-        todo!()
+    /// Get newest event of the match
+    async fn newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent> {
+        let query_result = game_match_event::table
+            .filter(game_match_event::game_match_id.eq(desired_match_id))
+            .order(game_match_event::created_at.desc())
+            .first(&self.get_connection().await?)?;
+
+        Ok(query_result)
     }
 
-    /// Delete an event type -> in special cases, we wish to delete an event
-    /// Supported event types -> all except the `Upcoming` type
-    async fn delete_event(&self, desired_match_id: i32, which_event: GameMatchEventType) {
-        todo!()
+    /// Edit an event
+    /// It is possible to edit events -> Live, Overtime
+    async fn edit_event_time(
+        &self,
+        desired_match_id: i32,
+        new_time: DateTime<Utc>,
+    ) -> anyhow::Result<()> {
+        let event = self.newest_event(desired_match_id).await?;
+
+        if event.event_type != *"Live" || event.event_type != *"Ovetime" {
+            anyhow::bail!("Cannot change the event type!");
+        }
+
+        let _ = update(game_match_event::table.find(event.id))
+            .set(game_match_event::until.eq(new_time.to_string()))
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
     }
+
+    // /// Delete an event type -> in special cases, we wish to delete an event
+    // /// Supported event types -> all except the `Upcoming` type
+    // async fn delete_newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent> {
+    //     let event = self.newest_event(desired_match_id).await?;
+
+    //     // delete the newest event
+    //     if event.event_type == GameMatchEventType::Upcoming.to_string() {
+    //         anyhow::bail!("Cannot delete the Upcoming event. Please, delete the whole match if you wish to delete it.");
+    //     }
+
+    //     let _ = delete(game_match_event::table.find(event.id))
+    //         .execute(&self.get_connection().await?)?;
+
+    //     Ok(event)
+    // }
 }

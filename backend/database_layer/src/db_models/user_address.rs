@@ -1,7 +1,9 @@
 use crate::db_models::user::User;
 use crate::schema::user_address;
-use crate::type_storing::time_handling::CurrentTime;
+use crate::type_storing::time_handling::TimeHandling;
 
+/// Read structure, used for data mapping of
+/// `user_address` record from the database
 #[derive(Identifiable, Associations, Queryable, PartialEq)]
 #[belongs_to(User)]
 #[table_name = "user_address"]
@@ -18,8 +20,9 @@ pub struct UserAddress {
 }
 
 impl UserAddress {
-    /// Create a new CreateUserAddress record which can speed up the process if a
-    /// user just tried to change a small detail
+    /// Create an update structure for `user_address` record
+    /// from already loaded address -> efficient when only a small
+    /// detail needs to be changed
     ///
     /// Params
     /// ---
@@ -32,7 +35,7 @@ impl UserAddress {
     ///
     /// Returns
     /// ---
-    /// - new edited CreateUserAddress instance
+    /// - new `user_address` update instance
     pub fn edit_address(
         &self,
         change_street_name: Option<&str>,
@@ -42,19 +45,16 @@ impl UserAddress {
         change_postal_code: Option<&str>,
         change_country: Option<&str>,
     ) -> CreateUserAddress {
-        // create the needed type
-        let store_area = match change_area {
-            Some(value) => value.map(String::from),
-            None => self.area.clone(), // original data remains
-        };
-
         CreateUserAddress {
             user_id: 0,
             street_name: change_street_name.map_or_else(|| self.street_name.clone(), String::from),
             street_number: change_street_number
                 .map_or_else(|| self.street_number.clone(), String::from),
             city: change_city.map_or_else(|| self.city.clone(), String::from),
-            area: store_area,
+            area: match change_area {
+                Some(value) => value.map(String::from),
+                None => self.area.clone(), // original data remains
+            },
             postal_code: change_postal_code.map_or_else(|| self.postal_code.clone(), String::from),
             country: change_country.map_or_else(|| self.country.clone(), String::from),
             valid_from: "".into(),
@@ -62,6 +62,8 @@ impl UserAddress {
     }
 }
 
+/// Write structure, used for inserting
+/// `user_address` records into the database
 #[derive(Insertable, AsChangeset)]
 #[table_name = "user_address"]
 pub struct CreateUserAddress {
@@ -76,7 +78,7 @@ pub struct CreateUserAddress {
 }
 
 impl CreateUserAddress {
-    /// Creating the write structure for user address
+    /// Create a new `user_address` insert structure
     ///
     /// Params
     /// ---
@@ -86,6 +88,10 @@ impl CreateUserAddress {
     /// - area: OPTIONAL area within the country (ie state, province etc)
     /// - postal_code: user's address postal code
     /// - country: user's address country
+    ///
+    /// Returns
+    /// ---
+    /// - new `user_address` insert structure
     pub fn new(
         street_name: &str,
         street_number: &str,
@@ -106,7 +112,7 @@ impl CreateUserAddress {
         }
     }
 
-    /// Finish the UserAddress write structure to store it into the database
+    /// Finish the `user_address` insert structure to store it into the database
     ///
     /// Params
     /// ---
@@ -115,7 +121,7 @@ impl CreateUserAddress {
     ///
     /// Returns
     /// ---
-    /// - a complete address write structure
+    /// - a complete `user_address` insert structure
     pub fn store(&self, user_id: i32) -> CreateUserAddress {
         CreateUserAddress {
             user_id,
@@ -125,7 +131,7 @@ impl CreateUserAddress {
             area: self.area.clone(),
             postal_code: self.postal_code.clone(),
             country: self.country.clone(),
-            valid_from: CurrentTime::store(),
+            valid_from: TimeHandling::store(),
         }
     }
 }

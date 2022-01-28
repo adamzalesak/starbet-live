@@ -1,21 +1,16 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use crate::db_models::user_address::CreateUserAddress;
-use crate::diesel::prelude::*;
-use crate::diesel::QueryDsl;
-use crate::diesel::RunQueryDsl;
-use crate::diesel::{insert_into, update};
+use crate::diesel::{insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
 
-use crate::connection::PgPool;
-use crate::connection::PgPooledConnection;
+use crate::connection::{PgPool, PgPooledConnection};
 
 // type and structure imports
 use super::repo::Repo;
 use crate::db_models::{
     ticket::Ticket,
     user::{CreateUser, User},
-    user_address::UserAddress,
+    user_address::{CreateUserAddress, UserAddress},
 };
 
 // schema imports
@@ -31,15 +26,6 @@ pub struct PgUserRepo {
 #[async_trait]
 impl Repo for PgUserRepo {
     /// Create a new User repo with a reference to an initialized pool.
-    ///
-    /// Params
-    /// ---
-    /// - pool: A reference to an already initialized database connection pool,
-    ///         used for connecting to the database
-    ///
-    /// Returns
-    /// ---
-    /// - new User repo
     fn new(pool: &Arc<PgPool>) -> PgUserRepo {
         PgUserRepo {
             pool: Arc::clone(pool),
@@ -47,11 +33,6 @@ impl Repo for PgUserRepo {
     }
 
     /// Get a connection from the pool
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(pooled_connection) if no error occurs
-    /// - Err(_) if the wait for another connection is too long
     async fn get_connection(&self) -> anyhow::Result<PgPooledConnection> {
         Ok(self.pool.get()?)
     }
@@ -141,6 +122,8 @@ pub trait UserRepo {
     /// - Ok(Option(Ticket)) if the user could be found, and no errors occurred
     /// - Err(_) otherwise
     async fn get_current_ticket(&self, desired_user_id: i32) -> anyhow::Result<Option<Ticket>>;
+
+    // async fn open_ticket() ->
 }
 
 #[async_trait]
@@ -179,6 +162,16 @@ impl UserRepo for PgUserRepo {
         Ok(())
     }
 
+    /// Get user's current address
+    async fn get_current_address(&self, desired_user_id: i32) -> anyhow::Result<UserAddress> {
+        let query_result: UserAddress = user_address::table
+            .filter(user_address::user_id.eq(desired_user_id))
+            .order(user_address::valid_from.desc())
+            .first(&self.get_connection().await?)?;
+
+        Ok(query_result)
+    }
+
     /// Add a new address for the user, replacing the old one
     /// (the old one will still be linked to all previous tickets as a billing address)
     async fn add_new_address(
@@ -192,16 +185,6 @@ impl UserRepo for PgUserRepo {
             .values(store_address)
             .returning(user_address::id)
             .get_result(&self.get_connection().await?)?;
-
-        Ok(query_result)
-    }
-
-    /// Get user's current address
-    async fn get_current_address(&self, desired_user_id: i32) -> anyhow::Result<UserAddress> {
-        let query_result: UserAddress = user_address::table
-            .filter(user_address::user_id.eq(desired_user_id))
-            .order(user_address::valid_from.desc())
-            .first(&self.get_connection().await?)?;
 
         Ok(query_result)
     }

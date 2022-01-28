@@ -1,13 +1,9 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use crate::diesel::prelude::*;
-use crate::diesel::QueryDsl;
-use crate::diesel::RunQueryDsl;
-use crate::diesel::{delete, insert_into, update};
-
-use crate::connection::PgPool;
-use crate::connection::PgPooledConnection;
+use crate::connection::{PgPool, PgPooledConnection};
+use crate::diesel::{delete, insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
+use std::cmp::Ordering;
 
 // type and structure imports
 use super::repo::Repo;
@@ -15,7 +11,7 @@ use crate::db_models::{
     team::{CreateTeam, Team},
     team_plays_game::CreateTeamPlaysGame,
 };
-use crate::result_types::{GameInfo, GameInfoRetrieve, TeamInfo, TeamInfoRetrieve};
+use crate::result_types::{GameInfo, TeamInfo};
 
 // schema imports
 use crate::schema::{game, team, team_plays_game};
@@ -80,6 +76,30 @@ impl PgTeamRepo {
 
 #[async_trait]
 pub trait TeamRepo {
+    /// Create a new team
+    ///
+    /// Params
+    /// ---
+    /// - new_team: a write structure for creating a team
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(id) if the new team has been created successfully
+    /// - Err(_) if an error occurred
+    async fn create(&self, new_team: CreateTeam) -> anyhow::Result<i32>;
+
+    /// Edit the team information
+    ///
+    /// Params
+    /// ---
+    /// - desired_team_id: ID of the desired team
+    /// - edited_team: a write structure with edited properties
+    ///
+    /// Returns
+    /// ---
+    /// - Ok(()) if the team information has updated successfully
+    /// - Err(_) if an error occurred
+    async fn edit(&self, desired_team_id: i32, edited_team: CreateTeam) -> anyhow::Result<()>;
     /// Get a specific desired team record
     ///
     /// Params
@@ -92,21 +112,15 @@ pub trait TeamRepo {
     /// - Err(_) if an error occurred
     async fn get(&self, desired_team_id: i32) -> anyhow::Result<Team>;
 
-    /// Get all teams (OPT: that play a certain game)
-    ///
-    /// Params
-    /// ---
-    /// - by_game_id: if contains a value -> filters which teams to obtain according to which game they play
-    ///               if it does not, has no effect on the query and function returns all teams
+    /// Get all teams
     ///
     /// Returns
     /// ---
     /// TeamInfo is a type alias for a tuple containing (team_id, team_name, team_logo_url)
     ///
-    /// - Ok(Vec<TeamInfo>) if the query has ran successfully (either containing all teams,
-    ///                     or just the teams that play a certain game)
+    /// - Ok(Vec<TeamInfo>) with all teams on the site
     /// - Err(_) if an error has occurred
-    async fn get_all(&self, by_game: Option<i32>) -> anyhow::Result<Vec<TeamInfo>>;
+    async fn get_all(&self) -> anyhow::Result<Vec<TeamInfo>>;
 
     /// Get a list of games which a certain team plays
     ///
@@ -152,39 +166,29 @@ pub trait TeamRepo {
         desired_team_id: i32,
         desired_game_id: i32,
     ) -> anyhow::Result<()>;
-
-    /// Create a new team
-    ///
-    /// Params
-    /// ---
-    /// - new_team: a write structure for creating a team
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(id) if the new team has been created successfully
-    /// - Err(_) if an error occurred
-    async fn create<'a>(&self, new_team: CreateTeam<'a>) -> anyhow::Result<i32>;
-
-    /// Edit the team information
-    ///
-    /// Params
-    /// ---
-    /// - desired_team_id: ID of the desired team
-    /// - edited_team: a write structure with edited properties
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(()) if the team information has updated successfully
-    /// - Err(_) if an error occurred
-    async fn edit<'a>(
-        &self,
-        desired_team_id: i32,
-        edited_team: CreateTeam<'a>,
-    ) -> anyhow::Result<()>;
 }
 
 #[async_trait]
 impl TeamRepo for PgTeamRepo {
+    /// Create a new team
+    async fn create(&self, new_team: CreateTeam) -> anyhow::Result<i32> {
+        let query_result: i32 = insert_into(team::table)
+            .values(new_team)
+            .returning(team::id)
+            .get_result(&self.get_connection().await?)?;
+
+        Ok(query_result)
+    }
+
+    /// Edit the team information
+    async fn edit(&self, desired_team_id: i32, edited_team: CreateTeam) -> anyhow::Result<()> {
+        let _ = update(team::table.find(desired_team_id))
+            .set(edited_team)
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
+    }
+
     /// Get a specific desired team record
     async fn get(&self, desired_team_id: i32) -> anyhow::Result<Team> {
         let query_result: Team = team::table
@@ -194,47 +198,43 @@ impl TeamRepo for PgTeamRepo {
         Ok(query_result)
     }
 
-    /// Get all teams (OPT: that play a certain game)
-    async fn get_all(&self, by_game_id: Option<i32>) -> anyhow::Result<Vec<TeamInfo>> {
+    /// Get all teams
+    async fn get_all(&self) -> anyhow::Result<Vec<TeamInfo>> {
         let selection = (team::id, team::name, team::logo);
 
-        let query_result: Vec<TeamInfoRetrieve> = match by_game_id {
-            Some(game_id_filter) => team::table
-                .order(team::name.asc())
-                .inner_join(team_plays_game::table)
-                .filter(team_plays_game::game_id.eq(game_id_filter))
-                .select(selection)
-                .get_results(&self.get_connection().await?)?,
-            _ => team::table
-                .order(team::name.asc())
-                .select(selection)
-                .get_results(&self.get_connection().await?)?,
-        };
+        let query_result: Vec<TeamInfo> = team::table
+            .order(team::name.asc())
+            .select(selection)
+            .get_results(&self.get_connection().await?)?;
 
-        Ok(TeamInfo::from_vector(&query_result))
+        Ok(query_result)
     }
 
     /// Get a list of games which a certain team plays
     async fn games_played(&self, desired_team_id: i32) -> anyhow::Result<Vec<GameInfo>> {
-        let query_result: Vec<GameInfoRetrieve> = team::table
+        let query_result: Vec<GameInfo> = team::table
             .inner_join(team_plays_game::table.inner_join(game::table))
             .filter(team::id.eq(desired_team_id))
             .select((game::id, game::name, game::logo))
             .distinct_on(game::id)
             .get_results(&self.get_connection().await?)?;
 
-        Ok(GameInfo::from_vector(&query_result))
+        Ok(query_result)
     }
 
     /// Add a team into a list of teams that play the game
     async fn add_to_game(&self, desired_team_id: i32, desired_game_id: i32) -> anyhow::Result<()> {
         // check whether the team is already playing the game, if it is, return an error
-        if self.in_game(desired_team_id, desired_game_id).await? != 0 {
-            anyhow::bail!("The team already plays the game!");
-        }
+        let in_game = self.in_game(desired_team_id, desired_game_id).await?;
+
+        match in_game.cmp(&1_usize) {
+            Ordering::Less => {},
+            Ordering::Equal => anyhow::bail!("The team already plays the game!"),
+            Ordering::Greater => anyhow::bail!("The team already plays a game multiple times! This is a bug, please contact the site administrator."),
+        };
 
         // add the team to the game
-        let _: usize = insert_into(team_plays_game::table)
+        let _ = insert_into(team_plays_game::table)
             .values(CreateTeamPlaysGame::new(desired_game_id, desired_team_id))
             .execute(&self.get_connection().await?)?;
 
@@ -249,12 +249,15 @@ impl TeamRepo for PgTeamRepo {
         desired_game_id: i32,
     ) -> anyhow::Result<()> {
         // check whether the team is playing the game, if it isnt, return an error
-        if self.in_game(desired_team_id, desired_game_id).await? == 0 {
+        let in_game = self.in_game(desired_team_id, desired_game_id).await?;
+        if in_game == 0 {
             anyhow::bail!("The team does not play the game!");
+        } else if in_game > 1 {
+            anyhow::bail!("Internal error, the team is registered to play the game more than once. Contact the site administrator, this is a bug.");
         }
 
         // remove the team from the game
-        let _: usize = delete(
+        let _ = delete(
             team_plays_game::table.filter(
                 team_plays_game::team_id
                     .eq(desired_team_id)
@@ -264,29 +267,6 @@ impl TeamRepo for PgTeamRepo {
         .execute(&self.get_connection().await?)?;
 
         // all went well
-        Ok(())
-    }
-
-    /// Create a new team
-    async fn create<'a>(&self, new_team: CreateTeam<'a>) -> anyhow::Result<i32> {
-        let query_result: i32 = insert_into(team::table)
-            .values(new_team)
-            .returning(team::id)
-            .get_result(&self.get_connection().await?)?;
-
-        Ok(query_result)
-    }
-
-    /// Edit the team information
-    async fn edit<'a>(
-        &self,
-        desired_team_id: i32,
-        edited_team: CreateTeam<'a>,
-    ) -> anyhow::Result<()> {
-        let _ = update(team::table.find(desired_team_id))
-            .set(edited_team)
-            .execute(&self.get_connection().await?)?;
-
         Ok(())
     }
 }

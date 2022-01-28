@@ -1,19 +1,30 @@
-use anyhow::Result;
-use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-use diesel::Connection;
+use diesel::{
+    pg::PgConnection,
+    r2d2::{ConnectionManager, Pool, PooledConnection},
+    Connection,
+};
 
 pub type PgPool = Pool<ConnectionManager<PgConnection>>;
 pub type PgPooledConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
 /// Initialize pool of connections
-fn initialize_pool(database_url: &str) -> Result<PgPool> {
+///
+/// Params
+/// ---
+/// - database_url: Connection string
+///
+/// Returns
+/// ---
+/// - Ok(connection_pool) if the pool has been created successfully
+/// - Err(_) otherwise
+fn initialize_pool(database_url: &str) -> anyhow::Result<PgPool> {
     let manager = ConnectionManager::<PgConnection>::new(database_url);
 
-    Ok(Pool::builder().build(manager)?)
+    // TODO on production -> configure the builder correctly
+    Ok(Pool::builder().max_size(1500).build(manager)?)
 }
 
-/// Establish pooled connection to the database.
+/// Establish a pooled connection to the database.
 ///
 /// Params
 /// ---
@@ -22,7 +33,7 @@ fn initialize_pool(database_url: &str) -> Result<PgPool> {
 /// Returns
 /// - Ok(PgPool) = after successfull database connection and pool creation
 /// - Err(_) = after an error occurred
-pub async fn db_connect_create_pool(database_url: &str) -> Result<PgPool> {
+pub async fn db_connect_create_pool(database_url: &str) -> anyhow::Result<PgPool> {
     PgConnection::establish(database_url)?;
     println!("Database connection has been successful.");
 

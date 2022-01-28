@@ -1,5 +1,7 @@
 use crate::schema::game;
 
+/// Read structure, used for data mapping of
+/// `game` record from the database
 #[derive(Queryable)]
 pub struct Game {
     pub id: i32,
@@ -8,20 +10,33 @@ pub struct Game {
     pub logo_url: String,
 }
 
+/// Write structure, used for inserting
+/// `game` records into the database
 #[derive(Insertable, AsChangeset)]
 #[table_name = "game"]
-pub struct CreateGame<'a> {
-    pub name: &'a str,
-    pub description: &'a str,
-    pub logo: &'a str,
+pub struct CreateGame {
+    pub name: String,
+    pub description: String,
+    pub logo: String,
 }
 
-impl<'a> CreateGame<'a> {
-    pub fn new(name: &'a str, description: &'a str, logo: &'a str) -> CreateGame<'a> {
+impl CreateGame {
+    /// Create a new `game`` insert structure
+    ///
+    /// Params
+    /// ---
+    /// - name: name of the game
+    /// - description: description of the game
+    /// - logo: path to the logo of the game
+    ///
+    /// Returns
+    /// ---
+    /// - new `game` insert structure
+    pub fn new(name: &str, description: &str, logo: &str) -> CreateGame {
         CreateGame {
-            name,
-            description,
-            logo,
+            name: String::from(name),
+            description: String::from(description),
+            logo: String::from(logo),
         }
     }
 }

@@ -74,7 +74,7 @@ pub trait UserAddressRepo {
     /// Returns
     /// - Ok(id) with UserAddress id after successful creation
     /// - Err(_) if an error occurs
-    async fn create(&self, new_address: CreateUserAddress) -> anyhow::Result<i32>;
+    // async fn create(&self, new_address: CreateUserAddress) -> anyhow::Result<i32>;
 
     /// Edit an already existing UserAddress record
     ///
@@ -86,11 +86,11 @@ pub trait UserAddressRepo {
     /// Returns
     /// - Ok(()) if the operation has been successful
     /// - Err(_) if something went wrong
-    async fn edit(
-        &self,
-        desired_address_id: i32,
-        edited_address: CreateUserAddress,
-    ) -> anyhow::Result<()>;
+    // async fn edit(
+    //     &self,
+    //     desired_address_id: i32,
+    //     edited_address: CreateUserAddress,
+    // ) -> anyhow::Result<()>;
 }
 
 #[async_trait]
@@ -105,25 +105,25 @@ impl UserAddressRepo for PgUserAddressRepo {
     }
 
     /// Create a new UserAddress
-    async fn create(&self, new_address: CreateUserAddress) -> anyhow::Result<i32> {
-        let id: i32 = insert_into(user_address::table)
-            .values(new_address)
-            .returning(user_address::id)
-            .get_result(&self.get_connection().await?)?;
+    // async fn create(&self, new_address: CreateUserAddress) -> anyhow::Result<i32> {
+    //     let id: i32 = insert_into(user_address::table)
+    //         .values(new_address)
+    //         .returning(user_address::id)
+    //         .get_result(&self.get_connection().await?)?;
 
-        Ok(id)
-    }
+    //     Ok(id)
+    // }
 
     /// Edit an already existing UserAddress record
-    async fn edit(
-        &self,
-        desired_address_id: i32,
-        edited_address: CreateUserAddress,
-    ) -> anyhow::Result<()> {
-        let _ = update(user_address::table.find(desired_address_id))
-            .set(edited_address)
-            .execute(&self.get_connection().await?)?;
+    // async fn edit(
+    //     &self,
+    //     desired_address_id: i32,
+    //     edited_address: CreateUserAddress,
+    // ) -> anyhow::Result<()> {
+    //     let _ = update(user_address::table.find(desired_address_id))
+    //         .set(edited_address)
+    //         .execute(&self.get_connection().await?)?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 }
