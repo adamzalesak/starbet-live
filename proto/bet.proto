@@ -6,8 +6,6 @@ service BetService {
     rpc ListBets (ListBetsRequest) returns (ListBetsReply);
     rpc CreateBet (CreateBetRequest) returns (CreateBetReply);
     rpc DeleteBet (DeleteBetRequest) returns (DeleteBetReply);
-
-    rpc StreamBets(StreamBetsRequest) returns (stream Bet);
     rpc ListTicketBets (ListTicketBetsRequest) returns (ListBetsReply);
 }
 
@@ -43,8 +41,6 @@ message DeleteBetRequest {
 }
 
 message DeleteBetReply {}
-
-message StreamBetsRequest {}
 
 message ListTicketBetsRequest {
     int32 ticket_id = 1;

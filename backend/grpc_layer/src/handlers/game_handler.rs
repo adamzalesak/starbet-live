@@ -4,6 +4,8 @@ use crate::game::{
     ListGamesRequest,
 };
 
+use bytes::{BufMut, BytesMut};
+use prost::Message;
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
@@ -16,14 +18,18 @@ use database_layer::{
     db_models::game::CreateGame,
 };
 
+use ws_layer::Clients;
+
 pub struct MyGameService {
     repo: PgGameRepo,
+    ws_clients: Clients,
 }
 
 impl MyGameService {
-    pub fn new(pool: &Arc<PgPool>) -> MyGameService {
+    pub fn new(pool: &Arc<PgPool>, ws_clients: Clients) -> MyGameService {
         MyGameService {
             repo: PgGameRepo::new(pool),
+            ws_clients: ws_clients,
         }
     }
 }
@@ -58,6 +64,14 @@ impl GameService for MyGameService {
             description: "",
             logo: "",
         };
+
+        let mut buf = BytesMut::with_capacity(64);
+        CreateGameReply { id: 1 }.encode(&mut buf);
+        for client in self.ws_clients.lock().await.values() {
+            if let Some(sender) = &client.sender {
+                sender.send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+            }
+        }
 
         match self.repo.create(create_game).await {
             Ok(game_id) => Ok(Response::new(CreateGameReply { id: game_id })),

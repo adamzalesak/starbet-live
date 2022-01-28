@@ -1,20 +1,19 @@
 [package]
-name = "grpc_layer"
+name = "ws_layer"
 version = "0.1.0"
 edition = "2018"
 
 [dependencies]
 database_layer = { path = "../database_layer" }
-ws_layer = { path = "../ws_layer" }
 
 anyhow = "*"
 tonic = "0.6"
-tonic-web = "0.2"
 prost = "0.9"
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "time"] }
 tokio-stream = "0.1"
-futures = "*"
-bytes = "*"
+warp = "0.3"
+futures = { version = "0.3", default-features=false}
+uuid = { version = "0.8", features = ["v4"] }
 
 [build-dependencies]
 tonic-build = "0.6"
