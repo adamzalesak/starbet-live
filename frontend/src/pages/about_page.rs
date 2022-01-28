@@ -1,5 +1,4 @@
 use yew::prelude::*;
-use crate::components::footer::Footer;
 
 pub enum Msg {}
 
@@ -19,10 +18,7 @@ impl Component for AboutPage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <>
-                <div class="w-full h-full lg:w-8/12 p-2 sm:w-10/12 overflow-auto mx-auto transition-all">{"about page"}</div>
-                <Footer squared_design={false} />
-            </>
+            {"about page"}
         }
     }
 }

@@ -199,7 +199,7 @@ impl Component for RegistrationForm {
                         html! {}
                     }
                 }
-                <button type="submit" class="block mx-auto my-1 w-6/12 lg:w-4/12 py-2 px-3 bg-yellow font-bold rounded-md transition-all">
+                <button type="submit" class="block shadow-md mx-auto my-1 w-6/12 lg:w-4/12 py-2 px-3 bg-yellow font-bold rounded-md transition-all">
                     {"Register"}
                 </button>
             </form>

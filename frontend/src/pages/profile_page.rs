@@ -18,7 +18,7 @@ impl Component for ProfilePage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-         <div class="w-full lg:w-8/12 p-2 sm:w-10/12 overflow-auto mx-auto transition-all">{"profile page"}</div>
+            {"profile page"}
         }
     }
 }

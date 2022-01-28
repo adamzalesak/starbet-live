@@ -34,13 +34,15 @@ impl Component for RegistrationPage {
                         <DateTime />
                     </div>
                 </header>
-                <div class="w-full h-full lg:w-8/12 py-3 px-5 sm:w-10/12 mx-auto overflow-auto bg-light-grey transition-all">
-                    <div class="text-center font-bold">
-                        {"Enter your contact information"}
+                <div class="flex flex-col overflow-auto ">
+                    <div class="w-full lg:w-8/12 py-3 px-5 sm:w-10/12 mx-auto bg-light-grey transition-all main-grow">
+                        <div class="text-center font-bold">
+                            {"Enter your contact information"}
+                        </div>
+                        <RegistrationForm />
                     </div>
-                    <RegistrationForm />
+                    <Footer squared_design={false} />
                 </div>
-                <Footer squared_design={false} />
             </>
         }
     }

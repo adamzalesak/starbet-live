@@ -47,6 +47,17 @@ impl Component for Ticket {
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::TicketStore(state) => {
+                info!("Received update");
+
+                let state = state.borrow();
+
+                if state.bets.len() != self.bets.len() {
+                    self.bets = state.bets.values().cloned().collect();
+                }
+                self.ticket_value = state.ticket_value;
+                self.rate = state.rate;
+            }
             // check if value is type of f32, otherwise wet bet_value to 1.0
             Msg::ChangeValue(data) => {
                 let val = get_value_from_event(data);
@@ -59,17 +70,6 @@ impl Component for Ticket {
             }
             Msg::Submit => {
                 self.ticket_store.send(TicketRequest::SubmitTicket);
-            }
-            Msg::TicketStore(state) => {
-                info!("Received update");
-
-                let state = state.borrow();
-
-                if state.bets.len() != self.bets.len() {
-                    self.bets = state.bets.values().cloned().collect();
-                }
-                self.ticket_value = state.ticket_value;
-                self.rate = state.rate;
             }
         }
         true

@@ -1,7 +1,8 @@
-use crate::components::{header::header::Header, layout::Layout};
+use crate::components::{layout::Layout, layout_no_sidebars::LayoutNoSidebars};
 use crate::pages::{
     about_page::AboutPage, contact_page::ContactPage, live_page::LivePage, not_found::NotFoundPage,
-    privacy_policy_page::PrivacyPolicyPage, results_page::ResultsPage, upcoming_page::UpcomingPage,
+    privacy_policy_page::PrivacyPolicyPage, profile_page::ProfilePage, results_page::ResultsPage,
+    upcoming_page::UpcomingPage,
 };
 use pages::registration_page::RegistrationPage;
 use yew::prelude::*;
@@ -28,6 +29,8 @@ pub enum Route {
     PrivacyPolicy,
     #[at("/contact")]
     Contact,
+    #[at("/profile")]
+    Profile,
     #[at("/")]
     Home,
     #[not_found]
@@ -64,9 +67,10 @@ fn switch(routes: &Route) -> Html {
     match routes.clone() {
         Route::Live | Route::Home => {
             html! {
-            <Layout>
-                <LivePage />
-            </Layout>}
+                <Layout>
+                    <LivePage />
+                </Layout>
+            }
         }
         Route::Upcoming => {
             html! {
@@ -82,39 +86,40 @@ fn switch(routes: &Route) -> Html {
                 </Layout>
             }
         }
-        Route::Registration => {
-            html! { <RegistrationPage /> }
-        }
+        Route::Registration => html! { <RegistrationPage /> },
         Route::About => {
             html! {
-                <>
-                    <Header />
+                <LayoutNoSidebars>
                     <AboutPage />
-                </>
+                </LayoutNoSidebars>
             }
         }
         Route::PrivacyPolicy => {
             html! {
-                <>
-                    <Header />
+                <LayoutNoSidebars>
                     <PrivacyPolicyPage />
-                </>
+                </LayoutNoSidebars>
             }
         }
         Route::Contact => {
             html! {
-                <>
-                    <Header />
+                <LayoutNoSidebars>
                     <ContactPage />
-                </>
+                </LayoutNoSidebars>
+            }
+        }
+        Route::Profile => {
+            html! {
+                <LayoutNoSidebars>
+                    <ProfilePage />
+                </LayoutNoSidebars>
             }
         }
         Route::NotFound => {
             html! {
-                <>
-                    <Header />
+                <LayoutNoSidebars>
                     <NotFoundPage />
-                </>
+                </LayoutNoSidebars>
             }
         }
     }

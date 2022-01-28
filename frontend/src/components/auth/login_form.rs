@@ -69,10 +69,11 @@ impl Component for LoginForm {
                     </div>
                     <div class="flex flex-row gap-1">
                         <button type="submit"
-                                class="bg-light-grey uppercase font-thin p-1 rounded-md transition-all">
+                                class="block my-auto px-1 py-4 lg:py-1 bg-light-grey uppercase font-light rounded-md transition-all">
                             {"Login"}
                         </button>
-                        <Link<Route> to={Route::Registration} classes="bg-yellow font-thin p-1 rounded-md uppercase text-black transition-all">
+                        <Link<Route> to={Route::Registration} 
+                                classes="block my-auto px-1 py-4 lg:py-1 bg-yellow rounded-md uppercase font-light text-black transition-all">
                             { "Join" }
                         </Link<Route>>
                     </div>

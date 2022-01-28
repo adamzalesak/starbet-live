@@ -34,6 +34,17 @@ pub struct UserLoginFormData {
     pub password: String,
 }
 
+// struct represents user's data stored in the app
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct UserStorage {
+    pub id: u32,
+    pub first_name: String,
+    pub last_name: String,
+    pub token: String,
+    pub current_balance: String,
+}
+
 // Enum represents individual fields in user's forms
 #[derive(Debug, Clone, PartialEq)]
 pub enum Field {
@@ -107,6 +118,18 @@ impl UserLoginFormData {
         Self {
             email: String::new(),
             password: String::new(),
+        }
+    }
+}
+
+impl UserStorage {
+    pub fn new() -> Self {
+        Self {
+            id: 0,
+            first_name: String::new(),
+            last_name: String::new(),
+            token: String::new(),
+            current_balance: String::new(),
         }
     }
 }

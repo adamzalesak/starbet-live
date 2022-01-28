@@ -1,5 +1,4 @@
 use std::fmt::Display;
-
 use wasm_bindgen::JsCast;
 use wasm_bindgen::UnwrapThrowExt;
 use web_sys::Event;
@@ -112,10 +111,10 @@ pub fn text_input(props: &Props) -> Html {
 
     html! {
         <div class="flex flex-col mt-2 mb-1">
-        
+
             <label for={format!("{:?}", field_copy)} class={format!("font-medium mb-1 {}", if required {"required_input"} else {""})}>
                 {label}{":"}
-            </label>     
+            </label>
 
             <input
                 id={format!("{:?}", field_copy)}
@@ -124,7 +123,7 @@ pub fn text_input(props: &Props) -> Html {
                 {oninput}
                 {onblur}
                 {placeholder}
-                class={format!("border border-dark-blue focus:outline-none p-1 rounded-md {}",
+                class={format!("border border-dark-blue focus:outline-none p-1 rounded-md shadow-md {}",
                             if !error_msg_copy2.is_empty() {"bg-danger-light border-danger"} else {""})}
             />
             {

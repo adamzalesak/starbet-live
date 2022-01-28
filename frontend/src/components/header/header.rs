@@ -1,11 +1,18 @@
 use super::date_time::DateTime;
-use crate::components::auth::login_form::LoginForm;
+use crate::agents::users::UserStore;
+use crate::components::{auth::login_form::LoginForm, user::user_summary::UserSummary};
+use crate::types::users::UserStorage;
 use crate::Route;
 use yew::prelude::*;
+use yew_agent::{
+    utils::store::{Bridgeable, ReadOnly, StoreWrapper},
+    Bridge,
+};
 use yew_router::{history::Location, prelude::Link, scope_ext::RouterScopeExt};
 
 pub enum Msg {
     SetActive(Pages),
+    UserStore(ReadOnly<UserStore>),
 }
 
 #[derive(PartialEq)]
@@ -18,6 +25,8 @@ pub enum Pages {
 
 pub struct Header {
     current_page: Pages,
+    user: UserStorage,
+    user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
 
 impl Component for Header {
@@ -33,11 +42,19 @@ impl Component for Header {
             "/upcoming" | "/upcoming/" => Pages::Upcoming,
             _ => Pages::None,
         };
-        Self { current_page: curr }
+        Self {
+            current_page: curr,
+            user: UserStorage::new(),
+            user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
+        }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::UserStore(state) => {
+                let state = state.borrow();
+                self.user = state.user.clone();
+            }
             Msg::SetActive(page) => self.current_page = page,
         }
         true
@@ -87,7 +104,18 @@ impl Component for Header {
                     }
                 </div>
                 <div class="my-auto text-sm p-2">
-                    <LoginForm />
+                    {
+                        if self.user.token.is_empty() {
+                            html! { <LoginForm /> }
+                        } else {
+                            html! { <UserSummary
+                                        first_name={self.user.first_name.clone()}
+                                        last_name={self.user.last_name.clone()}
+                                        current_balance={self.user.current_balance.clone()}
+                                    />
+                                }
+                        }
+                    }
                 </div>
             </header>
         }

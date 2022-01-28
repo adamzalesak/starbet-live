@@ -18,13 +18,13 @@ pub struct TicketItem {
 }
 
 #[derive(Properties, PartialEq)]
-pub struct Props {
+pub struct TicketItemProps {
     pub bet: BetInfo,
 }
 
 impl Component for TicketItem {
     type Message = Msg;
-    type Properties = Props;
+    type Properties = TicketItemProps;
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
