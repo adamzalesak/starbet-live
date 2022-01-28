@@ -37,7 +37,7 @@ pub struct UserLoginFormData {
 // struct represents user's data stored in the app
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct UserStorage {
+pub struct UserInfo {
     pub id: u32,
     pub first_name: String,
     pub last_name: String,
@@ -122,7 +122,7 @@ impl UserLoginFormData {
     }
 }
 
-impl UserStorage {
+impl UserInfo {
     pub fn new() -> Self {
         Self {
             id: 0,
@@ -131,5 +131,8 @@ impl UserStorage {
             token: String::new(),
             current_balance: String::new(),
         }
+    }
+    pub fn is_authenticated(&self) -> bool {
+        !self.token.is_empty()
     }
 }

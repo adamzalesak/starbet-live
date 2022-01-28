@@ -8,9 +8,10 @@ use pages::registration_page::RegistrationPage;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-mod agents;
 mod components;
 mod pages;
+mod services;
+mod store;
 mod types;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
@@ -66,6 +67,7 @@ impl Component for App {
 fn switch(routes: &Route) -> Html {
     match routes.clone() {
         Route::Live | Route::Home => {
+            gloo::utils::document().set_title("Starbet Live");
             html! {
                 <Layout>
                     <LivePage />
@@ -73,6 +75,7 @@ fn switch(routes: &Route) -> Html {
             }
         }
         Route::Upcoming => {
+            gloo::utils::document().set_title("Upcoming | Starbet Live");
             html! {
                 <Layout>
                     <UpcomingPage />
@@ -80,14 +83,19 @@ fn switch(routes: &Route) -> Html {
             }
         }
         Route::Results => {
+            gloo::utils::document().set_title("Results | Starbet Live");
             html! {
                 <Layout>
                     <ResultsPage />
                 </Layout>
             }
         }
-        Route::Registration => html! { <RegistrationPage /> },
+        Route::Registration => {
+            gloo::utils::document().set_title("Registration | Starbet Live");
+            html! { <RegistrationPage /> }
+        }
         Route::About => {
+            gloo::utils::document().set_title("About | Starbet Live");
             html! {
                 <LayoutNoSidebars>
                     <AboutPage />
@@ -95,6 +103,7 @@ fn switch(routes: &Route) -> Html {
             }
         }
         Route::PrivacyPolicy => {
+            gloo::utils::document().set_title("Privacy policy | Starbet Live");
             html! {
                 <LayoutNoSidebars>
                     <PrivacyPolicyPage />
@@ -102,6 +111,7 @@ fn switch(routes: &Route) -> Html {
             }
         }
         Route::Contact => {
+            gloo::utils::document().set_title("Contact | Starbet Live");
             html! {
                 <LayoutNoSidebars>
                     <ContactPage />
@@ -109,6 +119,7 @@ fn switch(routes: &Route) -> Html {
             }
         }
         Route::Profile => {
+            gloo::utils::document().set_title("Profile | Starbet Live");
             html! {
                 <LayoutNoSidebars>
                     <ProfilePage />
@@ -116,6 +127,7 @@ fn switch(routes: &Route) -> Html {
             }
         }
         Route::NotFound => {
+            gloo::utils::document().set_title("Not found | Starbet Live");
             html! {
                 <LayoutNoSidebars>
                     <NotFoundPage />

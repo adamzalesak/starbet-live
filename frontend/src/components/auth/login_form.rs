@@ -6,7 +6,9 @@ use crate::{
 use log::info;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
+use yew_agent::utils::store::Bridgeable;
 use yew_router::prelude::Link;
+use crate::store::users::UserStore;
 
 #[derive(Serialize, Deserialize, Clone)]
 
@@ -36,6 +38,11 @@ impl Component for LoginForm {
                 if self.data.email.is_empty() || self.data.password.is_empty() {
                     return false;
                 }
+
+                // request
+
+                // response
+
                 info!("Submiting login form");
             }
             Msg::SetEmail((new_data, _, _)) => self.data.email = new_data,

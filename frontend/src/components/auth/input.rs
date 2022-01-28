@@ -68,7 +68,7 @@ pub fn text_input(props: &Props) -> Html {
     let label_copy2 = label.clone();
     let input_type_copy = input_type.clone();
 
-    let error_msg = use_state(|| String::new());
+    let error_msg = use_state(String::new);
     let error_msg_copy = error_msg.clone();
     let error_msg_copy2 = (*error_msg).to_string();
 

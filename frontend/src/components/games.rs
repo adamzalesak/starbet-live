@@ -12,14 +12,15 @@ pub enum Msg {
 }
 
 pub struct Games {
-    games: Vec<Game>,
+    // games: Vec<Game>,
 }
 
 impl Component for Games {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_ctx: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
+        ctx.link().callback(|_| Msg::Call);
         Self { games: Vec::new() }
     }
 

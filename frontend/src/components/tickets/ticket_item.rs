@@ -1,4 +1,4 @@
-use crate::agents::tickets::{TicketRequest, TicketStore};
+use crate::store::tickets::{TicketRequest, TicketStore};
 use crate::types::tickets::BetInfo;
 use yew::prelude::*;
 use yew::{html, Component, Html, Properties};

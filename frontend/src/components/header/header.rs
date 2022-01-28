@@ -1,8 +1,9 @@
 use super::date_time::DateTime;
-use crate::agents::users::UserStore;
 use crate::components::{auth::login_form::LoginForm, user::user_summary::UserSummary};
-use crate::types::users::UserStorage;
+use crate::store::UserStore;
+use crate::types::UserInfo;
 use crate::Route;
+use log::info;
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
@@ -25,7 +26,7 @@ pub enum Pages {
 
 pub struct Header {
     current_page: Pages,
-    user: UserStorage,
+    user: UserInfo,
     user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
 
@@ -44,7 +45,7 @@ impl Component for Header {
         };
         Self {
             current_page: curr,
-            user: UserStorage::new(),
+            user: UserInfo::new(),
             user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
         }
     }
@@ -105,15 +106,15 @@ impl Component for Header {
                 </div>
                 <div class="my-auto text-sm p-2">
                     {
-                        if self.user.token.is_empty() {
-                            html! { <LoginForm /> }
-                        } else {
+                        if self.user.is_authenticated() {
                             html! { <UserSummary
-                                        first_name={self.user.first_name.clone()}
-                                        last_name={self.user.last_name.clone()}
-                                        current_balance={self.user.current_balance.clone()}
-                                    />
-                                }
+                                first_name={self.user.first_name.clone()}
+                                last_name={self.user.last_name.clone()}
+                                current_balance={self.user.current_balance.clone()}
+                            />
+                        }
+                        } else {
+                            html! { <LoginForm /> }
                         }
                     }
                 </div>

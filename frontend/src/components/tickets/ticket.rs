@@ -1,7 +1,7 @@
 use super::ticket_item::TicketItem;
 use crate::{
-    agents::tickets::{TicketRequest, TicketStore},
-    types::tickets::BetInfo,
+    store::{TicketRequest, TicketStore},
+    types::BetInfo,
 };
 use log::info;
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
