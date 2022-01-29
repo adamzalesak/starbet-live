@@ -1,4 +1,3 @@
-DROP TABLE "user_address";
 DROP TABLE "team_plays_game";
 DROP TABLE "game_match_event";
 DROP TABLE "bet";
@@ -6,4 +5,5 @@ DROP TABLE "game_match";
 DROP TABLE "team";
 DROP TABLE "game";
 DROP TABLE "ticket";
+DROP TABLE "user_address";
 DROP TABLE "user";

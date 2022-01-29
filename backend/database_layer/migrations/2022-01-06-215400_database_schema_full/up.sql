@@ -72,7 +72,9 @@ CREATE TABLE "game_match_event" (
 CREATE TABLE "ticket" (
     id SERIAL PRIMARY KEY,
     "user_id" INTEGER REFERENCES "user" NOT NULL,
+    "address_id" INTEGER REFERENCES "user_address" NOT NULL,
     created_at TEXT NOT NULL,
+    valid_until TEXT NOT NULL,
     price TEXT NOT NULL,
     paid_at TEXT
 );
