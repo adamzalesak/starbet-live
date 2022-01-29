@@ -7,3 +7,4 @@ pub mod footer;
 pub mod tickets;
 pub mod user;
 pub mod layout_no_sidebars;
+pub mod layout_profile;

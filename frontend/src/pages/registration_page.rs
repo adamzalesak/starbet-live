@@ -2,7 +2,7 @@ use crate::{
     components::{
         auth::registration_form::RegistrationForm, footer::Footer, header::date_time::DateTime,
     },
-    Route,
+    types::MainRoute,
 };
 use yew::prelude::*;
 use yew_router::prelude::Link;
@@ -27,10 +27,10 @@ impl Component for RegistrationPage {
         html! {
             <>
                 <header class="bg-dark-blue flex flex-row justify-between text-white">
-                    <div class="block w-52 p-2 mx-auto text-center">
-                        <Link<Route> to={Route::Home}>
+                    <div class="block w-52 p-2 mx-auto text-center text-sm">
+                        <Link<MainRoute> to={MainRoute::Home}>
                             <img src="/starbet-live-yellow.svg" alt="starbet live logo" class="mb-1"/>
-                        </Link<Route>>
+                        </Link<MainRoute>>
                         <DateTime />
                     </div>
                 </header>

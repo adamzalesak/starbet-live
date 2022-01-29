@@ -37,7 +37,7 @@ impl Component for DateTime {
         let date_handle = {
             let link = ctx.link().clone();
             // update date every 2 minutes
-            Interval::new(1000 * 60 * 2, move || link.send_message(Msg::Updatedate))
+            Interval::new(1000 * 60 * 4, move || link.send_message(Msg::Updatedate))
         };
 
         Self {

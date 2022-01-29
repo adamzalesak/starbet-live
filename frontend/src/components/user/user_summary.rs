@@ -1,4 +1,4 @@
-use crate::Route;
+use crate::types::{ProfileRoute, MainRoute};
 use yew::prelude::*;
 use yew_router::prelude::Link;
 
@@ -35,13 +35,13 @@ impl Component for UserSummary {
         html! {
             // <div class={"bg-dark-blue text-white text-center text-sm p-2"}>
             <div class="flex flex-row gap-2 p-3 rounded-md bg-light-grey whitespace-nowrap user-summary">
-                <Link<Route> to={Route::Registration} classes="block p-2 my-auto bg-blue rounded-md transition-all">
+                <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block p-2 my-auto bg-blue rounded-md transition-all">
                     { "My tickets" }
-                </Link<Route>>
+                </Link<ProfileRoute>>
 
-                <Link<Route> to={Route::Profile} classes="block p-2 my-auto bg-blue rounded-md transition-all">
+                <Link<ProfileRoute> to={ProfileRoute::Summary} classes="block p-2 my-auto bg-blue rounded-md transition-all">
                     { "Profile" }
-                </Link<Route>>
+                </Link<ProfileRoute>>
 
                 <div class="my-auto text-right text-black">
                     <span>{ first_name }{" "}{ last_name }</span>

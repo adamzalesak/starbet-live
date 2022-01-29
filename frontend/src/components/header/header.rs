@@ -2,7 +2,7 @@ use super::date_time::DateTime;
 use crate::components::{auth::login_form::LoginForm, user::user_summary::UserSummary};
 use crate::store::UserStore;
 use crate::types::UserInfo;
-use crate::Route;
+use crate::types::MainRoute;
 use log::info;
 use yew::prelude::*;
 use yew_agent::{
@@ -65,9 +65,9 @@ impl Component for Header {
         html! {
             <header class="bg-dark-blue flex flex-row justify-between text-white">
                 <div onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class="block w-52 header-logo transition-all my-auto">
-                    <Link<Route> to={Route::Home}>
+                    <Link<MainRoute> to={MainRoute::Home}>
                         <img src="/starbet-live-yellow.svg" alt="starbet live logo" class="p-3"/>
-                    </Link<Route>>
+                    </Link<MainRoute>>
                 </div>
                 <div class="flex flex-col justify-between w-full">
                     <div class="text-center my-2 text-sm">
@@ -81,19 +81,19 @@ impl Component for Header {
                                 <nav>
                                     <ul>
                                         <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class={if self.current_page == Pages::Live {"current_active_page"} else {""}}>
-                                            <Link<Route> to={Route::Live} classes={"inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
+                                            <Link<MainRoute> to={MainRoute::Live} classes={"inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
                                                 { "Live" }
-                                            </Link<Route>>
+                                            </Link<MainRoute>>
                                         </span>
                                         <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Upcoming))} class={if self.current_page == Pages::Upcoming {"current_active_page"} else {""}}>
-                                            <Link<Route> to={Route::Upcoming} classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                            <Link<MainRoute> to={MainRoute::Upcoming} classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
                                                 { "Upcoming" }
-                                            </Link<Route>>
+                                            </Link<MainRoute>>
                                         </span>
                                         <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Results))} class={if self.current_page == Pages::Results {"current_active_page"} else {""}}>
-                                            <Link<Route> to={Route::Results} classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                            <Link<MainRoute> to={MainRoute::Results} classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
                                                 { "Results" }
-                                            </Link<Route>>
+                                            </Link<MainRoute>>
                                         </span>
                                     </ul>
                                 </nav>

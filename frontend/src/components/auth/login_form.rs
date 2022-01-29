@@ -1,14 +1,11 @@
 use crate::{
     components::auth::input::{InputType, TextInput},
-    types::users::{Field, UserLoginFormData},
-    Route,
+    types::{Field, MainRoute, UserLoginFormData},
 };
 use log::info;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
-use yew_agent::utils::store::Bridgeable;
 use yew_router::prelude::Link;
-use crate::store::users::UserStore;
 
 #[derive(Serialize, Deserialize, Clone)]
 
@@ -79,10 +76,10 @@ impl Component for LoginForm {
                                 class="block my-auto px-1 py-4 lg:py-1 bg-light-grey uppercase font-light rounded-md transition-all">
                             {"Login"}
                         </button>
-                        <Link<Route> to={Route::Registration} 
+                        <Link<MainRoute> to={MainRoute::Registration}
                                 classes="block my-auto px-1 py-4 lg:py-1 bg-yellow rounded-md uppercase font-light text-black transition-all">
                             { "Join" }
-                        </Link<Route>>
+                        </Link<MainRoute>>
                     </div>
                 </form>
 

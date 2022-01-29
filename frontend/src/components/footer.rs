@@ -1,7 +1,6 @@
+use crate::types::MainRoute;
 use yew::prelude::*;
 use yew_router::prelude::Link;
-
-use crate::Route;
 
 pub enum Msg {}
 
@@ -26,7 +25,7 @@ impl Component for Footer {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let FooterProps { squared_design } = *ctx.props().clone();
+        let FooterProps { squared_design } = *ctx.props();
 
         html! {
             // <div class={"bg-dark-blue text-white text-center text-sm p-2"}>
@@ -38,15 +37,15 @@ impl Component for Footer {
                     <div class={format!("font-medium {}", if squared_design {"m-2"} else {"m-1"})}>
                         {"© Starbet Live 2022"}
                     </div>
-                    <Link<Route> to={Route::About} classes={"underline m-1 transition-all footer-link"}>
+                    <Link<MainRoute> to={MainRoute::About} classes={"underline m-1 transition-all footer-link"}>
                         {"About"}
-                    </Link<Route>>
-                    <Link<Route> to={Route::PrivacyPolicy} classes={"underline m-1 transition-all footer-link"}>
+                    </Link<MainRoute>>
+                    <Link<MainRoute> to={MainRoute::PrivacyPolicy} classes={"underline m-1 transition-all footer-link"}>
                         {"Privacy Policy"}
-                    </Link<Route>>
-                    <Link<Route> to={Route::Contact} classes={"underline m-1 transition-all footer-link"}>
+                    </Link<MainRoute>>
+                    <Link<MainRoute> to={MainRoute::Contact} classes={"underline m-1 transition-all footer-link"}>
                         {"Contact"}
-                    </Link<Route>>
+                    </Link<MainRoute>>
                 </div>
             </div>
         }

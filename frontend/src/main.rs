@@ -1,43 +1,20 @@
-use crate::components::{layout::Layout, layout_no_sidebars::LayoutNoSidebars};
+use crate::components::{
+    layout::Layout, layout_no_sidebars::LayoutNoSidebars, layout_profile::LayoutProfile,
+};
 use crate::pages::{
     about_page::AboutPage, contact_page::ContactPage, live_page::LivePage, not_found::NotFoundPage,
-    privacy_policy_page::PrivacyPolicyPage, profile_page::ProfilePage, results_page::ResultsPage,
-    upcoming_page::UpcomingPage,
+    privacy_policy_page::PrivacyPolicyPage, results_page::ResultsPage, upcoming_page::UpcomingPage,
 };
 use pages::registration_page::RegistrationPage;
+use types::{MainRoute, ProfileRoute};
 use yew::prelude::*;
-use yew_router::prelude::*;
+use yew_router::{prelude::Redirect, Switch, BrowserRouter};
 
 mod components;
 mod pages;
 mod services;
 mod store;
 mod types;
-
-#[derive(Routable, PartialEq, Clone, Debug)]
-pub enum Route {
-    #[at("/live")]
-    Live,
-    #[at("/upcoming")]
-    Upcoming,
-    #[at("/results")]
-    Results,
-    #[at("/registration")]
-    Registration,
-    #[at("/about")]
-    About,
-    #[at("/privacy-policy")]
-    PrivacyPolicy,
-    #[at("/contact")]
-    Contact,
-    #[at("/profile")]
-    Profile,
-    #[at("/")]
-    Home,
-    #[not_found]
-    #[at("/404")]
-    NotFound,
-}
 
 enum Msg {}
 
@@ -58,15 +35,15 @@ impl Component for App {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <BrowserRouter>
-                <Switch<Route> render={Switch::render(switch)} />
+                <Switch<MainRoute> render={Switch::render(switch_main)} />
             </BrowserRouter>
         }
     }
 }
 
-fn switch(routes: &Route) -> Html {
+fn switch_main(routes: &MainRoute) -> Html {
     match routes.clone() {
-        Route::Live | Route::Home => {
+        MainRoute::Live | MainRoute::Home => {
             gloo::utils::document().set_title("Starbet Live");
             html! {
                 <Layout>
@@ -74,7 +51,7 @@ fn switch(routes: &Route) -> Html {
                 </Layout>
             }
         }
-        Route::Upcoming => {
+        MainRoute::Upcoming => {
             gloo::utils::document().set_title("Upcoming | Starbet Live");
             html! {
                 <Layout>
@@ -82,7 +59,7 @@ fn switch(routes: &Route) -> Html {
                 </Layout>
             }
         }
-        Route::Results => {
+        MainRoute::Results => {
             gloo::utils::document().set_title("Results | Starbet Live");
             html! {
                 <Layout>
@@ -90,11 +67,11 @@ fn switch(routes: &Route) -> Html {
                 </Layout>
             }
         }
-        Route::Registration => {
+        MainRoute::Registration => {
             gloo::utils::document().set_title("Registration | Starbet Live");
             html! { <RegistrationPage /> }
         }
-        Route::About => {
+        MainRoute::About => {
             gloo::utils::document().set_title("About | Starbet Live");
             html! {
                 <LayoutNoSidebars>
@@ -102,7 +79,7 @@ fn switch(routes: &Route) -> Html {
                 </LayoutNoSidebars>
             }
         }
-        Route::PrivacyPolicy => {
+        MainRoute::PrivacyPolicy => {
             gloo::utils::document().set_title("Privacy policy | Starbet Live");
             html! {
                 <LayoutNoSidebars>
@@ -110,7 +87,7 @@ fn switch(routes: &Route) -> Html {
                 </LayoutNoSidebars>
             }
         }
-        Route::Contact => {
+        MainRoute::Contact => {
             gloo::utils::document().set_title("Contact | Starbet Live");
             html! {
                 <LayoutNoSidebars>
@@ -118,15 +95,17 @@ fn switch(routes: &Route) -> Html {
                 </LayoutNoSidebars>
             }
         }
-        Route::Profile => {
+        MainRoute::Profile => {
             gloo::utils::document().set_title("Profile | Starbet Live");
             html! {
                 <LayoutNoSidebars>
-                    <ProfilePage />
+                    <LayoutProfile>
+                        <Switch<ProfileRoute> render={Switch::render(switch_profile)} />
+                    </LayoutProfile>
                 </LayoutNoSidebars>
             }
         }
-        Route::NotFound => {
+        MainRoute::NotFound => {
             gloo::utils::document().set_title("Not found | Starbet Live");
             html! {
                 <LayoutNoSidebars>
@@ -134,6 +113,17 @@ fn switch(routes: &Route) -> Html {
                 </LayoutNoSidebars>
             }
         }
+    }
+}
+
+fn switch_profile(route: &ProfileRoute) -> Html {
+    match route {
+        ProfileRoute::Summary => html! {<h1>{"Profile"}</h1>},
+        ProfileRoute::Statistics => html! {<h1>{"Statistics"}</h1>},
+        ProfileRoute::Tickets => html! {<h1>{"Tickets"}</h1>},
+        ProfileRoute::NotFound => html! {
+            <Redirect<MainRoute> to={MainRoute::NotFound}/>
+        },
     }
 }
 
