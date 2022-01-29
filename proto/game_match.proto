@@ -1,9 +1,6 @@
 syntax = "proto3";
 package game_match;
 
-import "google/protobuf/empty.proto";
-
-
 service MatchService {
     rpc ListMatches (ListMatchesRequest) returns (ListMatchesReply);
     rpc CreateMatch (CreateMatchRequest) returns (CreateMatchReply);

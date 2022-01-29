@@ -1,13 +1,13 @@
+use bytes::{BufMut, BytesMut};
+use prost::Message;
+use std::sync::Arc;
+use tonic::{Code, Request, Response, Status};
+
 use crate::game::game_service_server::GameService;
 use crate::game::{
     CreateGameReply, CreateGameRequest, DeleteGameReply, DeleteGameRequest, Game, ListGamesReply,
     ListGamesRequest,
 };
-
-use bytes::{BufMut, BytesMut};
-use prost::Message;
-use std::sync::Arc;
-use tonic::{Code, Request, Response, Status};
 
 use database_layer::{
     connection::PgPool,
@@ -18,18 +18,14 @@ use database_layer::{
     db_models::game::CreateGame,
 };
 
-use ws_layer::Clients;
-
 pub struct MyGameService {
     repo: PgGameRepo,
-    ws_clients: Clients,
 }
 
 impl MyGameService {
-    pub fn new(pool: &Arc<PgPool>, ws_clients: Clients) -> MyGameService {
+    pub fn new(pool: &Arc<PgPool>) -> MyGameService {
         MyGameService {
             repo: PgGameRepo::new(pool),
-            ws_clients: ws_clients,
         }
     }
 }
@@ -38,7 +34,7 @@ impl MyGameService {
 impl GameService for MyGameService {
     async fn list_games(
         &self,
-        request: Request<ListGamesRequest>,
+        _: Request<ListGamesRequest>,
     ) -> Result<Response<ListGamesReply>, Status> {
         match self.repo.get_all().await {
             Ok(game_infos) => Ok(Response::new(ListGamesReply {
@@ -64,14 +60,6 @@ impl GameService for MyGameService {
             description: "",
             logo: "",
         };
-
-        let mut buf = BytesMut::with_capacity(64);
-        CreateGameReply { id: 1 }.encode(&mut buf);
-        for client in self.ws_clients.lock().await.values() {
-            if let Some(sender) = &client.sender {
-                sender.send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
-            }
-        }
 
         match self.repo.create(create_game).await {
             Ok(game_id) => Ok(Response::new(CreateGameReply { id: game_id })),

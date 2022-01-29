@@ -1,7 +1,6 @@
 syntax = "proto3";
 package bet;
 
-
 service BetService {
     rpc ListBets (ListBetsRequest) returns (ListBetsReply);
     rpc CreateBet (CreateBetRequest) returns (CreateBetReply);

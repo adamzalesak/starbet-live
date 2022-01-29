@@ -1,0 +1,46 @@
+syntax = "proto3";
+package team;
+
+service TeamService {
+    rpc GetTeam (GetTeamRequest) returns (GetTeamReply);
+    rpc CreateTeam (CreateTeamRequest) returns (CreateTeamReply);
+    rpc AddTeamToGame (AddTeamToGameRequest) returns (AddTeamToGameReply);
+    rpc RemoveTeamFromGame (RemoveTeamFromGameRequest) returns (RemoveTeamFromGameReply);
+}
+
+message Team {
+    string name = 2;
+    string description = 3;
+    string logo = 4;
+}
+
+message GetTeamRequest {
+    int32 id = 1;
+}
+
+message GetTeamReply {
+    Team team = 1;
+}
+
+message CreateTeamRequest {
+    Team team = 1;
+}
+
+message CreateTeamReply {
+    int32 id = 1;
+}
+
+message AddTeamToGameRequest {
+    int32 team_id = 1;
+    int32 game_id = 2;
+}
+
+message AddTeamToGameReply {}
+
+message RemoveTeamFromGameRequest {
+    int32 team_id = 1;
+    int32 game_id = 2;
+}
+
+message RemoveTeamFromGameReply {}
+
