@@ -31,6 +31,7 @@ impl Component for LayoutProfile {
     type Properties = LayoutProfileProps;
 
     fn create(ctx: &Context<Self>) -> Self {
+        info!("creating profile layout");
         Self {
             current_tab: ctx.link().route::<ProfileRoute>(),
             user: UserInfo::new(),
@@ -57,29 +58,20 @@ impl Component for LayoutProfile {
         true
     }
 
-    // fn change(&mut self, Self::Message) -> ShouldRender {
-    //     if self.props != props {
-    //         self.props = props;
-    //         true
-    //     } else {
-    //         false
-    //     }
-    // }
-
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <>
-                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("{}", if self.current_tab == Some(ProfileRoute::Summary) {"bg-blue"} else {""})}>
+                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={if self.current_tab == Some(ProfileRoute::Summary) {"bg-blue text-white"} else {""}}>
                     <Link<ProfileRoute> to={ProfileRoute::Summary}>
                         { "Summary" }
                     </Link<ProfileRoute>>
                 </span>
-                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("{}", if self.current_tab == Some(ProfileRoute::Tickets) {"bg-blue"} else {""})}>
+                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={if self.current_tab == Some(ProfileRoute::Tickets) {"bg-blue text-white"} else {""}}>
                     <Link<ProfileRoute> to={ProfileRoute::Tickets}>
                         { "Tickets" }
                     </Link<ProfileRoute>>
                 </span>
-                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("{}", if self.current_tab == Some(ProfileRoute::Statistics) {"bg-blue"} else {""})}>
+                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={if self.current_tab == Some(ProfileRoute::Statistics) {"bg-blue text-white"} else {""}}>
                     <Link<ProfileRoute> to={ProfileRoute::Statistics}>
                         { "Statistics" }
                     </Link<ProfileRoute>>

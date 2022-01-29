@@ -1,31 +1,23 @@
 use super::date_time::DateTime;
 use crate::components::{auth::login_form::LoginForm, user::user_summary::UserSummary};
 use crate::store::UserStore;
-use crate::types::UserInfo;
 use crate::types::MainRoute;
+use crate::types::UserInfo;
 use log::info;
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
     Bridge,
 };
-use yew_router::{history::Location, prelude::Link, scope_ext::RouterScopeExt};
+use yew_router::{prelude::Link, scope_ext::RouterScopeExt};
 
 pub enum Msg {
-    SetActive(Pages),
+    SetCurrentTab,
     UserStore(ReadOnly<UserStore>),
 }
 
-#[derive(PartialEq)]
-pub enum Pages {
-    None,
-    Live,
-    Upcoming,
-    Results,
-}
-
 pub struct Header {
-    current_page: Pages,
+    current_tab: Option<MainRoute>,
     user: UserInfo,
     user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
@@ -35,28 +27,20 @@ impl Component for Header {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        // check currently active page
-        let path: String = ctx.link().location().unwrap().pathname();
-        let curr: Pages = match path.as_str() {
-            "/live" | "/live/" | "/" | "" => Pages::Live,
-            "/results" | "/results/" => Pages::Results,
-            "/upcoming" | "/upcoming/" => Pages::Upcoming,
-            _ => Pages::None,
-        };
         Self {
-            current_page: curr,
+            current_tab: ctx.link().route::<MainRoute>(),
             user: UserInfo::new(),
             user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::UserStore(state) => {
                 let state = state.borrow();
                 self.user = state.user.clone();
             }
-            Msg::SetActive(page) => self.current_page = page,
+            Msg::SetCurrentTab => self.current_tab = ctx.link().route::<MainRoute>(),
         }
         true
     }
@@ -64,7 +48,7 @@ impl Component for Header {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <header class="bg-dark-blue flex flex-row justify-between text-white">
-                <div onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class="block w-52 header-logo transition-all my-auto">
+                <div onclick={ctx.link().callback(|_| Msg::SetCurrentTab)} class="block w-52 header-logo transition-all my-auto">
                     <Link<MainRoute> to={MainRoute::Home}>
                         <img src="/starbet-live-yellow.svg" alt="starbet live logo" class="p-3"/>
                     </Link<MainRoute>>
@@ -75,33 +59,39 @@ impl Component for Header {
                     </div>
 
                     {
-                        // render navigation only when necessary
-                        if self.current_page != Pages::None {
-                            html! {
-                                <nav>
-                                    <ul>
-                                        <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Live))} class={if self.current_page == Pages::Live {"current_active_page"} else {""}}>
-                                            <Link<MainRoute> to={MainRoute::Live} classes={"inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
-                                                { "Live" }
-                                            </Link<MainRoute>>
-                                        </span>
-                                        <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Upcoming))} class={if self.current_page == Pages::Upcoming {"current_active_page"} else {""}}>
-                                            <Link<MainRoute> to={MainRoute::Upcoming} classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
-                                                { "Upcoming" }
-                                            </Link<MainRoute>>
-                                        </span>
-                                        <span onclick={ctx.link().callback(|_| Msg::SetActive(Pages::Results))} class={if self.current_page == Pages::Results {"current_active_page"} else {""}}>
-                                            <Link<MainRoute> to={MainRoute::Results} classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
-                                                { "Results" }
-                                            </Link<MainRoute>>
-                                        </span>
-                                    </ul>
-                                </nav>
+                        match self.current_tab {
+                            Some(MainRoute::Live) | Some(MainRoute::Results) | Some(MainRoute::Upcoming) | Some(MainRoute::Home) => { 
+                                html! {
+                                    <nav>
+                                        <ul>
+                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)} 
+                                                class={if self.current_tab == Some(MainRoute::Live) || self.current_tab == Some(MainRoute::Home) {"current_active_page"} else {""}}>
+                                                <Link<MainRoute> to={MainRoute::Live} 
+                                                    classes={"inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
+                                                    { "Live" }
+                                                </Link<MainRoute>>
+                                            </span>
+                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)} 
+                                                class={if self.current_tab == Some(MainRoute::Upcoming)  {"current_active_page"} else {""}}>
+                                                <Link<MainRoute> to={MainRoute::Upcoming} 
+                                                    classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                                    { "Upcoming" }
+                                                </Link<MainRoute>>
+                                            </span>
+                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)} 
+                                                class={if self.current_tab == Some(MainRoute::Results) {"current_active_page"} else {""}}>
+                                                <Link<MainRoute> to={MainRoute::Results} 
+                                                    classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
+                                                    { "Results" }
+                                                </Link<MainRoute>>
+                                            </span>
+                                        </ul>
+                                    </nav>
+                                }
                             }
+                            _ => html!{} 
                         }
-                        else {
-                            html!{}
-                        }
+                        
                     }
                 </div>
                 <div class="my-auto text-sm p-2">
