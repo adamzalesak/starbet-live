@@ -30,5 +30,7 @@ js-sys = "0.3.55"
 web-sys = "0"
 prost = "0"
 
+wasm-sockets = "0.2.2"
+
 [build-dependencies]
 rust-grpc-web = { git = "https://github.com/elliptic-email/rust-grpc-web" }

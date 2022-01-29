@@ -4,7 +4,8 @@ use crate::components::{
     footer::Footer,
     // games::Games,
     header::header::Header,
-    tickets::{latest_tickets::LatestTickets, ticket::Ticket},
+    latest_bets::latest_bets::LatestBets,
+    ticket::ticket::Ticket,
 };
 pub enum Msg {}
 
@@ -42,7 +43,7 @@ impl Component for Layout {
                     </section>
                     <section class="w-3/12 lg:w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2 transition-all">
                         <Ticket />
-                        <LatestTickets />
+                        <LatestBets />
                     </section>
                 </main>
             </>
