@@ -5,7 +5,6 @@ service BetService {
     rpc ListBets (ListBetsRequest) returns (ListBetsReply);
     rpc CreateBet (CreateBetRequest) returns (CreateBetReply);
     rpc DeleteBet (DeleteBetRequest) returns (DeleteBetReply);
-    rpc ListTicketBets (ListTicketBetsRequest) returns (ListBetsReply);
 }
 
 message Bet {
@@ -13,11 +12,10 @@ message Bet {
     int32 ticket_id = 2;
     int32 match_id = 3;
     int32 team_id = 4;
-    float rate = 5;
 }
 
 message ListBetsRequest {
-    int32 limit = 1;
+    int32 ticket_id = 1;
 }
 
 message ListBetsReply {
@@ -28,7 +26,6 @@ message CreateBetRequest {
     int32 ticket_id = 1;
     int32 match_id = 2;
     int32 team_id = 3;
-    float rate = 4;
 }
 
 message CreateBetReply {
@@ -40,7 +37,3 @@ message DeleteBetRequest {
 }
 
 message DeleteBetReply {}
-
-message ListTicketBetsRequest {
-    int32 ticket_id = 1;
-}

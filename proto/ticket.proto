@@ -1,39 +1,43 @@
 syntax = "proto3";
 package ticket;
 
-import "google/protobuf/empty.proto";
+import "bet.proto";
 
 
 service TicketService {
+    rpc GetCurrentTicket(GetCurrentTicketRequest) returns (GetCurrentTicketReply);
     rpc ListTickets (ListTicketsRequest) returns (ListTicketsReply);
-    rpc CreateTicket (CreateTicketRequest) returns (CreateTicketReply);
-    rpc DeleteTicket (DeleteTicketRequest) returns (google.protobuf.Empty);
+    rpc SubmitTicket (SubmitTicketRequest) returns (SubmitTicketReply);
 }
 
 message Ticket {
     int32 id = 1;
-    int32 amount = 5;
-    float rate = 6;
+    int32 amount = 2;
+    float rate = 3;
+}
+
+message GetCurrentTicketRequest {
+    int32 user_id = 1;
+}
+
+message GetCurrentTicketReply {
+    int32 ticket_id = 1;
+    repeated bet.Bet bets = 2;
 }
 
 message ListTicketsRequest {
-    int32 limit = 1;
+    int32 user_id = 1;
 }
 
 message ListTicketsReply {
     repeated Ticket tickets = 1;
 }
 
-message CreateTicketRequest {
+message SubmitTicketRequest {
     int32 ticket_id = 1;
-    int32 amount = 4;
-    float rate = 5;
+    int32 amount = 2;
 }
 
-message CreateTicketReply {
-    int32 id = 1;
-}
+message SubmitTicketReply {}
 
-message DeleteTicketRequest {
-    int32 id = 1;
-}
+

@@ -42,6 +42,7 @@ impl UserService for MyUserService {
                         first_name: user.first_name,
                         last_name: user.last_name,
                         civil_id_number: user.civil_id_number,
+                        date_of_birth: user.date_of_birth,
                         email: user.email,
                         phone_number: user.phone_number,
                         photo: user.photo,
@@ -80,6 +81,7 @@ impl UserService for MyUserService {
             &user.first_name,
             &user.last_name,
             &user.civil_id_number,
+            &user.date_of_birth,
             &user.email,
             &user.phone_number,
             user.photo.as_deref(),
@@ -110,6 +112,7 @@ impl UserService for MyUserService {
                     request.first_name.as_deref(),
                     request.last_name.as_deref(),
                     request.civil_id_number.as_deref(),
+                    request.date_of_birth.as_deref(),
                     request.email.as_deref(),
                     request.phone_number.as_deref(),
                     Some(request.photo.as_deref()), // TODO

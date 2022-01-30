@@ -1,9 +1,9 @@
-use tonic::{Request, Response, Status};
+use tonic::{Code, Request, Response, Status};
 
 use crate::ticket::ticket_service_server::TicketService;
 use crate::ticket::{
-    CreateTicketReply, CreateTicketRequest, DeleteTicketRequest, ListTicketsReply,
-    ListTicketsRequest,
+    GetCurrentTicketReply, GetCurrentTicketRequest, ListTicketsReply, ListTicketsRequest,
+    SubmitTicketReply, SubmitTicketRequest,
 };
 
 pub struct MyTicketService {}
@@ -16,6 +16,13 @@ impl MyTicketService {
 
 #[tonic::async_trait]
 impl TicketService for MyTicketService {
+    async fn get_current_ticket(
+        &self,
+        request: Request<GetCurrentTicketRequest>,
+    ) -> Result<Response<GetCurrentTicketReply>, Status> {
+        Err(Status::new(Code::from_i32(13), "Todo"))
+    }
+
     async fn list_tickets(
         &self,
         request: Request<ListTicketsRequest>,
@@ -26,22 +33,10 @@ impl TicketService for MyTicketService {
         Ok(Response::new(reply))
     }
 
-    async fn create_ticket(
+    async fn submit_ticket(
         &self,
-        request: Request<CreateTicketRequest>,
-    ) -> Result<Response<CreateTicketReply>, Status> {
-        println!("[Server] Request from client: {:?}", &request);
-
-        let reply = CreateTicketReply { id: 0 };
-        Ok(Response::new(reply))
-    }
-
-    async fn delete_ticket(
-        &self,
-        request: Request<DeleteTicketRequest>,
-    ) -> Result<Response<()>, Status> {
-        println!("[Server] Request from client: {:?}", &request);
-
-        Ok(Response::new(()))
+        request: Request<SubmitTicketRequest>,
+    ) -> Result<Response<SubmitTicketReply>, Status> {
+        Err(Status::new(Code::from_i32(13), "Todo"))
     }
 }

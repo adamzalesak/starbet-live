@@ -1,25 +1,35 @@
 syntax = "proto3";
 package game_match;
 
+import "team.proto";
+
 service MatchService {
     rpc ListMatches (ListMatchesRequest) returns (ListMatchesReply);
     rpc CreateMatch (CreateMatchRequest) returns (CreateMatchReply);
-    rpc DeleteMatch (DeleteMatchRequest) returns (DeleteMatchReply);
+    rpc CreateGameEvent (CreateGameEventRequest) returns (CreateGameEventReply);
+}
 
-    rpc ListGamesMatches (ListGamesMatchesRequest) returns (ListMatchesReply);
+enum GameEventType {
+    UPCOMING = 0;
+    LIVE = 1;
+    ENDED = 2;
 }
 
 message Match {
     int32 id = 1;
     int32 game_id = 2;
-    int32 team_one_id = 3;
-    int32 team_two_id = 4;
-    float team_one_ratio = 5;
-    float team_two_ratio = 6;
-    int32 start_ts = 7;
+    team.Team team_one = 3;
+    team.Team team_two = 4;
+    string team_one_ratio = 5;
+    string team_two_ratio = 6;
+    string supposed_start_at = 7;
+    string state = 8;
 }
 
-message ListMatchesRequest {}
+message ListMatchesRequest {
+    int32 game_id = 1;
+    GameEventType game_event_type = 2;
+}
 
 message ListMatchesReply {
     repeated Match game_matches = 1;
@@ -29,22 +39,19 @@ message CreateMatchRequest {
     int32 game_id = 1;
     int32 team_one_id = 2;
     int32 team_two_id = 3;
-    float team_one_ratio = 4;
-    float team_two_ratio = 5;
-    int32 start_ts = 6;
+    string team_one_ratio = 4;
+    string team_two_ratio = 5;
+    string supposed_start_at = 6;
+    string state = 7;
 }
 
 message CreateMatchReply {
     int32 id = 1;
 }
 
-message DeleteMatchRequest {
-    int32 id = 1;
+message CreateGameEventRequest {
+    GameEventType game_event_type = 1;
+    int32 match_id = 2;
 }
 
-message DeleteMatchReply {}
-
-message ListGamesMatchesRequest {
-    int32 game_id = 1;
-}
-
+message CreateGameEventReply {}

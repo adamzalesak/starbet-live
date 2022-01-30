@@ -4,10 +4,7 @@ use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
 use crate::game::game_service_server::GameService;
-use crate::game::{
-    CreateGameReply, CreateGameRequest, DeleteGameReply, DeleteGameRequest, Game, ListGamesReply,
-    ListGamesRequest,
-};
+use crate::game::{CreateGameReply, CreateGameRequest, Game, ListGamesReply, ListGamesRequest};
 
 use database_layer::{
     connection::PgPool,
@@ -43,6 +40,7 @@ impl GameService for MyGameService {
                     .map(|game_info| Game {
                         id: game_info.id,
                         name: String::from(&game_info.name),
+                        logo_url: String::from(&game_info.logo_url),
                     })
                     .collect(),
             })),
@@ -55,24 +53,11 @@ impl GameService for MyGameService {
         request: Request<CreateGameRequest>,
     ) -> Result<Response<CreateGameReply>, Status> {
         let request = request.into_inner();
-        let create_game = CreateGame {
-            name: &request.name,
-            description: "",
-            logo: "",
-        };
+        let create_game = CreateGame::new(&*request.name, "", &*request.logo_url);
 
         match self.repo.create(create_game).await {
             Ok(game_id) => Ok(Response::new(CreateGameReply { id: game_id })),
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
-    }
-
-    async fn delete_game(
-        &self,
-        request: Request<DeleteGameRequest>,
-    ) -> Result<Response<DeleteGameReply>, Status> {
-        println!("[Server] Request from client: {:?}", &request);
-
-        Ok(Response::new(DeleteGameReply {}))
     }
 }

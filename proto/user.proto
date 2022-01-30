@@ -22,8 +22,9 @@ message User {
     string first_name = 1;
     string last_name = 2;
     string civil_id_number = 3;
-    string email = 4;
-    string phone_number = 5;
+    string date_of_birth = 4;
+    string email = 5;
+    string phone_number = 6;
     optional string photo = 7;
     Address address = 8;
 }
@@ -49,9 +50,10 @@ message EditUserRequest {
     optional string first_name = 2;
     optional string last_name = 3;
     optional string civil_id_number = 4;
-    optional string email = 5;
-    optional string phone_number = 6;
-    optional string photo = 7;
+    optional string date_of_birth = 5;
+    optional string email = 6;
+    optional string phone_number = 7;
+    optional string photo = 8;
 }
 
 message EditUserReply {}

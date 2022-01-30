@@ -6,21 +6,28 @@ use tonic::{Code, Request, Response, Status};
 use crate::bet::bet_service_server::BetService;
 use crate::bet::{
     CreateBetReply, CreateBetRequest, DeleteBetReply, DeleteBetRequest, ListBetsReply,
-    ListBetsRequest, ListTicketBetsRequest,
+    ListBetsRequest,
 };
 
-use database_layer::{connection::PgPool, db_access::repo::Repo, db_models::game::CreateGame};
+use database_layer::{
+    connection::PgPool,
+    db_access::{
+        bet::{BetRepo, PgBetRepo},
+        repo::Repo,
+    },
+    db_models::bet::CreateBet,
+};
 use ws_layer::Clients;
 
 pub struct MyBetService {
-    //    repo: PgBetRepo,
+    repo: PgBetRepo,
     ws_clients: Clients,
 }
 
 impl MyBetService {
     pub fn new(pool: &Arc<PgPool>, ws_clients: Clients) -> MyBetService {
         MyBetService {
-            //           repo: PgBetRepo::new(pool),
+            repo: PgBetRepo::new(pool),
             ws_clients: ws_clients,
         }
     }
@@ -42,15 +49,38 @@ impl BetService for MyBetService {
         &self,
         request: Request<CreateBetRequest>,
     ) -> Result<Response<CreateBetReply>, Status> {
-        println!("[Server] Request from client: {:?}", &request);
-
-        let mut buf = BytesMut::with_capacity(64);
         /*
-        CreateGameReply { id: 1 }.encode(&mut buf);
-        for client in self.ws_clients.lock().await.values() {
-            if let Some(sender) = &client.sender {
-                sender.send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+        let request = request.into_inner();
+        let create_bet = CreateBet::new(
+            request.match_id,
+            request.ticket_id,
+            request.team_id,
+            &request.ratio,
+            "Placed",
+        );
+
+        match self.repo.place(create_bet).await {
+            Ok(bet_id) => {
+                let bet = Bet {
+                    id: bet_id,
+                    game_match_id: create_bet.game_match_id,
+                    ticket_id: create_bet.ticket_id,
+                    team_id: create_bet.team_id,
+                    bet_ratio: create_bet.bet_ratio,
+                    bet_state: create_bet.bet_state,
+                    created_at: create_bet.created_at,
+                };
+
+                let mut buf = BytesMut::with_capacity(64);
+                bet.encode(&mut buf);
+                for client in self.ws_clients.lock().await.values() {
+                    if let Some(sender) = &client.sender {
+                        sender.send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+                    }
+                }
+                Ok(Response::new(CreateBetReply { id: bet_id }))
             }
+            Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
         */
         let reply = CreateBetReply { id: 0 };
@@ -64,15 +94,5 @@ impl BetService for MyBetService {
         println!("[Server] Request from client: {:?}", &request);
 
         Ok(Response::new(DeleteBetReply {}))
-    }
-
-    async fn list_ticket_bets(
-        &self,
-        request: Request<ListTicketBetsRequest>,
-    ) -> Result<Response<ListBetsReply>, Status> {
-        println!("[Server] Request from client: {:?}", &request);
-
-        let reply = ListBetsReply { bets: vec![] };
-        Ok(Response::new(reply))
     }
 }

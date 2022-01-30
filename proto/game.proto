@@ -4,12 +4,12 @@ package game;
 service GameService {
     rpc ListGames (ListGamesRequest) returns (ListGamesReply);
     rpc CreateGame (CreateGameRequest) returns (CreateGameReply);
-    rpc DeleteGame (DeleteGameRequest) returns (DeleteGameReply);
 }
 
 message Game {
     int32 id = 1;
     string name = 2;
+    string logo_url = 3;
 }
 
 message ListGamesRequest {}
@@ -19,18 +19,21 @@ message ListGamesReply {
 }
 
 message CreateGameRequest {
-    string name = 2;
+    string name = 1;
+    string logo_url = 2;
 }
 
 message CreateGameReply {
     int32 id = 1;
 }
 
+/*
 message DeleteGameRequest {
     int32 id = 1;
 }
 
 message DeleteGameReply {}
+*/
 
 
 
