@@ -16,7 +16,10 @@ use database_layer::{
         repo::Repo,
         team::{PgTeamRepo, TeamRepo},
     },
-    db_models::{game_match::CreateGameMatch, game_match_event::GameMatchEventType},
+    db_models::{
+        game_match::CreateGameMatch,
+        game_match_event::{GameMatchEventFilter, GameMatchEventType},
+    },
 };
 
 pub struct MyMatchService {
@@ -42,9 +45,9 @@ impl MatchService for MyMatchService {
         let request = request.into_inner();
         let game_match_event_type = match GameEventType::from_i32(request.game_event_type).unwrap()
         {
-            GameEventType::Upcoming => GameMatchEventType::Upcoming,
-            GameEventType::Live => GameMatchEventType::Live(Utc::now()),
-            GameEventType::Ended => GameMatchEventType::Ended,
+            GameEventType::Upcoming => GameMatchEventFilter::Upcoming,
+            GameEventType::Live => GameMatchEventFilter::Live,
+            GameEventType::Ended => GameMatchEventFilter::Ended, // TODO
         };
 
         match self
@@ -54,7 +57,7 @@ impl MatchService for MyMatchService {
         {
             Ok(game_matches) => {
                 let mut teams = HashMap::new();
-                for game_match in &game_matches {
+                for (game_match, _) in &game_matches {
                     for team_id in vec![game_match.team_one_id, game_match.team_two_id] {
                         if !teams.contains_key(&team_id) {
                             let team = match self.team_repo.get(team_id).await {
@@ -74,7 +77,7 @@ impl MatchService for MyMatchService {
                 Ok(Response::new(ListMatchesReply {
                     game_matches: game_matches
                         .iter()
-                        .map(|game_match| Match {
+                        .map(|(game_match, _)| Match {
                             id: game_match.id,
                             game_id: game_match.game_id,
                             team_one: Some(teams.get(&game_match.team_one_id).unwrap().clone()),
@@ -102,7 +105,7 @@ impl MatchService for MyMatchService {
             request.team_two_id,
             &*request.team_one_ratio,
             &*request.team_two_ratio,
-            &*request.supposed_start_at,
+            Utc::now(),
             &*request.state,
         );
 
@@ -121,7 +124,7 @@ impl MatchService for MyMatchService {
         {
             GameEventType::Upcoming => GameMatchEventType::Upcoming,
             GameEventType::Live => GameMatchEventType::Live(Utc::now()),
-            GameEventType::Ended => GameMatchEventType::Ended,
+            GameEventType::Ended => GameMatchEventType::Ended(0), // TODO
         };
         match self
             .repo

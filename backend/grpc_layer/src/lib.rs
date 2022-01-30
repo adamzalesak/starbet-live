@@ -47,9 +47,15 @@ async fn serve_grpc_server(
         .get("bet")
         .context("bet clients are absent")?
         .clone();
+    let match_clients = ws_route_clients
+        .lock()
+        .await
+        .get("match")
+        .context("match clients are absent")?
+        .clone();
 
     let bet_service = handlers::bet::MyBetService::new(&db_conn_pool, bet_clients);
-    let ticket_service = handlers::ticket::MyTicketService::new();
+    let ticket_service = handlers::ticket::MyTicketService::new(&db_conn_pool, match_clients);
     let game_match_service = handlers::game_match::MyMatchService::new(&db_conn_pool);
     let game_service = handlers::game::MyGameService::new(&db_conn_pool);
     let user_service = handlers::user::MyUserService::new(&db_conn_pool);
@@ -72,10 +78,12 @@ async fn serve_grpc_server(
 
 pub async fn run_grpc_server(server_address: &str, database_url: &str) -> anyhow::Result<()> {
     let ws_route_clients = Arc::new(Mutex::new(HashMap::new()));
-    let bet_clients = Arc::new(Mutex::new(HashMap::new()));
     {
+        let bet_clients = Arc::new(Mutex::new(HashMap::new()));
+        let match_clients = Arc::new(Mutex::new(HashMap::new()));
         let mut ws_route_clients_locked = ws_route_clients.lock().await;
-        ws_route_clients_locked.insert("bet".into(), bet_clients.clone());
+        ws_route_clients_locked.insert("bet".into(), bet_clients);
+        ws_route_clients_locked.insert("match".into(), match_clients);
     }
 
     let ws_server_coro = ws_layer::run_ws_server(ws_route_clients.clone());

@@ -19,14 +19,15 @@ message Address {
 }
 
 message User {
-    string first_name = 1;
-    string last_name = 2;
-    string civil_id_number = 3;
-    string date_of_birth = 4;
-    string email = 5;
-    string phone_number = 6;
-    optional string photo = 7;
-    Address address = 8;
+    int32 id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string civil_id_number = 4;
+    string date_of_birth = 5;
+    string email = 6;
+    string phone_number = 7;
+    optional string photo = 8;
+    Address address = 9;
 }
 
 message GetUserRequest {
@@ -38,7 +39,16 @@ message GetUserReply {
 }
 
 message CreateUserRequest {
-    User user = 1;
+    string first_name = 1;
+    string last_name = 2;
+    string password = 3;
+    string password_salt = 4;
+    string civil_id_number = 5;
+    string date_of_birth = 6;
+    string email = 7;
+    string phone_number = 8;
+    optional string photo = 9;
+    Address address = 10;
 }
 
 message CreateUserReply {
@@ -49,11 +59,13 @@ message EditUserRequest {
     int32 id = 1;
     optional string first_name = 2;
     optional string last_name = 3;
-    optional string civil_id_number = 4;
-    optional string date_of_birth = 5;
-    optional string email = 6;
-    optional string phone_number = 7;
-    optional string photo = 8;
+    optional string password = 4;
+    optional string password_salt = 5;
+    optional string civil_id_number = 6;
+    optional string date_of_birth = 7;
+    optional string email = 8;
+    optional string phone_number = 9;
+    optional string photo = 10;
 }
 
 message EditUserReply {}

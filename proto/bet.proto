@@ -34,6 +34,7 @@ message CreateBetReply {
 
 message DeleteBetRequest {
     int32 id = 1;
+    int32 ticket_id = 2;
 }
 
 message DeleteBetReply {}

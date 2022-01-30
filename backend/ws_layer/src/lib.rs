@@ -24,14 +24,28 @@ pub async fn run_ws_server(route_clients: RouteClients) -> anyhow::Result<()> {
         .get("bet")
         .context("bet clients are absent")?
         .clone();
-    let ws_route = warp::path("bet")
+    let match_clients = route_clients
+        .lock()
+        .await
+        .get("match")
+        .context("match clients are absent")?
+        .clone();
+
+    let bet_route = warp::path("bet")
         .and(warp::ws())
         .and(with_clients(bet_clients))
-        .and_then(handlers::bet_handler);
+        .and_then(handlers::ws_handler);
 
-    let routes = ws_route.with(warp::cors().allow_any_origin());
-    println!("Starting server");
-    warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
+    let match_route = warp::path("match")
+        .and(warp::ws())
+        .and(with_clients(match_clients))
+        .and_then(handlers::ws_handler);
+
+    let routes = bet_route
+        .or(match_route)
+        .with(warp::cors().allow_any_origin());
+
+    warp::serve(routes).run(([127, 0, 0, 1], 50052)).await;
     Ok(())
 }
 

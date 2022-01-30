@@ -39,6 +39,7 @@ impl UserService for MyUserService {
             Ok(user) => match self.repo.get_current_address(user.id).await {
                 Ok(address) => Ok(Response::new(GetUserReply {
                     user: Some(User {
+                        id: user.id,
                         first_name: user.first_name,
                         last_name: user.last_name,
                         civil_id_number: user.civil_id_number,
@@ -68,23 +69,21 @@ impl UserService for MyUserService {
         request: Request<CreateUserRequest>,
     ) -> Result<Response<CreateUserReply>, Status> {
         let request = request.into_inner();
-        if let None = request.user {
-            return Err(Status::new(Code::from_i32(13), "user is None"));
-        }
-        let user = request.user.unwrap();
-        if let None = user.address {
+        if let None = request.address {
             return Err(Status::new(Code::from_i32(13), "address is None"));
         }
-        let address = user.address.unwrap();
+        let address = request.address.unwrap();
 
         let create_user = CreateUser::new(
-            &user.first_name,
-            &user.last_name,
-            &user.civil_id_number,
-            &user.date_of_birth,
-            &user.email,
-            &user.phone_number,
-            user.photo.as_deref(),
+            &request.first_name,
+            &request.last_name,
+            &request.password,
+            &request.password_salt,
+            &request.civil_id_number,
+            &request.date_of_birth,
+            &request.email,
+            &request.phone_number,
+            request.photo.as_deref(),
         );
         let create_user_address = CreateUserAddress::new(
             &address.street_name,
@@ -111,6 +110,8 @@ impl UserService for MyUserService {
                 let create_user = user.edit_user(
                     request.first_name.as_deref(),
                     request.last_name.as_deref(),
+                    request.password.as_deref(),
+                    request.password_salt.as_deref(),
                     request.civil_id_number.as_deref(),
                     request.date_of_birth.as_deref(),
                     request.email.as_deref(),

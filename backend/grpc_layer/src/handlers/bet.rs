@@ -5,14 +5,14 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::bet::bet_service_server::BetService;
 use crate::bet::{
-    CreateBetReply, CreateBetRequest, DeleteBetReply, DeleteBetRequest, ListBetsReply,
+    Bet, CreateBetReply, CreateBetRequest, DeleteBetReply, DeleteBetRequest, ListBetsReply,
     ListBetsRequest,
 };
 
 use database_layer::{
     connection::PgPool,
     db_access::{
-        bet::{BetRepo, PgBetRepo},
+        bet_and_ticket::{BetAndTicketRepo, PgBetAndTicketRepo},
         repo::Repo,
     },
     db_models::bet::CreateBet,
@@ -20,14 +20,14 @@ use database_layer::{
 use ws_layer::Clients;
 
 pub struct MyBetService {
-    repo: PgBetRepo,
+    repo: PgBetAndTicketRepo,
     ws_clients: Clients,
 }
 
 impl MyBetService {
     pub fn new(pool: &Arc<PgPool>, ws_clients: Clients) -> MyBetService {
         MyBetService {
-            repo: PgBetRepo::new(pool),
+            repo: PgBetAndTicketRepo::new(pool),
             ws_clients: ws_clients,
         }
     }
@@ -39,60 +39,67 @@ impl BetService for MyBetService {
         &self,
         request: Request<ListBetsRequest>,
     ) -> Result<Response<ListBetsReply>, Status> {
-        println!("[Server] Request from client: {:?}", &request);
-
-        let reply = ListBetsReply { bets: vec![] };
-        Ok(Response::new(reply))
+        let request = request.into_inner();
+        match self.repo.get_bets(request.ticket_id).await {
+            Ok(bets) => Ok(Response::new(ListBetsReply {
+                bets: bets
+                    .iter()
+                    .map(|bet| Bet {
+                        id: bet.id,
+                        match_id: bet.game_match_id,
+                        ticket_id: bet.ticket_id,
+                        team_id: bet.team_id,
+                    })
+                    .collect(),
+            })),
+            Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
+        }
     }
 
     async fn create_bet(
         &self,
         request: Request<CreateBetRequest>,
     ) -> Result<Response<CreateBetReply>, Status> {
-        /*
         let request = request.into_inner();
         let create_bet = CreateBet::new(
             request.match_id,
             request.ticket_id,
             request.team_id,
-            &request.ratio,
-            "Placed",
+            "", // TODO
         );
 
-        match self.repo.place(create_bet).await {
-            Ok(bet_id) => {
+        match self.repo.place_a_bet(request.ticket_id, create_bet).await {
+            Ok(bet) => {
                 let bet = Bet {
-                    id: bet_id,
-                    game_match_id: create_bet.game_match_id,
-                    ticket_id: create_bet.ticket_id,
-                    team_id: create_bet.team_id,
-                    bet_ratio: create_bet.bet_ratio,
-                    bet_state: create_bet.bet_state,
-                    created_at: create_bet.created_at,
+                    id: bet.id,
+                    match_id: bet.game_match_id,
+                    ticket_id: bet.ticket_id,
+                    team_id: bet.team_id,
                 };
 
                 let mut buf = BytesMut::with_capacity(64);
-                bet.encode(&mut buf);
+                let _ = bet.encode(&mut buf);
                 for client in self.ws_clients.lock().await.values() {
                     if let Some(sender) = &client.sender {
-                        sender.send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+                        let _ =
+                            sender.send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
                     }
                 }
-                Ok(Response::new(CreateBetReply { id: bet_id }))
+                Ok(Response::new(CreateBetReply { id: bet.id }))
             }
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
-        */
-        let reply = CreateBetReply { id: 0 };
-        Ok(Response::new(reply))
     }
 
     async fn delete_bet(
         &self,
         request: Request<DeleteBetRequest>,
     ) -> Result<Response<DeleteBetReply>, Status> {
-        println!("[Server] Request from client: {:?}", &request);
+        let request = request.into_inner();
 
-        Ok(Response::new(DeleteBetReply {}))
+        match self.repo.discard_a_bet(request.ticket_id, request.id).await {
+            Ok(()) => Ok(Response::new(DeleteBetReply {})),
+            Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
+        }
     }
 }

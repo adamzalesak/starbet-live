@@ -6,13 +6,11 @@ use uuid::Uuid;
 use warp::ws::WebSocket;
 use warp::Reply;
 
-pub async fn bet_handler(ws: warp::ws::Ws, clients: Clients) -> Result<impl Reply> {
-    println!("bet_handler");
-    Ok(ws.on_upgrade(move |socket| bet_cb(socket, clients)))
+pub async fn ws_handler(ws: warp::ws::Ws, clients: Clients) -> Result<impl Reply> {
+    Ok(ws.on_upgrade(move |socket| ws_callback(socket, clients)))
 }
 
-pub async fn bet_cb(ws: WebSocket, clients: Clients) {
-    println!("establishing client connection... {:?}", ws);
+pub async fn ws_callback(ws: WebSocket, clients: Clients) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
     let (client_sender, client_rcv) = mpsc::unbounded_channel();
     let client_rcv = UnboundedReceiverStream::new(client_rcv);
@@ -27,10 +25,8 @@ pub async fn bet_cb(ws: WebSocket, clients: Clients) {
         sender: Some(client_sender),
     };
     clients.lock().await.insert(uuid.clone(), new_client);
-    println!("cringaci");
 
     while let Some(_) = client_ws_rcv.next().await {}
 
     clients.lock().await.remove(&uuid);
-    println!("{} disconnected", uuid);
 }
