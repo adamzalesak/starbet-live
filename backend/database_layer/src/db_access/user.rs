@@ -1,20 +1,21 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use crate::diesel::{insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
+use crate::diesel::{delete, insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
 
 use crate::connection::{PgPool, PgPooledConnection};
 
 // type and structure imports
 use super::repo::Repo;
 use crate::db_models::{
-    ticket::Ticket,
+    game_match_event::GameMatchEventType,
+    ticket::{CreateTicket, ObtainedTicket, Ticket},
     user::{CreateUser, User},
     user_address::{CreateUserAddress, UserAddress},
 };
 
 // schema imports
-use crate::schema::{ticket, user, user_address};
+use crate::schema::{bet, game_match, game_match_event, ticket, user, user_address};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -48,8 +49,8 @@ pub trait UserRepo {
     ///
     /// Returns
     /// ---
-    /// - Ok(User) if the user could be found and no error occurred while communicating with database
-    /// - Err(_) if an error occurred
+    /// - `Ok(User)` if the user could be found and no error occurred while communicating with database
+    /// - `Err(_)` if an error occurred
     async fn get(&self, desired_user_id: i32) -> anyhow::Result<User>;
 
     /// Create a new User record in the database
@@ -60,8 +61,8 @@ pub trait UserRepo {
     ///
     /// Returns
     /// ---
-    /// - Ok(new_user_id, new_address_id) with user id and address id after successful creation
-    /// - Err(_) if an error occurrs
+    /// - `Ok(new_user_id, new_address_id)` with user id and address id after successful creation
+    /// - `Err(_)` if an error occurrs
     async fn create(
         &self,
         new_user: CreateUser,
@@ -78,8 +79,8 @@ pub trait UserRepo {
     ///
     /// Returns
     /// ---
-    /// - Ok(()) if the operation has been done successfully
-    /// - Err(_) if an error occurrs
+    /// - `Ok(())` if the operation has been done successfully
+    /// - `Err(_)` if an error occurrs
     async fn edit(&self, desired_user_id: i32, edited_record: CreateUser) -> anyhow::Result<()>;
 
     /// Add a new address for the user
@@ -91,8 +92,8 @@ pub trait UserRepo {
     ///
     /// Returns
     /// ---
-    /// - Ok(id) with the ID of the new address if everything went alright
-    /// - Err(_) if an error occurred
+    /// - `Ok(id)` with the ID of the new address if everything went alright
+    /// - `Err(_)` if an error occurred
     async fn add_new_address(
         &self,
         desired_user_id: i32,
@@ -107,23 +108,43 @@ pub trait UserRepo {
     ///
     /// Returns
     /// ---
-    /// - Ok(User) if the user could be found, their address exists and no error occurred while communicating with database
-    /// - Err(_) if an error occurred
+    /// - `Ok(User)` if the user could be found, their address exists and no error occurred while communicating with database
+    /// - `Err(_)` if an error occurred
     async fn get_current_address(&self, desired_user_id: i32) -> anyhow::Result<UserAddress>;
 
-    /// Get User's current ticket
+    /// Get user's balance
     ///
     /// Params
     /// ---
-    /// - desired_user_id: ID of desired user
+    /// - desired_user_id: ID of the user we wish to get the balance of
     ///
     /// Returns
     /// ---
-    /// - Ok(Option(Ticket)) if the user could be found, and no errors occurred
-    /// - Err(_) otherwise
-    async fn get_current_ticket(&self, desired_user_id: i32) -> anyhow::Result<Option<Ticket>>;
+    /// - `Ok(balance)` with the balance of the user
+    /// - `Err(_)` if an error occurrs
+    async fn get_balance(&self, desired_user_id: i32) -> anyhow::Result<f64>;
 
-    // async fn open_ticket() ->
+    /// Add balance to the user's account
+    ///
+    /// Params
+    /// ---
+    /// - desired_user_id: ID of the user we wish to add the balance to
+    /// - desired_amount: amount of money we wish to add to the user's account
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(())` if the operation was successful
+    /// - `Err(_)` otherwise
+    async fn add_balance(&self, desired_user_id: i32, desired_amount: f64) -> anyhow::Result<()>;
+
+    /// Withdraw the user's balance
+    /// Fails if the balance specified is higher than the current balance
+    ///
+    /// Params
+    /// ---
+    /// - desired_user_id: ID of the user we wish to withdraw the balance of
+    /// - desired_withdrawal: amount of money the user wants to withdraw
+    async fn withdraw_balance(&self, desired_user_id: i32, desired_withdrawal: f64);
 }
 
 #[async_trait]
@@ -189,18 +210,15 @@ impl UserRepo for PgUserRepo {
         Ok(query_result)
     }
 
-    /// Get User's current ticket
-    async fn get_current_ticket(&self, desired_user_id: i32) -> anyhow::Result<Option<Ticket>> {
-        let query_result: Vec<Ticket> = ticket::table
-            .filter(ticket::user_id.eq(desired_user_id))
-            .filter(ticket::paid_at.is_null())
-            .order(ticket::created_at.desc())
-            .get_results(&self.get_connection().await?)?;
+    async fn get_balance(&self, desired_user_id: i32) -> anyhow::Result<f64> {
+        todo!()
+    }
 
-        match query_result.len() {
-            0 => Ok(None),
-            1 => Ok(Some(query_result[0].clone())),
-            _ => anyhow::bail!("Internal inconsistency -> multiple open tickets for the user! Please, contact your administrator."),
-        }
+    async fn add_balance(&self, desired_user_id: i32, desired_amount: f64) -> anyhow::Result<()> {
+        todo!()
+    }
+
+    async fn withdraw_balance(&self, desired_user_id: i32, desired_withdrawal: f64) {
+        todo!()
     }
 }

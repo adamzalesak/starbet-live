@@ -75,3 +75,13 @@ pub struct BetShowInfo {
     #[sql_type = "Text"]
     pub team_name: String,
 }
+
+pub struct TicketShowInfo {
+    pub id: i32,
+    pub user_id: i32,
+    pub user_address_id: i32,
+    pub created_at: String,
+    pub valid_until: String,
+    pub price: String,
+    pub paid_at: Option<String>,
+}

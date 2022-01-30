@@ -5,7 +5,6 @@ table! {
         ticket_id -> Int4,
         team_id -> Int4,
         bet_ratio -> Text,
-        bet_state -> Text,
         created_at -> Text,
     }
 }
@@ -38,7 +37,33 @@ table! {
         game_match_id -> Int4,
         event_type -> Text,
         created_at -> Text,
-        until -> Nullable<Text>,
+        event_value -> Nullable<Text>,
+    }
+}
+
+table! {
+    submitted_bet (id) {
+        id -> Int4,
+        game_match_id -> Int4,
+        submitted_ticket_id -> Nullable<Int4>,
+        team_id -> Int4,
+        bet_ratio -> Text,
+        placed_at -> Text,
+        submitted_at -> Text,
+        won -> Nullable<Bool>,
+    }
+}
+
+table! {
+    submitted_ticket (id) {
+        id -> Int4,
+        user_id -> Int4,
+        user_address_id -> Int4,
+        submitted_at -> Text,
+        price_paid -> Text,
+        total_ratio -> Text,
+        winnable_price -> Text,
+        won -> Nullable<Bool>,
     }
 }
 
@@ -64,8 +89,8 @@ table! {
         id -> Int4,
         user_id -> Int4,
         created_at -> Text,
+        valid_until -> Text,
         price -> Text,
-        paid_at -> Nullable<Text>,
     }
 }
 
@@ -74,11 +99,14 @@ table! {
         id -> Int4,
         first_name -> Text,
         last_name -> Text,
+        user_password -> Text,
+        user_password_salt -> Text,
         civil_id_number -> Text,
         date_of_birth -> Text,
         email -> Text,
         phone_number -> Text,
         created_at -> Text,
+        balance -> Text,
         photo -> Nullable<Text>,
     }
 }
@@ -102,6 +130,11 @@ joinable!(bet -> team (team_id));
 joinable!(bet -> ticket (ticket_id));
 joinable!(game_match -> game (game_id));
 joinable!(game_match_event -> game_match (game_match_id));
+joinable!(submitted_bet -> game_match (game_match_id));
+joinable!(submitted_bet -> submitted_ticket (submitted_ticket_id));
+joinable!(submitted_bet -> team (team_id));
+joinable!(submitted_ticket -> user (user_id));
+joinable!(submitted_ticket -> user_address (user_address_id));
 joinable!(team_plays_game -> game (game_id));
 joinable!(team_plays_game -> team (team_id));
 joinable!(ticket -> user (user_id));
@@ -112,6 +145,8 @@ allow_tables_to_appear_in_same_query!(
     game,
     game_match,
     game_match_event,
+    submitted_bet,
+    submitted_ticket,
     team,
     team_plays_game,
     ticket,

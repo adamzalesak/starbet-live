@@ -3,11 +3,14 @@ CREATE TABLE "user" (
     id SERIAL PRIMARY KEY,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
+    user_password TEXT NOT NULL,
+    user_password_salt TEXT NOT NULL,
     civil_id_number TEXT NOT NULL,
     date_of_birth TEXT NOT NULL,
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
     created_at TEXT NOT NULL,
+    balance TEXT NOT NULL,
     photo TEXT
 );
 
@@ -65,27 +68,48 @@ CREATE TABLE "game_match_event" (
     game_match_id INTEGER REFERENCES "game_match" NOT NULL,
     event_type TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    until TEXT
+    event_value TEXT
 );
 
 -- Ticket containing multiple bets
 CREATE TABLE "ticket" (
     id SERIAL PRIMARY KEY,
     "user_id" INTEGER REFERENCES "user" NOT NULL,
-    "address_id" INTEGER REFERENCES "user_address" NOT NULL,
     created_at TEXT NOT NULL,
     valid_until TEXT NOT NULL,
-    price TEXT NOT NULL,
-    paid_at TEXT
+    price TEXT NOT NULL
 );
 
--- Bet containing the 
+-- Tickets that have been submitted
+CREATE TABLE "submitted_ticket" (
+    id SERIAL PRIMARY KEY,
+    "user_id" INTEGER REFERENCES "user" NOT NULL,
+    "user_address_id" INTEGER REFERENCES "user_address" NOT NULL,
+    submitted_at TEXT NOT NULL,
+    price_paid TEXT NOT NULL,
+    total_ratio TEXT NOT NULL,
+    winnable_price TEXT NOT NULL,
+    won BOOLEAN
+);
+
+-- bets that have been submitted
+CREATE TABLE "submitted_bet" (
+    id SERIAL PRIMARY KEY,
+    game_match_id INTEGER REFERENCES "game_match" NOT NULL,
+    submitted_ticket_id INTEGER REFERENCES "submitted_ticket",
+    team_id INTEGER REFERENCES "team" NOT NULL,
+    bet_ratio TEXT NOT NULL,
+    placed_at TEXT NOT NULL,
+    submitted_at TEXT NOT NULL,
+    won BOOLEAN
+);
+
+-- Bet containing the ratio and the team id 
 CREATE TABLE "bet" (
     id SERIAL PRIMARY KEY,
     game_match_id INTEGER REFERENCES "game_match" NOT NULL,
     ticket_id INTEGER REFERENCES "ticket" NOT NULL,
     team_id INTEGER REFERENCES "team" NOT NULL,
     bet_ratio TEXT NOT NULL,
-    bet_state TEXT NOT NULL,
     created_at TEXT NOT NULL
 );

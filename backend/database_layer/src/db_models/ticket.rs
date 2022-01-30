@@ -1,5 +1,13 @@
 use crate::db_models::user::User;
 use crate::{schema::ticket, type_storing::time_handling::TimeHandling};
+use chrono::{Duration, Utc};
+
+/// encapuslates an obtained ticket
+pub enum ObtainedTicket {
+    NewAfterInvalid(Ticket),
+    NoTicketFound(Ticket),
+    StillValid(Ticket),
+}
 
 /// Read structure, used for data mapping of
 /// `ticket` record from the database
@@ -10,8 +18,8 @@ pub struct Ticket {
     pub id: i32,
     pub user_id: i32,
     pub created_at: String,
+    pub valid_until: String,
     pub price: String,
-    pub paid_at: Option<String>,
 }
 
 /// Write structure, used for inserting
@@ -21,12 +29,14 @@ pub struct Ticket {
 pub struct CreateTicket {
     pub user_id: i32,
     pub created_at: String,
+    pub valid_until: String,
     pub price: String,
-    pub paid_at: Option<String>,
 }
 
 impl CreateTicket {
     /// Create a new `ticket` insert structure
+    /// The ticket is valid for 10 days. This changes, when the ticket has a bet in it.
+    /// The ticket is then valid until the first match that user put a bet ends
     ///
     /// Params
     /// ---
@@ -36,12 +46,12 @@ impl CreateTicket {
     /// Returns
     /// ---
     /// - new `ticket` insert structure
-    pub fn new(user_id: i32, price: String) -> CreateTicket {
+    pub fn new(user_id: i32, price: &str) -> CreateTicket {
         CreateTicket {
             user_id,
             created_at: TimeHandling::store(),
-            price,
-            paid_at: None,
+            valid_until: (Utc::now() + Duration::days(10)).to_string(),
+            price: String::from(price),
         }
     }
 }

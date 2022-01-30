@@ -310,7 +310,7 @@ async fn main() -> Result<()> {
     println!("RETRIEVE ALL TEAMS (again, ordered by name by default)");
 
     // now get all the teams on this website
-    let all_teams: Vec<TeamInfo> = pg_team.get_all(None).await?;
+    let all_teams: Vec<TeamInfo> = pg_team.get_all().await?;
     for team in all_teams {
         println!("Team [{}]: {}", team.id, team.name);
     }

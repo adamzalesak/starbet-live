@@ -54,7 +54,6 @@ impl GameMatch {
         &self,
         update_ratio_one: Option<&str>,
         update_ratio_two: Option<&str>,
-        update_supposed_start_at: Option<DateTime<Utc>>,
         update_state: Option<&str>,
     ) -> anyhow::Result<GameMatchUpdate> {
         Ok(GameMatchUpdate {
@@ -62,7 +61,6 @@ impl GameMatch {
                 .map_or_else(|| self.team_one_ratio.clone(), String::from),
             team_two_ratio: update_ratio_two
                 .map_or_else(|| self.team_two_ratio.clone(), String::from),
-            supposed_start_at: update_supposed_start_at,
             state: update_state.map_or_else(|| self.state.clone(), String::from),
         })
     }
@@ -109,6 +107,5 @@ impl CreateGameMatch {
 pub struct GameMatchUpdate {
     pub team_one_ratio: String,
     pub team_two_ratio: String,
-    pub supposed_start_at: Option<DateTime<Utc>>,
     pub state: String,
 }

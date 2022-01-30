@@ -2,6 +2,8 @@ pub mod bet;
 pub mod game;
 pub mod game_match;
 pub mod game_match_event;
+pub mod submitted_bet;
+pub mod submitted_ticket;
 pub mod team;
 pub mod team_plays_game;
 pub mod ticket;

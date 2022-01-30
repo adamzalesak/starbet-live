@@ -15,7 +15,7 @@ pub struct GameMatchEvent {
     pub game_match_id: i32,
     pub event_type: String,
     pub created_at: String,
-    pub until: Option<String>,
+    pub event_value: Option<String>,
 }
 
 /// Write structure, used for inserting
@@ -26,7 +26,7 @@ pub struct CreateGameMatchEvent {
     pub game_match_id: i32,
     pub event_type: String,
     pub created_at: String,
-    pub until: Option<String>,
+    pub event_value: Option<String>,
 }
 
 /// Structure capturing possible `game_match_event` types
@@ -36,7 +36,14 @@ pub enum GameMatchEventType {
     Live(DateTime<Utc>),
     Cancelled,
     Overtime(DateTime<Utc>),
-    Ended,
+    Ended(i32),
+}
+
+impl GameMatchEventType {
+    /// Compare the type of two objects
+    pub fn cmp_type(&self, other: &Self) -> bool {
+        self.to_string() == other.to_string()
+    }
 }
 
 impl Display for GameMatchEventType {
@@ -47,7 +54,7 @@ impl Display for GameMatchEventType {
             GameMatchEventType::Live(_) => "Live",
             GameMatchEventType::Cancelled => "Cancelled",
             GameMatchEventType::Overtime(_) => "Overtime",
-            GameMatchEventType::Ended => "Ended",
+            GameMatchEventType::Ended(_) => "Ended",
         };
 
         write!(f, "{}", self_string)
@@ -66,18 +73,27 @@ impl GameMatchEvent {
             "Upcoming" => Ok(GameMatchEventType::Upcoming),
             "Live" => Ok(GameMatchEventType::Overtime(TimeHandling::load_timestamp(
                 &self
-                    .until
+                    .event_value
                     .clone()
                     .unwrap_or_else(|| String::from("Will not convert")),
             )?)),
             "Cancelled" => Ok(GameMatchEventType::Cancelled),
             "Overtime" => Ok(GameMatchEventType::Overtime(TimeHandling::load_timestamp(
                 &self
-                    .until
+                    .event_value
                     .clone()
                     .unwrap_or_else(|| String::from("Will not convert")),
             )?)),
-            "Ended" => Ok(GameMatchEventType::Ended),
+            "Ended" => {
+                let get_event_value = self
+                    .event_value
+                    .clone()
+                    .unwrap_or_else(|| String::from("Will not convert"));
+
+                let winner_id: i32 = get_event_value.parse()?;
+
+                Ok(GameMatchEventType::Ended(winner_id))
+            }
             _ => anyhow::bail!(
                 "Could not convert the database record into a proper game match event!"
             ),
@@ -101,10 +117,11 @@ impl CreateGameMatchEvent {
             game_match_id,
             event_type: event_type.to_string(),
             created_at: TimeHandling::store(),
-            until: match event_type {
+            event_value: match event_type {
                 GameMatchEventType::Live(until) | GameMatchEventType::Overtime(until) => {
                     Some(until.to_string())
                 }
+                GameMatchEventType::Ended(winner_team_id) => Some(winner_team_id.to_string()),
                 _ => None,
             },
         }

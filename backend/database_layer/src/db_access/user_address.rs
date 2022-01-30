@@ -64,33 +64,6 @@ pub trait UserAddressRepo {
     /// - Ok(address) if we found the address we were looking for
     /// - Err(_) if an error occurrs
     async fn get(&self, desired_address_id: i32) -> anyhow::Result<UserAddress>;
-
-    /// Create a new UserAddress
-    ///
-    /// Params
-    /// ---
-    /// - new_address: structure for database insert of a UserAddress record
-    ///
-    /// Returns
-    /// - Ok(id) with UserAddress id after successful creation
-    /// - Err(_) if an error occurs
-    // async fn create(&self, new_address: CreateUserAddress) -> anyhow::Result<i32>;
-
-    /// Edit an already existing UserAddress record
-    ///
-    /// Params
-    /// ---
-    /// - desired_address_id: i32
-    /// - new_record: new information we wish to update
-    ///
-    /// Returns
-    /// - Ok(()) if the operation has been successful
-    /// - Err(_) if something went wrong
-    // async fn edit(
-    //     &self,
-    //     desired_address_id: i32,
-    //     edited_address: CreateUserAddress,
-    // ) -> anyhow::Result<()>;
 }
 
 #[async_trait]
@@ -103,27 +76,4 @@ impl UserAddressRepo for PgUserAddressRepo {
 
         Ok(query_result)
     }
-
-    /// Create a new UserAddress
-    // async fn create(&self, new_address: CreateUserAddress) -> anyhow::Result<i32> {
-    //     let id: i32 = insert_into(user_address::table)
-    //         .values(new_address)
-    //         .returning(user_address::id)
-    //         .get_result(&self.get_connection().await?)?;
-
-    //     Ok(id)
-    // }
-
-    /// Edit an already existing UserAddress record
-    // async fn edit(
-    //     &self,
-    //     desired_address_id: i32,
-    //     edited_address: CreateUserAddress,
-    // ) -> anyhow::Result<()> {
-    //     let _ = update(user_address::table.find(desired_address_id))
-    //         .set(edited_address)
-    //         .execute(&self.get_connection().await?)?;
-
-    //     Ok(())
-    // }
 }

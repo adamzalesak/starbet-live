@@ -8,25 +8,30 @@ use chrono::{DateTime, Duration, Utc};
 
 // type and structure imports
 use crate::{
-    db_access::repo::Repo,
+    db_access::{
+        repo::Repo,
+        user::{PgUserRepo, UserRepo},
+    },
     db_models::{
         bet::{Bet, CreateBet},
-        ticket::{CreateTicket, Ticket},
+        game_match::GameMatch,
+        game_match_event::{GameMatchEvent, GameMatchEventType},
+        submitted_bet::{CreateSubmittedBet, SubmittedBet},
+        submitted_ticket::{CreateSubmittedTicket, SubmittedTicket},
+        ticket::{CreateTicket, ObtainedTicket, Ticket},
+        user_address::UserAddress,
     },
 };
 
 // schema imports
-use crate::schema::{bet, game, game_match, ticket, user};
+use crate::schema::{bet, game, game_match, game_match_event, ticket, user};
 
-/// Structure containing a reference to a database connection pool
-/// and methods to access the database
-/// to work with Bet records
-pub struct PgTicketRepo {
+pub struct PgSubmittedBetAndTicketRepo {
     pub pool: Arc<PgPool>,
 }
 
 #[async_trait]
-impl Repo for PgTicketRepo {
+impl Repo for PgSubmittedBetAndTicketRepo {
     /// Create a new Bet repo with a reference to an initialized pool.
     ///
     /// Params
@@ -37,8 +42,8 @@ impl Repo for PgTicketRepo {
     /// Returns
     /// ---
     /// - new Team repo
-    fn new(pool: &Arc<PgPool>) -> PgTicketRepo {
-        PgTicketRepo {
+    fn new(pool: &Arc<PgPool>) -> PgSubmittedBetAndTicketRepo {
+        PgSubmittedBetAndTicketRepo {
             pool: Arc::clone(pool),
         }
     }
@@ -55,6 +60,9 @@ impl Repo for PgTicketRepo {
 }
 
 #[async_trait]
-pub trait TicketRepo {
-    async fn open_ticket();
+pub trait SubmittedBetAndTicketRepo {
+    async fn get_all(
+        &self,
+        desired_user_id: i32,
+    ) -> anyhow::Result<Vec<(SubmittedBet, Vec<SubmittedBet>)>>;
 }

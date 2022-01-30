@@ -174,33 +174,6 @@ pub trait MatchRepo {
     /// - Ok(newest_event) with the latest event
     /// - Err(_) if there was an internal consistency error / connection error etc
     async fn newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent>;
-
-    /// Edit an event
-    /// It is possible to edit events -> Live, Overtime
-    ///
-    /// Params
-    /// ---
-    /// - desired_match_id: ID of the match we need to edit the events of
-    /// - edited_event: new value of the event that will be updated in the database
-    ///
-    /// Returns
-    /// ---
-    /// - Ok(()) if the event has been updated successfully
-    /// - Err(_) if an error occurred, or a wrong event_type has been selected, or the event does not exist
-    async fn edit_event_time(
-        &self,
-        desired_match_id: i32,
-        new_time: DateTime<Utc>,
-    ) -> anyhow::Result<()>;
-
-    // /// Delete an event -> in special cases, we wish to delete an event
-    // /// Supported event types -> all except the `Upcoming` type
-    // ///
-    // /// Params
-    // /// ---
-    // /// - desired_match_id: ID of the match we need to delete the event of
-    // /// - which_event: what event type
-    // async fn delete_newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent>;
 }
 
 #[async_trait]
@@ -335,7 +308,6 @@ impl MatchRepo for PgMatchRepo {
         &self,
         filter_by_time_period: Option<GameMatchEventType>,
         filter_by_game: Option<i32>,
-        // filter_by_team: Option<i32>,
     ) -> anyhow::Result<Vec<GameMatchShow>> {
         // raw query performing all necessarry joins -> could not do it with Diesel
 
@@ -419,14 +391,6 @@ impl MatchRepo for PgMatchRepo {
         _desired_match_id: i32,
         edited_match: GameMatchUpdate,
     ) -> anyhow::Result<()> {
-        // if there is a request for the time change and that time change is less than 2 seconds away,
-        // this method will produce error informing about an incorrect operation.
-        if edited_match.supposed_start_at.is_some()
-            && edited_match.supposed_start_at.unwrap() < Utc::now() + Duration::seconds(2)
-        {
-            anyhow::bail!("Cannot change the match to start in less than 5 seconds from now!");
-        }
-
         // let table = update(game_match::table.find(desired_match_id));
 
         // let _ = match edited_match.supposed_start_at {
@@ -484,40 +448,4 @@ impl MatchRepo for PgMatchRepo {
 
         Ok(query_result)
     }
-
-    /// Edit an event
-    /// It is possible to edit events -> Live, Overtime
-    async fn edit_event_time(
-        &self,
-        desired_match_id: i32,
-        new_time: DateTime<Utc>,
-    ) -> anyhow::Result<()> {
-        let event = self.newest_event(desired_match_id).await?;
-
-        if event.event_type != *"Live" || event.event_type != *"Ovetime" {
-            anyhow::bail!("Cannot change the event type!");
-        }
-
-        let _ = update(game_match_event::table.find(event.id))
-            .set(game_match_event::until.eq(new_time.to_string()))
-            .execute(&self.get_connection().await?)?;
-
-        Ok(())
-    }
-
-    // /// Delete an event type -> in special cases, we wish to delete an event
-    // /// Supported event types -> all except the `Upcoming` type
-    // async fn delete_newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent> {
-    //     let event = self.newest_event(desired_match_id).await?;
-
-    //     // delete the newest event
-    //     if event.event_type == GameMatchEventType::Upcoming.to_string() {
-    //         anyhow::bail!("Cannot delete the Upcoming event. Please, delete the whole match if you wish to delete it.");
-    //     }
-
-    //     let _ = delete(game_match_event::table.find(event.id))
-    //         .execute(&self.get_connection().await?)?;
-
-    //     Ok(event)
-    // }
 }
