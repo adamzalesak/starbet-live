@@ -1,3 +1,4 @@
+use log::info;
 use yew::prelude::*;
 
 pub mod game {
@@ -13,8 +14,8 @@ pub enum Msg {
 
 pub struct Games {
     games: Vec<Game>,
-    is_loading_games: bool,
-    error_games: bool,
+    is_loading: bool,
+    is_error: bool,
 }
 
 impl Component for Games {
@@ -25,16 +26,17 @@ impl Component for Games {
         ctx.link().send_message(Msg::FetchGames);
         Self {
             games: Vec::new(),
-            is_loading_games: true,
-            error_games: false,
+            is_loading: true,
+            is_error: false,
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::FetchGames => {
-                self.is_loading_games = true;
-                self.error_games = false;
+                self.is_loading = true;
+                self.is_error = false;
+
                 let grpc_client =
                     game_service_client::GameService::new(String::from("http://127.0.0.1:5430"));
                 ctx.link().send_future(async move {
@@ -50,13 +52,13 @@ impl Component for Games {
             }
             Msg::ReceiveResponse(Ok(result)) => {
                 self.games = result.games;
-                self.is_loading_games = false;
+                self.is_loading = false;
                 true
             }
             Msg::ReceiveResponse(Err(_error)) => {
                 self.games = Vec::new();
-                self.is_loading_games = false;
-                self.error_games = true;
+                self.is_loading = false;
+                self.is_error = true;
                 true
             }
         }
@@ -64,31 +66,35 @@ impl Component for Games {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-         <div class="bg-dark-blue text-white flex-auto rounded-md p-2 text-center">
-            <div class="font-bold mb-2">{"Games"}</div>
+         <div class="bg-dark-blue text-white flex-auto rounded-md p-2 text-center h-4/5 max-h-full">
+            <div class="h-full flex flex-col">
+                <div class="font-bold mb-2">{"Games"}</div>
 
-            if self.is_loading_games {
-                <h1>{"loading"}</h1>
-            }
-            else if self.error_games {
-                <h1>{"error"}</h1>
-            }
-            else {
-                <ul class="flex flex-col gap-1.5">
-                    {
-                        self.games.clone().into_iter().map(|game| {
-                            html! {
-                                <li key={game.id} class="flex gap-2 text-black font-bold rounded-md bg-white p-1 text-left cursor-pointer">
-                                    if game.logo_url != "" {
-                                        <img src={game.logo_url} class="h-6 w-6" />
-                                    }
-                                    { game.name }
-                                </li>
-                            }
-                        }).collect::<Html>()
-                    }
-                </ul>
-            }
+                if self.is_loading {
+                    <h1>{"loading"}</h1>
+                }
+                else if self.is_error {
+                    <h1>{"error"}</h1>
+                }
+                else {
+                    <ul class="flex flex-col gap-1.5 overflow-auto">
+                        {
+                            self.games.clone().into_iter().map(|game| {
+                                html! {
+                                    <li key={game.id} class="flex gap-2 text-black font-bold rounded-md bg-white p-1 text-left cursor-pointer">
+                                        if game.logo_url != "" {
+                                            <div class="w-6 h-6">
+                                                <img src={game.logo_url} class="w-full" alt={game.name.clone()} />
+                                            </div>
+                                        }
+                                        { game.name }
+                                    </li>
+                                }
+                            }).collect::<Html>()
+                        }
+                    </ul>
+                }
+                </div>
 
         </div>
         }
