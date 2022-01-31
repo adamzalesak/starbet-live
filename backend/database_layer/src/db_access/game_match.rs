@@ -260,11 +260,9 @@ impl MatchRepo for PgMatchRepo {
             .values(new_match.store(&game_name, &team_one_name, &team_two_name))
             .returning(game_match::id)
             .get_result(&connection)?;
-
         // create an upcoming event for the new match
         self.create_event(query_result, GameMatchEventType::Upcoming)
             .await?;
-
         Ok(query_result)
     }
 
