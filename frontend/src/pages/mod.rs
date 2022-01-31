@@ -1,4 +1,5 @@
 pub mod about_page;
+pub mod administration_page;
 pub mod contact_page;
 pub mod live_page;
 pub mod not_found;

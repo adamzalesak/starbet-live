@@ -97,11 +97,13 @@ impl Component for Header {
                 <div class="my-auto text-sm p-2">
                     {
                         if self.user.is_authenticated() {
-                            html! { <UserSummary
-                                first_name={self.user.first_name.clone()}
-                                last_name={self.user.last_name.clone()}
-                                current_balance={self.user.current_balance.clone()}
-                            />
+                            html! { 
+                                <UserSummary
+                                    is_admin={self.user.id == 0}
+                                    first_name={self.user.first_name.clone()}
+                                    last_name={self.user.last_name.clone()}
+                                    current_balance={self.user.current_balance.clone()}
+                                />
                         }
                         } else {
                             html! { <LoginForm /> }

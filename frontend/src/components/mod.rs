@@ -1,11 +1,12 @@
 pub mod auth;
+pub mod footer;
 pub mod header;
 pub mod layout;
 pub mod main;
-pub mod footer;
 pub mod games;
-pub mod ticket;
+pub mod administration;
 pub mod latest_bets;
-pub mod user;
 pub mod layout_no_sidebars;
 pub mod layout_profile;
+pub mod ticket;
+pub mod user;

@@ -9,3 +9,5 @@ pub use users::{Field, UserInfo, UserLoginFormData, UserRegistrationFormData};
 pub use tickets::{BetInfo, TicketInfo};
 
 pub use router::{MainRoute, ProfileRoute};
+
+pub use games::CreateGameFormData;

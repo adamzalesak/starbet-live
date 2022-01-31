@@ -6,6 +6,7 @@ use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
     Bridge,
 };
+use yew_router::history::History;
 use yew_router::prelude::RouterScopeExt;
 use yew_router::prelude::{Link, Redirect};
 
@@ -31,7 +32,6 @@ impl Component for LayoutProfile {
     type Properties = LayoutProfileProps;
 
     fn create(ctx: &Context<Self>) -> Self {
-        info!("creating profile layout");
         Self {
             current_tab: ctx.link().route::<ProfileRoute>(),
             user: UserInfo::new(),
@@ -47,8 +47,8 @@ impl Component for LayoutProfile {
 
                 // only authenticated user can access profile page
                 if !self.user.is_authenticated() {
-                    html! { <Redirect<MainRoute> to={MainRoute::Home} /> };
-                    return false;
+                    let history = ctx.link().history().unwrap();
+                    history.push(MainRoute::Home);
                 }
             }
             Msg::SetCurrentTab => {

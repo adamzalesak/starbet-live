@@ -2,13 +2,14 @@ use crate::components::{
     layout::Layout, layout_no_sidebars::LayoutNoSidebars, layout_profile::LayoutProfile,
 };
 use crate::pages::{
-    about_page::AboutPage, contact_page::ContactPage, live_page::LivePage, not_found::NotFoundPage,
-    privacy_policy_page::PrivacyPolicyPage, results_page::ResultsPage, upcoming_page::UpcomingPage,
+    about_page::AboutPage, administration_page::AdministrationPage, contact_page::ContactPage,
+    live_page::LivePage, not_found::NotFoundPage, privacy_policy_page::PrivacyPolicyPage,
+    results_page::ResultsPage, upcoming_page::UpcomingPage,
 };
 use pages::registration_page::RegistrationPage;
 use types::{MainRoute, ProfileRoute};
 use yew::prelude::*;
-use yew_router::{prelude::Redirect, Switch, BrowserRouter};
+use yew_router::{prelude::Redirect, BrowserRouter, Switch};
 
 mod components;
 mod pages;
@@ -102,6 +103,14 @@ fn switch_main(routes: &MainRoute) -> Html {
                     <LayoutProfile>
                         <Switch<ProfileRoute> render={Switch::render(switch_profile)} />
                     </LayoutProfile>
+                </LayoutNoSidebars>
+            }
+        }
+        MainRoute::Administration => {
+            gloo::utils::document().set_title("Administration | Starbet Live");
+            html! {
+                <LayoutNoSidebars>
+                    <AdministrationPage />
                 </LayoutNoSidebars>
             }
         }

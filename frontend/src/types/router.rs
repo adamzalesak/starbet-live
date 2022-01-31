@@ -16,6 +16,8 @@ pub enum MainRoute {
     PrivacyPolicy,
     #[at("/contact")]
     Contact,
+    #[at("/administration")]
+    Administration,
     #[at("/profile/:s")]
     Profile,
     #[at("/")]

@@ -38,7 +38,7 @@ fn retrieve_data() -> Option<UserInfo> {
             temp.last_name = "Kubani".to_string();
             temp.current_balance = "21231.21".to_string();
             temp.token = "3o24fh9834hf028hfh973hfwhef938hfodsnaimjw2jedowh".to_string();
-            temp.id = 3;
+            temp.id = 0;
 
             Some(temp)
         }
