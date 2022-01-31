@@ -1,6 +1,6 @@
 use crate::components::administration::{
     create_game_form::CreateGameForm,
-    // create_match_form::CreateMatchForm,
+    create_match_form::CreateMatchForm,
     create_team_form::CreateTeamForm,
 };
 use crate::store::UserStore;
@@ -54,7 +54,7 @@ impl Component for AdministrationPage {
             <>
                 <CreateGameForm />
                 <CreateTeamForm />
-                // <CreateMatchForm />
+                <CreateMatchForm />
             </>
         }
     }

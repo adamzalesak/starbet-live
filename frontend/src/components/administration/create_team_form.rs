@@ -98,7 +98,7 @@ impl Component for CreateTeamForm {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <div class="bg-light-grey p-2 rounded-md my-2">
+            <div class="bg-light-grey p-2 rounded-md mb-2">
                 <div class="text-center font-bold text-lg">{"Create team"}</div>
                 <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) }
                         class="flex flex-col gap-1 text-black admin-form">

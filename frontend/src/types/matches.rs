@@ -4,23 +4,23 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateMatchForm {
-    pub game_id: (u32, bool),
-    pub team_one_id: (u32, bool),
-    pub team_two_id: (u32, bool),
-    pub team_one_ratio: (String, bool),
-    pub team_two_ratio: (String, bool),
+pub struct CreateMatchFormData {
+    pub game_id: (f32, bool),
+    pub team_one_id: (f32, bool),
+    pub team_two_id: (f32, bool),
+    pub team_one_ratio: (f32, bool),
+    pub team_two_ratio: (f32, bool),
     pub supposed_start_at: (String, bool),
 }
 
-impl CreateMatchForm {
+impl CreateMatchFormData {
     pub fn new() -> Self {
         Self {
-            game_id: (0, false),
-            team_one_id: (0, false),
-            team_two_id: (0, false),
-            team_one_ratio: (String::new(), false),
-            team_two_ratio: (String::new(), false),
+            game_id: (0.0, false),
+            team_one_id: (0.0, false),
+            team_two_id: (0.0, false),
+            team_one_ratio: (0.0, false),
+            team_two_ratio: (0.0, false),
             supposed_start_at: (String::new(), false),
         }
     }

@@ -1,26 +1,34 @@
 use crate::{
-    components::auth::input::{InputType, TextInput},
+    components::auth::{
+        input::{InputType, TextInput},
+        input_number::{NumberInput, NumberType},
+    },
     types::{CreateMatchFormData, Field, SubmitResult},
 };
+use chrono::{DateTime, Utc};
 use gloo_timers::callback::Timeout;
-use log::{warn};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
 pub mod game_match {
     include!(concat!(env!("OUT_DIR"), concat!("/game_match.rs")));
 }
-use game_match::{match_service_client, CreateMatchReply, CreateMatchRequest, GameEventType};
+
+pub mod team {
+    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
+}
+
+use game_match::{match_service_client, CreateMatchReply, CreateMatchRequest};
 
 pub enum Msg {
     Submit,
-    SetGameId((u32, Field, bool)),
-    SetTeam1Id((u32, Field, bool)),
-    SetTeam2Id((u32, Field, bool)),
-    SetTeam1Ratio((String, Field, bool)),
-    SetTeam2Ratio((String, Field, bool)),
+    SetGameId((f32, bool)),
+    SetTeam1Id((f32, bool)),
+    SetTeam2Id((f32, bool)),
+    SetTeam1Ratio((f32, bool)),
+    SetTeam2Ratio((f32, bool)),
     SetStartAt((String, Field, bool)),
-
     ResetSubmitResult,
     ReceiveResponse(Result<CreateMatchReply, Box<dyn std::error::Error>>),
 }
@@ -50,49 +58,61 @@ impl Component for CreateMatchForm {
                     return false;
                 }
 
+                let datetime = match DateTime::parse_from_rfc3339(&format!(
+                    "{}:00+01:00",
+                    self.data.supposed_start_at.0
+                )) {
+                    Ok(val) => val,
+                    _ => {
+                        warn!("Inserted date is not valid");
+                        return false;
+                    }
+                };
+                let datetime_utc = datetime.with_timezone(&Utc);
+
                 let grpc_client =
                     match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
-                let game_id = self.data.game_id.0;
-                let team_one_id = self.data.team_one_id.0;
-                let team_two_id = self.data.team_two_id.0;
-                let team_one_ratio = self.data.team_one_ratio.0.clone();
-                let team_two_ratio = self.data.team_two_ratio.0.clone();
-                let supposed_start_at = self.data.supposed_start_at.0.clone();
+                let game_id = self.data.game_id.0 as i32;
+                let team_one_id = self.data.team_one_id.0 as i32;
+                let team_two_id = self.data.team_two_id.0 as i32;
+                let team_one_ratio = self.data.team_one_ratio.0.to_string();
+                let team_two_ratio = self.data.team_two_ratio.0.to_string();
+                let supposed_start_at = datetime_utc.to_string();
 
                 ctx.link().send_future(async move {
                     Msg::ReceiveResponse(
                         grpc_client
-                            .create_team(CreateMatchRequest {
+                            .create_match(CreateMatchRequest {
                                 game_id,
                                 team_one_id,
                                 team_two_id,
                                 team_one_ratio,
                                 team_two_ratio,
                                 supposed_start_at,
-                                state: "UPCOMING".to_string(),
+                                state: "unknown".to_string(),
                             })
                             .await,
                     )
                 });
                 true
             }
-            Msg::SetGameId((new_data, _, is_valid)) => {
+            Msg::SetGameId((new_data, is_valid)) => {
                 self.data.game_id = (new_data, is_valid);
                 false
             }
-            Msg::SetTeam1Id((new_data, _, is_valid)) => {
+            Msg::SetTeam1Id((new_data, is_valid)) => {
                 self.data.team_one_id = (new_data, is_valid);
                 false
             }
-            Msg::SetTeam2Id((new_data, _, is_valid)) => {
+            Msg::SetTeam2Id((new_data, is_valid)) => {
                 self.data.team_two_id = (new_data, is_valid);
                 false
             }
-            Msg::SetTeam1Ratio((new_data, _, is_valid)) => {
+            Msg::SetTeam1Ratio((new_data, is_valid)) => {
                 self.data.team_one_ratio = (new_data, is_valid);
                 false
             }
-            Msg::SetTeam2Ratio((new_data, _, is_valid)) => {
+            Msg::SetTeam2Ratio((new_data, is_valid)) => {
                 self.data.team_two_ratio = (new_data, is_valid);
                 false
             }
@@ -121,45 +141,52 @@ impl Component for CreateMatchForm {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <div class="bg-light-grey p-2 rounded-md my-2">
+            <div class="bg-light-grey p-2 rounded-md mb-2">
                 <div class="text-center font-bold text-lg">{"Create match"}</div>
                 <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) }
                         class="flex flex-col gap-1 text-black admin-form">
-                    <TextInput
-                        field={Field::Area} // ignore it, just for id
+
+                    <NumberInput
+                        number_type={NumberType::Id}
                         label="Game ID"
                         placeholder="8"
-                        on_change={ctx.link().callback(Msg::SetTeam1Id)}
+                        on_change={ctx.link().callback(Msg::SetGameId)}
                     />
-                    <TextInput
-                        field={Field::StreetName} // ignore it, just for id
-                        label="Team 1 ID"
-                        placeholder="28"
-                        on_change={ctx.link().callback(Msg::SetTeam1Id)}
-                    />
-                    <TextInput
-                        field={Field::StreetNumber} // ignore it, just for id
-                        label="Team 2 ID"
-                        placeholder="95"
-                        on_change={ctx.link().callback(Msg::SetTeam2Id)}
-                    />
-                    <TextInput
-                        field={Field::City} // ignore it, just for id
-                        label="Team 1 Ratio"
-                        placeholder="1.34"
-                        on_change={ctx.link().callback(Msg::SetTeam1Ratio)}
-                    />
-                    <TextInput
-                        field={Field::PostalCode} // ignore it, just for id
-                        label="Team 2 Ratio"
-                        placeholder="2.19"
-                        on_change={ctx.link().callback(Msg::SetTeam2Ratio)}
-                    />
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <NumberInput
+                                number_type={NumberType::Id}
+                                label="Team 1 ID"
+                                placeholder="28"
+                                on_change={ctx.link().callback(Msg::SetTeam1Id)}
+                            />
+                            <NumberInput
+                                number_type={NumberType::Ratio}
+                                label="Team 1 Ratio"
+                                placeholder="1.34"
+                                on_change={ctx.link().callback(Msg::SetTeam1Ratio)}
+                            />
+                        </div>
+                        <div>
+                            <NumberInput
+                                number_type={NumberType::Id}
+                                label="Team 2 ID"
+                                placeholder="95"
+                                on_change={ctx.link().callback(Msg::SetTeam2Id)}
+                            />
+                            <NumberInput
+                                number_type={NumberType::Ratio}
+                                label="Team 2 Ratio"
+                                placeholder="2.19"
+                                on_change={ctx.link().callback(Msg::SetTeam2Ratio)}
+                            />
+                        </div>
+                    </div>
                     <TextInput
                         input_type={InputType::DateTime}
                         field={Field::Country} // ignore it, just for id
                         label="Supposed start"
-                        placeholder="https://logos-download.com/wp-content/uploads/2016/06/Fnatic_logo_wordmark.png"
+                        placeholder=""
                         on_change={ctx.link().callback(Msg::SetStartAt)}
                     />
                     {

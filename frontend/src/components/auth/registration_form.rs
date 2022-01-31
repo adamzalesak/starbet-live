@@ -37,7 +37,6 @@ impl Component for RegistrationForm {
                 info!("Submiting registration form {:?}", self.data);
             }
             Msg::SetData((new_data, field, is_valid)) => {
-                // info!("Arrived from input: {} {:?} {}", new_data, field, is_valid);
                 match field {
                     Field::FirstName => self.data.first_name = (new_data, is_valid),
                     Field::LastName => self.data.last_name = (new_data, is_valid),
