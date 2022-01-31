@@ -50,12 +50,7 @@ impl TeamService for MyTeamService {
         request: Request<CreateTeamRequest>,
     ) -> Result<Response<CreateTeamReply>, Status> {
         let request = request.into_inner();
-        if let None = request.team {
-            return Err(Status::new(Code::from_i32(13), "team is None"));
-        }
-        let team = request.team.unwrap();
-
-        let create_team = CreateTeam::new(&team.name, &team.description, &team.logo);
+        let create_team = CreateTeam::new(&request.name, &request.description, &request.logo);
 
         match self.repo.create(create_team).await {
             Ok(team_id) => Ok(Response::new(CreateTeamReply { id: team_id })),

@@ -22,7 +22,9 @@ message GetTeamReply {
 }
 
 message CreateTeamRequest {
-    Team team = 1;
+    string name = 2;
+    string description = 3;
+    string logo = 4;
 }
 
 message CreateTeamReply {
