@@ -1,6 +1,6 @@
 use crate::{
     components::auth::input::{InputType, TextInput},
-    types::{CreateGameFormData, Field, MainRoute, SubmitResult},
+    types::{CreateGameFormData, CreateTeamFormData, Field, MainRoute, SubmitResult},
 };
 use gloo_timers::callback::Timeout;
 use log::{info, warn};
@@ -9,33 +9,34 @@ use std::time::Duration;
 use yew::prelude::*;
 use yew_router::prelude::Link;
 
-pub mod game {
-    include!(concat!(env!("OUT_DIR"), concat!("/game.rs")));
+pub mod team {
+    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
 }
-use game::{game_service_client, CreateGameReply, CreateGameRequest};
+use team::{team_service_client, CreateTeamReply, CreateTeamRequest};
 
 pub enum Msg {
     Submit,
     SetName((String, Field, bool)),
+    SetDescription((String, Field, bool)),
     SetLogoUrl((String, Field, bool)),
     ResetSubmitResult,
-    ReceiveResponse(Result<CreateGameReply, Box<dyn std::error::Error>>),
+    ReceiveResponse(Result<CreateTeamReply, Box<dyn std::error::Error>>),
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct CreateGameForm {
-    data: CreateGameFormData,
+pub struct CreateTeamForm {
+    data: CreateTeamFormData,
     submit_result: SubmitResult,
 }
 
-impl Component for CreateGameForm {
+impl Component for CreateTeamForm {
     type Message = Msg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             submit_result: SubmitResult::None,
-            data: CreateGameFormData::new(),
+            data: CreateTeamFormData::new(),
         }
     }
 
@@ -48,14 +49,19 @@ impl Component for CreateGameForm {
                 }
 
                 let grpc_client =
-                    game_service_client::GameService::new(String::from("http://127.0.0.1:5430"));
+                    team_service_client::TeamService::new(String::from("http://127.0.0.1:5430"));
                 let name = self.data.name.0.clone();
-                let logo_url = self.data.logo_url.0.clone();
+                let description = self.data.description.0.clone();
+                let logo = self.data.logo_url.0.clone();
 
                 ctx.link().send_future(async move {
                     Msg::ReceiveResponse(
                         grpc_client
-                            .create_game(CreateGameRequest { name, logo_url })
+                            .create_team(CreateTeamRequest {
+                                name,
+                                description,
+                                logo,
+                            })
                             .await,
                     )
                 });
@@ -67,6 +73,10 @@ impl Component for CreateGameForm {
             }
             Msg::SetLogoUrl((new_data, _, is_valid)) => {
                 self.data.logo_url = (new_data, is_valid);
+                false
+            }
+            Msg::SetDescription((new_data, _, is_valid)) => {
+                self.data.description = (new_data, is_valid);
                 false
             }
             Msg::ReceiveResponse(Ok(_)) => {
@@ -91,22 +101,29 @@ impl Component for CreateGameForm {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <div class="bg-light-grey p-2 rounded-md my-2">
-                <div class="text-center font-bold text-lg">{"Create game"}</div>
+                <div class="text-center font-bold text-lg">{"Create team"}</div>
                 <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) }
                         class="flex flex-col gap-1 text-black admin-form">
                     <TextInput
                         field={Field::FirstName} // ignore it
                         label="Name"
-                        placeholder="Counter-Strike: Global Offensive"
+                        placeholder="Fnatic"
                         on_change={ctx.link().callback(Msg::SetName)}
+                    />
+                    <TextInput
+                        field={Field::LastName} // ignore it
+                        label="Short description"
+                        // value={self.data.logo_url.0.clone()}
+                        placeholder="Fnatic is the world's leading esports organisation..."
+                        on_change={ctx.link().callback(Msg::SetDescription)}
                     />
                     <TextInput
                         field={Field::LastName} // ignore it
                         label="Logo Url"
                         // value={self.data.logo_url.0.clone()}
-                        placeholder="https://logos-download.com/wp-content/uploads/2016/04/Counter_Strike_logo-700x700.png"
+                        placeholder="https://logos-download.com/wp-content/uploads/2016/06/Fnatic_logo_wordmark.png"
                         on_change={ctx.link().callback(Msg::SetLogoUrl)}
-                    />    
+                    />
                     {
                         if self.submit_result == SubmitResult::Success {
                             html! {

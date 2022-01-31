@@ -1,4 +1,3 @@
-pub mod games;
 pub mod matches;
 pub mod router;
 pub mod tickets;
@@ -10,4 +9,4 @@ pub use tickets::{BetInfo, TicketInfo};
 
 pub use router::{MainRoute, ProfileRoute};
 
-pub use games::CreateGameFormData;
+pub use matches::{CreateGameFormData, CreateTeamFormData};

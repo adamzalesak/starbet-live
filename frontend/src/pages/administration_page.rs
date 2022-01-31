@@ -1,4 +1,6 @@
-use crate::components::administration::create_game_form::CreateGameForm;
+use crate::components::administration::{
+    create_game_form::CreateGameForm, create_team_form::CreateTeamForm,
+};
 use crate::store::UserStore;
 use crate::types::{MainRoute, UserInfo};
 use log::info;
@@ -49,7 +51,7 @@ impl Component for AdministrationPage {
         html! {
             <>
                 <CreateGameForm />
-                <div>{"Create a team"}</div>
+                <CreateTeamForm />
 
 
                 <div>{"Create a match"}</div>

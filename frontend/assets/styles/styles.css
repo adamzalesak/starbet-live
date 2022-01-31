@@ -162,3 +162,8 @@ body {
 .main-grow {
   flex: 1 0 auto;
 }
+
+.admin-form button[type='submit']:hover {
+  background-color: var(--yellow);
+  color: var(--black);
+}
