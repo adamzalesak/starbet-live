@@ -13,6 +13,7 @@ use crate::game_match::{
 };
 use crate::repos::Repos;
 use crate::team::Team;
+use std::convert::*;
 
 use database_layer::{
     connection::PgPool,
