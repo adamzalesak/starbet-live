@@ -1,14 +1,12 @@
 use crate::types::{MainRoute, ProfileRoute};
 use crate::{store::UserStore, types::UserInfo};
-use log::info;
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
     Bridge,
 };
 use yew_router::history::History;
-use yew_router::prelude::RouterScopeExt;
-use yew_router::prelude::{Link, Redirect};
+use yew_router::prelude::{Link, RouterScopeExt};
 
 pub enum Msg {
     SetCurrentTab,

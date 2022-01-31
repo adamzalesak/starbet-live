@@ -3,7 +3,6 @@ use crate::components::{auth::login_form::LoginForm, user::user_summary::UserSum
 use crate::store::UserStore;
 use crate::types::MainRoute;
 use crate::types::UserInfo;
-use log::info;
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},

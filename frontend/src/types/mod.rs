@@ -9,4 +9,4 @@ pub use tickets::{BetInfo, TicketInfo};
 
 pub use router::{MainRoute, ProfileRoute};
 
-pub use matches::{CreateGameFormData, CreateTeamFormData};
+pub use matches::{CreateGameFormData, CreateTeamFormData, CreateMatchForm};

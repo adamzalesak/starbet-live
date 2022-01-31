@@ -1,13 +1,11 @@
 use crate::{
-    components::auth::input::{InputType, TextInput},
-    types::{CreateGameFormData, Field, MainRoute, SubmitResult},
+    components::auth::input::TextInput,
+    types::{CreateGameFormData, Field, SubmitResult},
 };
 use gloo_timers::callback::Timeout;
-use log::{info, warn};
+use log::warn;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use yew::prelude::*;
-use yew_router::prelude::Link;
 
 pub mod game {
     include!(concat!(env!("OUT_DIR"), concat!("/game.rs")));
@@ -95,18 +93,18 @@ impl Component for CreateGameForm {
                 <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) }
                         class="flex flex-col gap-1 text-black admin-form">
                     <TextInput
-                        field={Field::FirstName} // ignore it
+                        field={Field::FirstName} // ignore it, just for id
                         label="Name"
                         placeholder="Counter-Strike: Global Offensive"
                         on_change={ctx.link().callback(Msg::SetName)}
                     />
                     <TextInput
-                        field={Field::LastName} // ignore it
+                        field={Field::LastName} // ignore it, just for id
                         label="Logo Url"
                         // value={self.data.logo_url.0.clone()}
                         placeholder="https://logos-download.com/wp-content/uploads/2016/04/Counter_Strike_logo-700x700.png"
                         on_change={ctx.link().callback(Msg::SetLogoUrl)}
-                    />    
+                    />
                     {
                         if self.submit_result == SubmitResult::Success {
                             html! {

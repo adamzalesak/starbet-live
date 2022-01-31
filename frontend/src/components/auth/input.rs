@@ -14,6 +14,7 @@ pub enum InputType {
     Email,
     Date,
     Password,
+    DateTime,
 }
 
 impl Display for InputType {
@@ -23,6 +24,7 @@ impl Display for InputType {
             InputType::Email => "email",
             InputType::Password => "password",
             InputType::Date => "date",
+            InputType::DateTime => "datetime-local",
         };
         write!(f, "{}", result)
     }
@@ -87,6 +89,7 @@ pub fn text_input(props: &Props) -> Html {
                 InputType::Password => temp_value.trim().len() >= 6,
                 InputType::Text => temp_value.trim().len() > 2 && temp_value.trim().len() <= 255,
                 InputType::Date => !temp_value.trim().is_empty(),
+                InputType::DateTime => !temp_value.trim().is_empty(),
             },
         };
 

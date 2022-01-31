@@ -1,13 +1,11 @@
 use crate::{
     components::auth::input::{InputType, TextInput},
-    types::{CreateGameFormData, CreateTeamFormData, Field, MainRoute, SubmitResult},
+    types::{CreateTeamFormData, Field, SubmitResult},
 };
 use gloo_timers::callback::Timeout;
-use log::{info, warn};
+use log::warn;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use yew::prelude::*;
-use yew_router::prelude::Link;
 
 pub mod team {
     include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
@@ -105,20 +103,20 @@ impl Component for CreateTeamForm {
                 <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) }
                         class="flex flex-col gap-1 text-black admin-form">
                     <TextInput
-                        field={Field::FirstName} // ignore it
+                        field={Field::CivilIdNumber} // ignore it, just for id
                         label="Name"
                         placeholder="Fnatic"
                         on_change={ctx.link().callback(Msg::SetName)}
                     />
                     <TextInput
-                        field={Field::LastName} // ignore it
+                        field={Field::PhoneNumber} // ignore it, just for id
                         label="Short description"
                         // value={self.data.logo_url.0.clone()}
                         placeholder="Fnatic is the world's leading esports organisation..."
                         on_change={ctx.link().callback(Msg::SetDescription)}
                     />
                     <TextInput
-                        field={Field::LastName} // ignore it
+                        field={Field::DateOfBirth} // ignore it, just for id
                         label="Logo Url"
                         // value={self.data.logo_url.0.clone()}
                         placeholder="https://logos-download.com/wp-content/uploads/2016/06/Fnatic_logo_wordmark.png"
@@ -128,7 +126,7 @@ impl Component for CreateTeamForm {
                         if self.submit_result == SubmitResult::Success {
                             html! {
                                 <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
-                                    {"Game successfully created"}
+                                    {"Team successfully created"}
                                 </div>
                             }
                         } else if self.submit_result == SubmitResult::Error {
@@ -143,7 +141,7 @@ impl Component for CreateTeamForm {
                     }
                     <button type="submit"
                             class="block w-6/12 mx-auto p-1 bg-blue text-white uppercase font-light rounded-md transition-all">
-                        {"Create game"}
+                        {"Create team"}
                     </button>
                 </form>
 
