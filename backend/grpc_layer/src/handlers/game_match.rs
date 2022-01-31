@@ -1,14 +1,16 @@
+use bytes::BytesMut;
+use chrono::Utc;
+use prost::Message;
+use std::convert::*;
+use std::{collections::HashMap, sync::Arc};
+use tonic::{Code, Request, Response, Status};
+
 use crate::game_match::match_service_server::MatchService;
 use crate::game_match::{
     CreateGameEventReply, CreateGameEventRequest, CreateMatchReply, CreateMatchRequest,
     GameEventType, ListMatchesReply, ListMatchesRequest, Match,
 };
 use crate::team::Team;
-use std::convert::*;
-
-use chrono::Utc;
-use std::{collections::HashMap, sync::Arc};
-use tonic::{Code, Request, Response, Status};
 
 use database_layer::{
     connection::PgPool,
@@ -22,17 +24,20 @@ use database_layer::{
         game_match_event::{GameMatchEventFilter, GameMatchEventType},
     },
 };
+use ws_layer::Clients;
 
 pub struct MyMatchService {
     repo: PgMatchRepo,
     team_repo: PgTeamRepo,
+    ws_clients: Clients,
 }
 
 impl MyMatchService {
-    pub fn new(pool: &Arc<PgPool>) -> MyMatchService {
+    pub fn new(pool: &Arc<PgPool>, ws_clients: Clients) -> MyMatchService {
         MyMatchService {
             repo: PgMatchRepo::new(pool),
             team_repo: PgTeamRepo::new(pool),
+            ws_clients: ws_clients,
         }
     }
 }
@@ -125,7 +130,35 @@ impl MatchService for MyMatchService {
             .create_event(request.match_id, game_match_event_type)
             .await
         {
-            Ok(_) => Ok(Response::new(CreateGameEventReply {})),
+            Ok(_) => match self.repo.get(request.match_id).await {
+                Ok(game_match) => {
+                    let mut teams = HashMap::new();
+                    for team_id in vec![game_match.team_one_id, game_match.team_two_id] {
+                        if !teams.contains_key(&team_id) {
+                            let team = match self.team_repo.get(team_id).await {
+                                Ok(team) => Ok(Team::from(&team)),
+                                Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
+                            }?;
+                            teams.insert(team_id, team);
+                        }
+                    }
+
+                    let mut grpc_match = Match::from(&game_match);
+                    grpc_match.team_one = Some(teams.get(&game_match.team_one_id).unwrap().clone());
+                    grpc_match.team_two = Some(teams.get(&game_match.team_two_id).unwrap().clone());
+
+                    let mut buf = BytesMut::with_capacity(64);
+                    let _ = grpc_match.encode(&mut buf);
+                    for client in self.ws_clients.lock().await.values() {
+                        if let Some(sender) = &client.sender {
+                            let _ = sender
+                                .send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+                        }
+                    }
+                    Ok(Response::new(CreateGameEventReply {}))
+                }
+                Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
+            },
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
     }

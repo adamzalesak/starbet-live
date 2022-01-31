@@ -5,10 +5,7 @@ use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
 use crate::bet::bet_service_server::BetService;
-use crate::bet::{
-    Bet, CreateBetReply, CreateBetRequest, DeleteBetReply, DeleteBetRequest, ListBetsReply,
-    ListBetsRequest,
-};
+use crate::bet::{Bet, CreateBetReply, CreateBetRequest, DeleteBetReply, DeleteBetRequest};
 
 use database_layer::{
     connection::PgPool,
@@ -36,19 +33,6 @@ impl MyBetService {
 
 #[tonic::async_trait]
 impl BetService for MyBetService {
-    async fn list_bets(
-        &self,
-        request: Request<ListBetsRequest>,
-    ) -> Result<Response<ListBetsReply>, Status> {
-        let request = request.into_inner();
-        match self.repo.get_bets(request.ticket_id).await {
-            Ok(bets) => Ok(Response::new(ListBetsReply {
-                bets: bets.iter().map(|bet| Bet::from(bet)).collect(),
-            })),
-            Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
-        }
-    }
-
     async fn create_bet(
         &self,
         request: Request<CreateBetRequest>,

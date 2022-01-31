@@ -2,7 +2,6 @@ syntax = "proto3";
 package bet;
 
 service BetService {
-    rpc ListBets (ListBetsRequest) returns (ListBetsReply);
     rpc CreateBet (CreateBetRequest) returns (CreateBetReply);
     rpc DeleteBet (DeleteBetRequest) returns (DeleteBetReply);
 }
@@ -12,14 +11,6 @@ message Bet {
     int32 ticket_id = 2;
     int32 match_id = 3;
     int32 team_id = 4;
-}
-
-message ListBetsRequest {
-    int32 ticket_id = 1;
-}
-
-message ListBetsReply {
-    repeated Bet bets = 1;
 }
 
 message CreateBetRequest {

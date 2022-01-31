@@ -8,8 +8,6 @@ use crate::team;
 use database_layer::db_models::{bet::Bet, game_match::GameMatch, team::Team};
 use database_layer::result_types::GameInfo;
 
-pub trait FromGame: From<GameInfo> {}
-
 impl From<&'_ GameInfo> for game::Game {
     fn from(game: &'_ GameInfo) -> Self {
         game::Game {
@@ -19,10 +17,6 @@ impl From<&'_ GameInfo> for game::Game {
         }
     }
 }
-
-impl<T: From<GameInfo>> FromGame for T {}
-
-pub trait FromGameMatch: From<GameMatch> {}
 
 impl From<&'_ GameMatch> for Match {
     fn from(game_match: &'_ GameMatch) -> Self {
@@ -39,10 +33,6 @@ impl From<&'_ GameMatch> for Match {
     }
 }
 
-impl<T: From<GameMatch>> FromGameMatch for T {}
-
-pub trait FromTeam: From<Team> {}
-
 impl From<&'_ Team> for team::Team {
     fn from(team: &'_ Team) -> Self {
         team::Team {
@@ -54,10 +44,6 @@ impl From<&'_ Team> for team::Team {
     }
 }
 
-impl<T: From<Team>> FromTeam for T {}
-
-pub trait FromBet: From<Bet> {}
-
 impl From<&'_ Bet> for bet::Bet {
     fn from(bet: &'_ Bet) -> Self {
         bet::Bet {
@@ -68,5 +54,3 @@ impl From<&'_ Bet> for bet::Bet {
         }
     }
 }
-
-impl<T: From<Bet>> FromBet for T {}

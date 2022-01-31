@@ -56,8 +56,10 @@ async fn serve_grpc_server(
         .clone();
 
     let bet_service = handlers::bet::MyBetService::new(&db_conn_pool, bet_clients);
-    let ticket_service = handlers::ticket::MyTicketService::new(&db_conn_pool, match_clients);
-    let game_match_service = handlers::game_match::MyMatchService::new(&db_conn_pool);
+    let ticket_service =
+        handlers::ticket::MyTicketService::new(&db_conn_pool, match_clients.clone());
+    let game_match_service =
+        handlers::game_match::MyMatchService::new(&db_conn_pool, match_clients);
     let game_service = handlers::game::MyGameService::new(&db_conn_pool);
     let user_service = handlers::user::MyUserService::new(&db_conn_pool);
     let team_service = handlers::team::MyTeamService::new(&db_conn_pool);
