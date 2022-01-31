@@ -29,7 +29,8 @@ impl Component for LatestBets {
         info!("updated");
         match msg {
             Msg::Connect => {
-                let mut client = wasm_sockets::EventClient::new("ws://127.0.0.1:8000/bet").unwrap();
+                let mut client =
+                    wasm_sockets::EventClient::new("ws://127.0.0.1:50052/bet").unwrap();
 
                 let callback = ctx.link().callback(|text: String| Msg::ReceiveBets(text));
 

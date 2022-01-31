@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use crate::components::{
     footer::Footer,
-    // games::Games,
+    games::Games,
     header::header::Header,
     latest_bets::latest_bets::LatestBets,
     ticket::ticket::Ticket,
@@ -35,7 +35,7 @@ impl Component for Layout {
                 <Header />
                 <main class="w-full flex-auto flex flex-row overflow-auto">
                     <section class="w-3/12 lg:w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2 transition-all">
-                        // <Games />
+                        <Games />
                         <Footer />
                     </section>
                     <section class="w-6/12 lg:w-8/12 p-2 overflow-auto transition-all">

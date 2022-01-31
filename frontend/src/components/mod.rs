@@ -3,7 +3,7 @@ pub mod header;
 pub mod layout;
 pub mod main;
 pub mod footer;
-// pub mod games;
+pub mod games;
 pub mod ticket;
 pub mod latest_bets;
 pub mod user;
