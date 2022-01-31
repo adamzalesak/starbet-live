@@ -13,7 +13,7 @@ service TicketService {
 message Ticket {
     int32 id = 1;
     string submitted_at = 2;
-    int32 price_paid = 3;
+    float price_paid = 3;
     string total_ratio = 4;
     bool won = 5;
     repeated bet.Bet bets = 6;
@@ -38,7 +38,7 @@ message ListTicketsReply {
 
 message SubmitTicketRequest {
     int32 ticket_id = 1;
-    int32 amount = 2;
+    float price_paid = 2;
 }
 
 message SubmitTicketReply {}

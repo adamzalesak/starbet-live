@@ -111,7 +111,7 @@ impl TicketService for MyTicketService {
         let request = request.into_inner();
         match self
             .repo
-            .submit_ticket(request.ticket_id, request.amount)
+            .submit_ticket(request.ticket_id, request.price_paid)
             .await
         {
             Ok(submitted_ticket_id) => {
