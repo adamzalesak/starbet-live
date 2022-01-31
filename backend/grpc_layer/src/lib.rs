@@ -8,6 +8,7 @@ use tonic::transport::Server;
 use ws_layer::RouteClients;
 
 mod handlers;
+mod transform;
 
 mod bet {
     tonic::include_proto!("bet");

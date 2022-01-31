@@ -55,15 +55,7 @@ impl TicketService for MyTicketService {
                 match self.repo.get_bets(ticket.id).await {
                     Ok(bets) => Ok(Response::new(GetCurrentTicketReply {
                         ticket_id: ticket.id,
-                        bets: bets
-                            .iter()
-                            .map(|bet| Bet {
-                                id: bet.id,
-                                ticket_id: bet.ticket_id,
-                                match_id: bet.game_match_id,
-                                team_id: bet.team_id,
-                            })
-                            .collect(),
+                        bets: bets.iter().map(|bet| Bet::from(bet)).collect(),
                     })),
                     Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
                 }

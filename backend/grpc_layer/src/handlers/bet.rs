@@ -1,5 +1,6 @@
-use bytes::{BufMut, BytesMut};
+use bytes::BytesMut;
 use prost::Message;
+use std::convert::*;
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
@@ -42,15 +43,7 @@ impl BetService for MyBetService {
         let request = request.into_inner();
         match self.repo.get_bets(request.ticket_id).await {
             Ok(bets) => Ok(Response::new(ListBetsReply {
-                bets: bets
-                    .iter()
-                    .map(|bet| Bet {
-                        id: bet.id,
-                        match_id: bet.game_match_id,
-                        ticket_id: bet.ticket_id,
-                        team_id: bet.team_id,
-                    })
-                    .collect(),
+                bets: bets.iter().map(|bet| Bet::from(bet)).collect(),
             })),
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
@@ -70,12 +63,7 @@ impl BetService for MyBetService {
 
         match self.repo.place_a_bet(request.ticket_id, create_bet).await {
             Ok(bet) => {
-                let bet = Bet {
-                    id: bet.id,
-                    match_id: bet.game_match_id,
-                    ticket_id: bet.ticket_id,
-                    team_id: bet.team_id,
-                };
+                let bet = Bet::from(&bet);
 
                 let mut buf = BytesMut::with_capacity(64);
                 let _ = bet.encode(&mut buf);

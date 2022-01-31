@@ -1,5 +1,4 @@
-use bytes::{BufMut, BytesMut};
-use prost::Message;
+use std::convert::*;
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
@@ -35,14 +34,7 @@ impl GameService for MyGameService {
     ) -> Result<Response<ListGamesReply>, Status> {
         match self.repo.get_all().await {
             Ok(game_infos) => Ok(Response::new(ListGamesReply {
-                games: game_infos
-                    .iter()
-                    .map(|game_info| Game {
-                        id: game_info.id,
-                        name: String::from(&game_info.name),
-                        logo_url: String::from(&game_info.logo_url),
-                    })
-                    .collect(),
+                games: game_infos.iter().map(|game| Game::from(game)).collect(),
             })),
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
@@ -53,7 +45,7 @@ impl GameService for MyGameService {
         request: Request<CreateGameRequest>,
     ) -> Result<Response<CreateGameReply>, Status> {
         let request = request.into_inner();
-        let create_game = CreateGame::new(&*request.name, "", &*request.logo_url);
+        let create_game = CreateGame::new(&*request.name, "", &*request.logo_url); // TODO
 
         match self.repo.create(create_game).await {
             Ok(game_id) => Ok(Response::new(CreateGameReply { id: game_id })),

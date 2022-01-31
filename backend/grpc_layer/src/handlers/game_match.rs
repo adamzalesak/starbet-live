@@ -4,6 +4,7 @@ use crate::game_match::{
     GameEventType, ListMatchesReply, ListMatchesRequest, Match,
 };
 use crate::team::Team;
+use std::convert::*;
 
 use chrono::Utc;
 use std::{collections::HashMap, sync::Arc};
@@ -61,12 +62,7 @@ impl MatchService for MyMatchService {
                     for team_id in vec![game_match.team_one_id, game_match.team_two_id] {
                         if !teams.contains_key(&team_id) {
                             let team = match self.team_repo.get(team_id).await {
-                                Ok(team) => Ok(Team {
-                                    id: team.id,
-                                    name: team.name,
-                                    description: team.description,
-                                    logo: team.logo,
-                                }),
+                                Ok(team) => Ok(Team::from(&team)),
                                 Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
                             }?;
                             teams.insert(team_id, team);
@@ -77,15 +73,13 @@ impl MatchService for MyMatchService {
                 Ok(Response::new(ListMatchesReply {
                     game_matches: game_matches
                         .iter()
-                        .map(|(game_match, _)| Match {
-                            id: game_match.id,
-                            game_id: game_match.game_id,
-                            team_one: Some(teams.get(&game_match.team_one_id).unwrap().clone()),
-                            team_two: Some(teams.get(&game_match.team_two_id).unwrap().clone()),
-                            team_one_ratio: game_match.team_one_ratio.clone(),
-                            team_two_ratio: game_match.team_two_ratio.clone(),
-                            supposed_start_at: game_match.supposed_start_at.clone(),
-                            state: game_match.state.clone(),
+                        .map(|(game_match, _)| {
+                            let mut grpc_match = Match::from(game_match);
+                            grpc_match.team_one =
+                                Some(teams.get(&game_match.team_one_id).unwrap().clone());
+                            grpc_match.team_two =
+                                Some(teams.get(&game_match.team_two_id).unwrap().clone());
+                            grpc_match
                         })
                         .collect(),
                 }))
