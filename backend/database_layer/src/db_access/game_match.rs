@@ -10,12 +10,15 @@ use chrono::{DateTime, Duration, Utc};
 use super::repo::Repo;
 use crate::db_models::{
     game_match::{CreateGameMatch, GameMatch, GameMatchUpdate},
-    game_match_event::{CreateGameMatchEvent, GameMatchEvent, GameMatchEventType},
+    game_match_event::{
+        CreateGameMatchEvent, GameMatchEvent, GameMatchEventFilter, GameMatchEventType,
+    },
 };
-use crate::result_types::GameMatchShow;
 
 // schema imports
-use crate::schema::{bet, game_match, game_match_event, team_plays_game};
+use crate::schema::{
+    bet, game, game_match, game_match_event, submitted_bet, team, team_plays_game,
+};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -104,7 +107,10 @@ pub trait MatchRepo {
     /// ---
     /// - Ok(GameMatchShow) if the match has been found
     /// - Err(_) if an error has occurred or the match has not been found
-    async fn get_show_info(&self, desired_match_id: i32) -> anyhow::Result<GameMatchShow>;
+    async fn get_show_info(
+        &self,
+        desired_match_id: i32,
+    ) -> anyhow::Result<(GameMatch, GameMatchEvent)>;
 
     /// Get all matches, optionally we can filter by the time period (upcoming),
     /// filter by the team and filter by the game
@@ -121,9 +127,9 @@ pub trait MatchRepo {
     /// - Err(_) if an error has occurred
     async fn get_all_show_info(
         &self,
-        filter_by_time_period: Option<GameMatchEventType>,
+        filter_by_time_period: Option<GameMatchEventFilter>,
         filter_by_game: Option<i32>,
-    ) -> anyhow::Result<Vec<GameMatchShow>>;
+    ) -> anyhow::Result<Vec<(GameMatch, GameMatchEvent)>>;
 
     /// Update a match record.
     /// Update ratios, possibly the supposed start and the shown state of the match
@@ -204,9 +210,24 @@ impl MatchRepo for PgMatchRepo {
             _ => anyhow::bail!("Internal error!!! More occurrences of the same team playing the game multiple times!"),
         }
 
+        let team_one_name: String = team::table
+            .find(new_match.team_one_id)
+            .select(team::name)
+            .get_result(&connection)?;
+
+        let team_two_name: String = team::table
+            .find(new_match.team_two_id)
+            .select(team::name)
+            .get_result(&connection)?;
+
+        let game_name: String = game::table
+            .find(new_match.game_id)
+            .select(game::name)
+            .get_result(&connection)?;
+
         // create the game match
         let query_result: i32 = insert_into(game_match::table)
-            .values(new_match)
+            .values(new_match.store(&game_name, &team_one_name, &team_two_name))
             .returning(game_match::id)
             .get_result(&connection)?;
 
@@ -223,13 +244,13 @@ impl MatchRepo for PgMatchRepo {
     async fn delete(&self, desired_match_id: i32) -> anyhow::Result<GameMatch> {
         let connection: PgPooledConnection = self.get_connection().await?;
 
-        let any_bets: usize = bet::table
+        let any_bets: usize = submitted_bet::table
             .filter(bet::game_match_id.eq(desired_match_id))
             .execute(&connection)?;
 
-        // there are bets placed on the match
+        // there are bets submitted on the match
         if any_bets > 0 {
-            anyhow::bail!("Cannot delete a game match, if there are bets placed on it!");
+            anyhow::bail!("Cannot delete a game match, if there are submitted bets placed on it");
         }
 
         let to_be_removed: GameMatch = game_match::table
@@ -247,7 +268,11 @@ impl MatchRepo for PgMatchRepo {
         let _ = delete(
             game_match_event::table.filter(game_match_event::game_match_id.eq(desired_match_id)),
         )
-        .execute(&connection);
+        .execute(&connection)?;
+
+        // remove all unsubmitted bets second
+        let _ = delete(bet::table.filter(bet::game_match_id.eq(desired_match_id)))
+            .execute(&connection)?;
 
         // remove the match
         let _ = delete(game_match::table.find(desired_match_id)).execute(&connection)?;
@@ -265,39 +290,16 @@ impl MatchRepo for PgMatchRepo {
     }
 
     /// Get a desired match (together with display information) by its ID
-    async fn get_show_info(&self, desired_match_id: i32) -> anyhow::Result<GameMatchShow> {
-        let query = sql_query(format!(
-            "
-        SELECT game_match.*
-            , match_event.event_type
-            , team_one.team_one_name
-            , team_two.team_two_name
-            , game_table.games_name
-                FROM game_match
-                INNER JOIN (SELECT DISTINCT ON (game_match_id) game_match_id AS event_match_id
-                                    , event_type
-                                    , created_at AS event_created_at
-                            FROM game_match_event
-                            ORDER BY event_match_id, event_created_at DESC
-                            ) AS match_event
-                ON game_match.id=match_event.event_match_id
-                INNER JOIN (SELECT id AS first_team_id
-                                    , name AS team_one_name
-                            FROM team) AS team_one
-                ON game_match.team_one_id=team_one.first_team_id
-                INNER JOIN (SELECT id AS second_team_id
-                                    , name AS team_two_name
-                            FROM team) AS team_two
-                ON game_match.team_two_id=team_two.second_team_id
-                INNER JOIN (SELECT id AS games_id
-                                    , name AS games_name
-                            FROM game) AS game_table
-                ON game_match.game_id=game_table.games_id
-                WHERE game_match.id={}",
-            desired_match_id
-        ));
-
-        let query_result: GameMatchShow = query.get_result(&self.get_connection().await?)?;
+    async fn get_show_info(
+        &self,
+        desired_match_id: i32,
+    ) -> anyhow::Result<(GameMatch, GameMatchEvent)> {
+        let query_result: (GameMatch, GameMatchEvent) = game_match::table
+            .filter(game_match::id.eq(desired_match_id))
+            .inner_join(game_match_event::table)
+            .order(game_match_event::created_at.desc())
+            .distinct_on(game_match::id)
+            .get_result(&self.get_connection().await?)?;
 
         Ok(query_result)
     }
@@ -306,80 +308,40 @@ impl MatchRepo for PgMatchRepo {
     /// filter by the team and filter by the game
     async fn get_all_show_info(
         &self,
-        filter_by_time_period: Option<GameMatchEventType>,
+        filter_by_time_period: Option<GameMatchEventFilter>,
         filter_by_game: Option<i32>,
-    ) -> anyhow::Result<Vec<GameMatchShow>> {
-        // raw query performing all necessarry joins -> could not do it with Diesel
+    ) -> anyhow::Result<Vec<(GameMatch, GameMatchEvent)>> {
+        // join the match table with the latest event
+        let basic_query = game_match::table
+            .inner_join(game_match_event::table)
+            .order(game_match_event::created_at.desc())
+            .distinct_on(game_match::id)
+            .order_by(game_match::supposed_start_at.desc());
 
-        // optional parts of the clause need to be addressed:
-        // adding a where clause if there is some sort of a filter
-        let where_clause = if filter_by_game.is_some() || filter_by_time_period.is_some() {
-            "WHERE"
-        } else {
-            ""
-        };
-        // adding an `and` clause if there are two optional filters
-        let and_clause = if filter_by_game.is_some() && filter_by_time_period.is_some() {
-            "AND"
-        } else {
-            ""
-        };
+        // filter by method parameters
+        let query_result: Vec<(GameMatch, GameMatchEvent)> =
+            match (filter_by_time_period, filter_by_game) {
+                // filter by both period and a game id
+                (Some(period), Some(game)) => basic_query
+                    .filter(
+                        (game_match_event::event_type.eq(period.to_string()))
+                            .and(game_match::game_id.eq(game)),
+                    )
+                    .get_results(&self.get_connection().await?)?,
 
-        // filter string -> possibility to expand the options
-        let filter_string = format!(
-            "{} {} {} {}",
-            where_clause,
-            filter_by_time_period.map_or_else(
-                || "".into(),
-                |time_period: GameMatchEventType| {
-                    format!("match_event.event_type='{}'", time_period)
-                }
-            ),
-            and_clause,
-            filter_by_game.map_or_else(
-                || "".into(),
-                |game_id: i32| { format!("game_match.game_id={}", game_id) }
-            )
-        );
+                // filter by period
+                (Some(period), None) => basic_query
+                    .filter(game_match_event::event_type.eq(period.to_string()))
+                    .get_results(&self.get_connection().await?)?,
+                // fiter by game id
+                (None, Some(game)) => basic_query
+                    .filter(game_match::game_id.eq(game))
+                    .get_results(&self.get_connection().await?)?,
+                // nofilter
+                _ => basic_query.get_results(&self.get_connection().await?)?,
+            };
 
-        // final query string with the filter at the end
-        let query_string = format!(
-            "
-        SELECT game_match.*
-        , match_event.event_type
-        , team_one.team_one_name
-        , team_two.team_two_name
-        , game_table.games_name
-            FROM game_match
-            INNER JOIN (SELECT DISTINCT ON (game_match_id) game_match_id AS event_match_id
-                                , event_type
-                                , created_at AS event_created_at
-                        FROM game_match_event
-                        ORDER BY event_match_id, event_created_at DESC
-                        ) AS match_event
-            ON game_match.id=match_event.event_match_id
-            INNER JOIN (SELECT id AS first_team_id
-                                , name AS team_one_name
-                        FROM team) AS team_one
-            ON game_match.team_one_id=team_one.first_team_id
-            INNER JOIN (SELECT id AS second_team_id
-                                , name AS team_two_name
-                        FROM team) AS team_two
-            ON game_match.team_two_id=team_two.second_team_id
-            INNER JOIN (SELECT id AS games_id
-                                , name AS games_name
-                        FROM game) AS game_table
-            ON game_match.game_id=game_table.games_id
-            {}
-        ",
-            filter_string
-        );
-
-        // run query
-        let result: Vec<GameMatchShow> =
-            sql_query(query_string).get_results(&self.get_connection().await?)?;
-
-        Ok(result)
+        Ok(query_result)
     }
 
     /// TODO!

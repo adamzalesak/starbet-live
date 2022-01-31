@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-use crate::db_models::{game_match::GameMatch, team::Team, ticket::Ticket};
+use crate::db_models::{
+    game_match::GameMatch, submitted_bet::CreateSubmittedBet, team::Team, ticket::Ticket,
+};
 use crate::schema::bet;
 use crate::type_storing::time_handling::TimeHandling;
 
@@ -30,6 +32,27 @@ pub struct CreateBet {
     pub team_id: i32,
     pub bet_ratio: String,
     pub created_at: String,
+}
+
+impl Bet {
+    pub fn submit_bets(desired_submitted_ticket_id: i32, bets: &[Bet]) -> Vec<CreateSubmittedBet> {
+        let mut submitted_bets: Vec<CreateSubmittedBet> = Vec::new();
+        let submission_date = TimeHandling::store();
+
+        for bet in bets {
+            submitted_bets.push(CreateSubmittedBet {
+                game_match_id: bet.game_match_id,
+                submitted_ticket_id: desired_submitted_ticket_id,
+                team_id: bet.team_id,
+                bet_ratio: bet.bet_ratio.clone(),
+                placed_at: bet.created_at.clone(),
+                submitted_at: submission_date.clone(),
+                won: None,
+            })
+        }
+
+        submitted_bets
+    }
 }
 
 impl CreateBet {

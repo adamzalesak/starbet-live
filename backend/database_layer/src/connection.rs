@@ -20,8 +20,7 @@ pub type PgPooledConnection = PooledConnection<ConnectionManager<PgConnection>>;
 fn initialize_pool(database_url: &str) -> anyhow::Result<PgPool> {
     let manager = ConnectionManager::<PgConnection>::new(database_url);
 
-    // TODO on production -> configure the builder correctly
-    Ok(Pool::builder().max_size(1500).build(manager)?)
+    Ok(Pool::builder().build(manager)?)
 }
 
 /// Establish a pooled connection to the database.

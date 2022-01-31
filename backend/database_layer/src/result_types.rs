@@ -1,4 +1,4 @@
-use diesel::sql_types::{Integer, Text};
+use diesel::sql_types::{Integer, Nullable, Text};
 
 /// Structure used for getting some fields of Game records from the database
 /// This is to limit the amout of traffic between the db and the backend
@@ -22,35 +22,6 @@ pub struct TeamInfo {
     pub name: String,
     #[sql_type = "Text"]
     pub logo_url: String,
-}
-
-/// Structure fo retrieving display information for `game_match` records.
-#[derive(QueryableByName, Debug)]
-pub struct GameMatchShow {
-    #[sql_type = "Integer"]
-    pub id: i32,
-    #[sql_type = "Integer"]
-    pub game_id: i32,
-    #[sql_type = "Integer"]
-    pub team_one_id: i32,
-    #[sql_type = "Integer"]
-    pub team_two_id: i32,
-    #[sql_type = "Text"]
-    pub team_one_ratio: String,
-    #[sql_type = "Text"]
-    pub team_two_ratio: String,
-    #[sql_type = "Text"]
-    pub supposed_start_at: String,
-    #[sql_type = "Text"]
-    pub state: String,
-    #[sql_type = "Text"]
-    pub event_type: String,
-    #[sql_type = "Text"]
-    pub team_one_name: String,
-    #[sql_type = "Text"]
-    pub team_two_name: String,
-    #[sql_type = "Text"]
-    pub games_name: String,
 }
 
 /// Structure for retrieving display information for `bet` records

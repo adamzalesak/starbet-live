@@ -122,9 +122,10 @@ pub trait UserRepo {
     /// ---
     /// - `Ok(balance)` with the balance of the user
     /// - `Err(_)` if an error occurrs
-    async fn get_balance(&self, desired_user_id: i32) -> anyhow::Result<f64>;
+    async fn get_balance(&self, desired_user_id: i32) -> anyhow::Result<String>;
 
     /// Add balance to the user's account
+    /// Fails if the balance specified is negative
     ///
     /// Params
     /// ---
@@ -144,7 +145,11 @@ pub trait UserRepo {
     /// ---
     /// - desired_user_id: ID of the user we wish to withdraw the balance of
     /// - desired_withdrawal: amount of money the user wants to withdraw
-    async fn withdraw_balance(&self, desired_user_id: i32, desired_withdrawal: f64);
+    async fn withdraw_balance(
+        &self,
+        desired_user_id: i32,
+        desired_withdrawal: f64,
+    ) -> anyhow::Result<()>;
 }
 
 #[async_trait]
@@ -210,15 +215,59 @@ impl UserRepo for PgUserRepo {
         Ok(query_result)
     }
 
-    async fn get_balance(&self, desired_user_id: i32) -> anyhow::Result<f64> {
-        todo!()
+    /// Get user's balance
+    async fn get_balance(&self, desired_user_id: i32) -> anyhow::Result<String> {
+        let query_result: String = user::table
+            .find(desired_user_id)
+            .select(user::balance)
+            .get_result(&self.get_connection().await?)?;
+
+        Ok(query_result)
     }
 
+    /// Add balance to the user's account
+    /// Fails if the balance specified is negative
     async fn add_balance(&self, desired_user_id: i32, desired_amount: f64) -> anyhow::Result<()> {
-        todo!()
+        if desired_amount <= 0.0 {
+            anyhow::bail!("Cannot 'add' a negative balance!")
+        }
+
+        // retrieve balance
+        let user_balance: String = self.get_balance(desired_user_id).await?;
+        let converted_balance: f64 = user_balance.parse::<f64>()?;
+
+        // update the balance
+        let _ = update(user::table.find(desired_user_id))
+            .set(user::balance.eq((converted_balance + desired_amount).to_string()))
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
     }
 
-    async fn withdraw_balance(&self, desired_user_id: i32, desired_withdrawal: f64) {
-        todo!()
+    /// Withdraw the user's balance
+    /// Fails if the balance specified is higher than the current balance
+    async fn withdraw_balance(
+        &self,
+        desired_user_id: i32,
+        desired_withdrawal: f64,
+    ) -> anyhow::Result<()> {
+        if desired_withdrawal <= 0.0 {
+            anyhow::bail!("Cannot 'withdraw' a negative balance!")
+        }
+
+        // retrieve balance
+        let user_balance: String = self.get_balance(desired_user_id).await?;
+        let converted_balance: f64 = user_balance.parse::<f64>()?;
+
+        if converted_balance < desired_withdrawal {
+            anyhow::bail!("Cannot withdraw more money that user has.")
+        }
+
+        // update the balance
+        let _ = update(user::table.find(desired_user_id))
+            .set(user::balance.eq((converted_balance - desired_withdrawal).to_string()))
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
     }
 }

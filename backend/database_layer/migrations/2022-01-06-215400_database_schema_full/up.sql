@@ -54,10 +54,13 @@ CREATE TABLE "team_plays_game" (
 CREATE TABLE "game_match" (
     id SERIAL PRIMARY KEY,
     game_id INTEGER REFERENCES "game" NOT NULL,
+    game_name TEXT NOT NULL,
     team_one_id INTEGER REFERENCES "team" NOT NULL,
-    team_two_id INTEGER REFERENCES "team" NOT NULL,
     team_one_ratio TEXT NOT NULL,
+    team_one_name TEXT NOT NULL,
+    team_two_id INTEGER REFERENCES "team" NOT NULL,
     team_two_ratio TEXT NOT NULL,
+    team_two_name TEXT NOT NULL,
     supposed_start_at TEXT NOT NULL,
     "state" TEXT NOT NULL
 );
@@ -76,15 +79,13 @@ CREATE TABLE "ticket" (
     id SERIAL PRIMARY KEY,
     "user_id" INTEGER REFERENCES "user" NOT NULL,
     created_at TEXT NOT NULL,
-    valid_until TEXT NOT NULL,
-    price TEXT NOT NULL
+    valid_until TEXT NOT NULL
 );
 
 -- Tickets that have been submitted
 CREATE TABLE "submitted_ticket" (
     id SERIAL PRIMARY KEY,
     "user_id" INTEGER REFERENCES "user" NOT NULL,
-    "user_address_id" INTEGER REFERENCES "user_address" NOT NULL,
     submitted_at TEXT NOT NULL,
     price_paid TEXT NOT NULL,
     total_ratio TEXT NOT NULL,

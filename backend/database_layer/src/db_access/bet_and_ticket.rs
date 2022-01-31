@@ -15,14 +15,16 @@ use crate::{
     db_models::{
         bet::{Bet, CreateBet},
         game_match::GameMatch,
-        game_match_event::{GameMatchEvent, GameMatchEventType},
+        game_match_event::{GameMatchEvent, GameMatchEventFilter, GameMatchEventType},
         ticket::{CreateTicket, ObtainedTicket, Ticket},
         user_address::UserAddress,
     },
 };
 
 // schema imports
-use crate::schema::{bet, game, game_match, game_match_event, ticket, user};
+use crate::schema::{
+    bet, game, game_match, game_match_event, submitted_bet, submitted_ticket, ticket, user,
+};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -127,7 +129,11 @@ pub trait BetAndTicketRepo {
     /// ---
     /// - `Ok(())` if the bet was successfully discarded
     /// - `Err(_)` if an error occurrs
-    async fn discard_a_bet(&self, desired_bet_id: i32) -> anyhow::Result<()>;
+    async fn discard_a_bet(
+        &self,
+        desired_ticket_id: i32,
+        desired_bet_id: i32,
+    ) -> anyhow::Result<()>;
 
     /// Submit a ticket -> the ticket then gets submitted, 'paid' and shows up in the ticket history
     ///
@@ -139,7 +145,7 @@ pub trait BetAndTicketRepo {
     /// ---
     /// - `Ok(id)` with ID of the newly submitted ticket
     /// - `Err(_)` if an error occurrs
-    async fn submit_ticket(&self, desired_ticket_id: i32) -> anyhow::Result<i32>;
+    async fn submit_ticket(&self, desired_ticket_id: i32, paid_price: f64) -> anyhow::Result<i32>;
 }
 
 #[async_trait]
@@ -184,7 +190,7 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
             // no tickets were open -> either first time using it, or need for new ticket after submitting the old one
             0 => {
                 let new_open_ticket: Ticket = insert_into(ticket::table)
-                    .values(CreateTicket::new(desired_user_id, ""))
+                    .values(CreateTicket::new(desired_user_id))
                     .get_result(&connection)?;
 
                 Ok(ObtainedTicket::NoTicketFound(new_open_ticket))
@@ -238,7 +244,10 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         let desired_ticket: Ticket = ticket::table.find(desired_ticket_id).first(&connection)?;
 
         // update the new ticket validity
-        if TimeHandling::load_timestamp(&desired_ticket.valid_until)? >= played_until {
+        // either when no validity has been set, or when the valid date is bigger than on the current ticket
+        if desired_ticket.valid_until.as_str() == ""
+            || TimeHandling::load_timestamp(&desired_ticket.valid_until)? >= played_until
+        {
             let _ = update(ticket::table.filter(ticket::id.eq(desired_ticket.id)))
                 .set(ticket::valid_until.eq(played_until.to_string()))
                 .execute(&connection)?;
@@ -253,16 +262,110 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
 
     /// Discard a specific bet.
     /// Ticket validity date will be re-calculated
-    async fn discard_a_bet(&self, desired_bet_id: i32) -> anyhow::Result<()> {
+    async fn discard_a_bet(
+        &self,
+        desired_ticket_id: i32,
+        desired_bet_id: i32,
+    ) -> anyhow::Result<()> {
         let connection: PgPooledConnection = self.get_connection().await?;
 
-        // let be
+        // obtain all bets
+        let bets_and_info: Vec<(Bet, Ticket, GameMatchEvent)> = ticket::table
+            .filter(ticket::id.eq(desired_ticket_id))
+            .inner_join(
+                bet::table.inner_join(game_match::table.inner_join(game_match_event::table)),
+            )
+            .order(game_match_event::created_at.desc())
+            .filter(game_match_event::event_type.eq(GameMatchEventFilter::Live.to_string()))
+            .or_filter(game_match_event::event_type.eq(GameMatchEventFilter::Overtime.to_string()))
+            .distinct_on(bet::id)
+            .select((
+                bet::all_columns,
+                ticket::all_columns,
+                game_match_event::all_columns,
+            ))
+            .get_results(&connection)?;
 
-        todo!()
+        // retrieve the desired bet from the list
+        let desired_bet = bets_and_info
+            .iter()
+            .find(|(bet, _, _)| bet.id == desired_bet_id);
+
+        // check if the bet is in ticket
+        if desired_bet.is_none() {
+            anyhow::bail!("The bet does not belong to the ticket!")
+        }
+
+        // unwrap the bet
+        let (bet_to_remove, in_ticket, with_event) = desired_bet.unwrap();
+
+        // find new minimal ticket validity
+        // unwrap_or called to avoid panics.
+        // it is fixed in this api, because whenever the type is "Live" or "Overtime", it always has the
+        // "event_value" field filled with a DateTime string representation
+        if in_ticket.valid_until.clone() == with_event.event_value.clone().unwrap_or("".into()) {
+            // in case this was the only bet, the new valid date is set to 10 days from now
+            let new_validity = bets_and_info
+                .iter()
+                .map(|(_, _, event)| event.event_value.clone())
+                .filter_map(|event_value| event_value)
+                .min()
+                .unwrap_or((Utc::now() + Duration::days(10)).to_string());
+
+            // set the new validity
+            let _ = update(ticket::table.filter(ticket::id.eq(desired_ticket_id)))
+                .set(ticket::valid_until.eq(new_validity))
+                .execute(&connection)?;
+        }
+
+        // remove the bet from the ticket
+        let _ = delete(bet::table.filter(bet::id.eq(desired_bet_id))).execute(&connection)?;
+
+        Ok(())
     }
 
     /// Submit a ticket -> the ticket then gets submitted, 'paid' and shows up in the ticket history
-    async fn submit_ticket(&self, desired_ticket_id: i32) -> anyhow::Result<i32> {
-        todo!()
+    async fn submit_ticket(&self, desired_ticket_id: i32, paid_price: f64) -> anyhow::Result<i32> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+
+        // obtain current ticket, along with the bets
+        let ticket_and_bets: Vec<(Ticket, Bet)> = ticket::table
+            .filter(ticket::id.eq(desired_ticket_id))
+            .inner_join(bet::table)
+            .get_results(&connection)?;
+
+        // the ticket is empty
+        if ticket_and_bets.len() == 0 {
+            anyhow::bail!("Cannot submit an empty ticket!")
+        }
+
+        // obtain the ticket
+        let ticket: Ticket = ticket_and_bets[0].0.clone();
+        let bets: Vec<Bet> = ticket_and_bets.into_iter().map(|(_, bet)| bet).collect();
+
+        // create the submit ticket now and create the submit bets now
+        let submitted_ticket_id: i32 = insert_into(submitted_ticket::table)
+            .values(ticket.submit(paid_price, &bets)?)
+            .returning(submitted_ticket::id)
+            .get_result(&connection)?;
+
+        // create submitted bets
+        let submitted_bets = Bet::submit_bets(submitted_ticket_id, &bets);
+
+        // add bets to the submitted ticket
+        let _ = insert_into(submitted_bet::table)
+            .values(submitted_bets)
+            .execute(&connection)?;
+
+        // get ids of the bets that need to be deleted
+        let original_bets_id: Vec<i32> = bets.iter().map(|bet| bet.id).collect();
+
+        // delete bets that are bound to the ticket
+        let _ = delete(bet::table.filter(bet::id.eq_any(original_bets_id))).execute(&connection)?;
+
+        // delete ticket
+        let _ = delete(ticket::table.filter(ticket::id.eq(ticket.id))).execute(&connection)?;
+
+        Ok(submitted_ticket_id)
     }
 }

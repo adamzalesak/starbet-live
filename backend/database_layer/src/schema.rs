@@ -22,10 +22,13 @@ table! {
     game_match (id) {
         id -> Int4,
         game_id -> Int4,
+        game_name -> Text,
         team_one_id -> Int4,
-        team_two_id -> Int4,
         team_one_ratio -> Text,
+        team_one_name -> Text,
+        team_two_id -> Int4,
         team_two_ratio -> Text,
+        team_two_name -> Text,
         supposed_start_at -> Text,
         state -> Text,
     }
@@ -58,7 +61,6 @@ table! {
     submitted_ticket (id) {
         id -> Int4,
         user_id -> Int4,
-        user_address_id -> Int4,
         submitted_at -> Text,
         price_paid -> Text,
         total_ratio -> Text,
@@ -90,7 +92,6 @@ table! {
         user_id -> Int4,
         created_at -> Text,
         valid_until -> Text,
-        price -> Text,
     }
 }
 
@@ -134,7 +135,6 @@ joinable!(submitted_bet -> game_match (game_match_id));
 joinable!(submitted_bet -> submitted_ticket (submitted_ticket_id));
 joinable!(submitted_bet -> team (team_id));
 joinable!(submitted_ticket -> user (user_id));
-joinable!(submitted_ticket -> user_address (user_address_id));
 joinable!(team_plays_game -> game (game_id));
 joinable!(team_plays_game -> team (team_id));
 joinable!(ticket -> user (user_id));

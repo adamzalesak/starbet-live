@@ -17,7 +17,7 @@ pub struct SubmittedBet {
     pub bet_ratio: String,
     pub placed_at: String,
     pub submitted_at: String,
-    won: Option<bool>,
+    pub won: Option<bool>,
 }
 
 /// Write structure, used for inserting
@@ -31,7 +31,7 @@ pub struct CreateSubmittedBet {
     pub bet_ratio: String,
     pub placed_at: String,
     pub submitted_at: String,
-    won: Option<bool>,
+    pub won: Option<bool>,
 }
 
 impl CreateSubmittedBet {

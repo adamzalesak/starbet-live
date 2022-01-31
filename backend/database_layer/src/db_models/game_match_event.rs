@@ -39,6 +39,14 @@ pub enum GameMatchEventType {
     Ended(i32),
 }
 
+pub enum GameMatchEventFilter {
+    Upcoming,
+    Live,
+    Cancelled,
+    Overtime,
+    Ended,
+}
+
 impl GameMatchEventType {
     /// Compare the type of two objects
     pub fn cmp_type(&self, other: &Self) -> bool {
@@ -55,6 +63,21 @@ impl Display for GameMatchEventType {
             GameMatchEventType::Cancelled => "Cancelled",
             GameMatchEventType::Overtime(_) => "Overtime",
             GameMatchEventType::Ended(_) => "Ended",
+        };
+
+        write!(f, "{}", self_string)
+    }
+}
+
+impl Display for GameMatchEventFilter {
+    /// Implement the display trait for converting the enum and writing the result to the database
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let self_string = match self {
+            GameMatchEventFilter::Upcoming => "Upcoming",
+            GameMatchEventFilter::Live => "Live",
+            GameMatchEventFilter::Cancelled => "Cancelled",
+            GameMatchEventFilter::Overtime => "Overtime",
+            GameMatchEventFilter::Ended => "Ended",
         };
 
         write!(f, "{}", self_string)

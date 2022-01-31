@@ -30,6 +30,22 @@ pub struct PgSubmittedBetAndTicketRepo {
     pub pool: Arc<PgPool>,
 }
 
+impl PgSubmittedBetAndTicketRepo {
+    /// Evaluate all bets that have not yet been evaluated -> showing user whether they won the bet or not
+    ///
+    /// Params
+    /// ---
+    /// - desired_user_id: ID of the user we wish to evaluate submitted bets of
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(())` after this method has ran successfully
+    /// - `Err(_)` otherwise
+    async fn evaluate_submitted_bets(&self, desired_user_id: i32) -> anyhow::Result<()> {
+        todo!()
+    }
+}
+
 #[async_trait]
 impl Repo for PgSubmittedBetAndTicketRepo {
     /// Create a new Bet repo with a reference to an initialized pool.
@@ -64,5 +80,5 @@ pub trait SubmittedBetAndTicketRepo {
     async fn get_all(
         &self,
         desired_user_id: i32,
-    ) -> anyhow::Result<Vec<(SubmittedBet, Vec<SubmittedBet>)>>;
+    ) -> anyhow::Result<Vec<(SubmittedTicket, Vec<SubmittedBet>)>>;
 }

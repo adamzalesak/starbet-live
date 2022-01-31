@@ -8,7 +8,6 @@ use chrono::{Duration, Utc};
 pub struct SubmittedTicket {
     pub id: i32,
     pub user_id: i32,
-    pub user_address_id: i32,
     pub submitted_at: String,
     pub price_paid: String,
     pub total_ratio: String,
@@ -20,7 +19,6 @@ pub struct SubmittedTicket {
 #[table_name = "submitted_ticket"]
 pub struct CreateSubmittedTicket {
     pub user_id: i32,
-    pub user_address_id: i32,
     pub submitted_at: String,
     pub price_paid: String,
     pub total_ratio: String,
