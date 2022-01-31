@@ -48,7 +48,7 @@ table! {
     submitted_bet (id) {
         id -> Int4,
         game_match_id -> Int4,
-        submitted_ticket_id -> Nullable<Int4>,
+        submitted_ticket_id -> Int4,
         team_id -> Int4,
         bet_ratio -> Text,
         placed_at -> Text,

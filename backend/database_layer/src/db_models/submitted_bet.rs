@@ -4,7 +4,7 @@ use crate::type_storing::time_handling::TimeHandling;
 
 /// Read structure, used for data mapping of
 /// `bet` record from the database
-#[derive(Identifiable, Queryable, Associations, PartialEq)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Clone)]
 #[belongs_to(SubmittedTicket)]
 #[belongs_to(Team)]
 #[belongs_to(GameMatch)]

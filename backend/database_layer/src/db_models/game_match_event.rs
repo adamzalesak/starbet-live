@@ -30,7 +30,7 @@ pub struct CreateGameMatchEvent {
 }
 
 /// Structure capturing possible `game_match_event` types
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum GameMatchEventType {
     Upcoming,
     Live(DateTime<Utc>),

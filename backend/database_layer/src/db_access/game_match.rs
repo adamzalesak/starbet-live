@@ -13,6 +13,7 @@ use crate::db_models::{
     game_match_event::{
         CreateGameMatchEvent, GameMatchEvent, GameMatchEventFilter, GameMatchEventType,
     },
+    submitted_bet::SubmittedBet,
 };
 
 // schema imports
@@ -180,6 +181,10 @@ pub trait MatchRepo {
     /// - Ok(newest_event) with the latest event
     /// - Err(_) if there was an internal consistency error / connection error etc
     async fn newest_event(&self, desired_match_id: i32) -> anyhow::Result<GameMatchEvent>;
+
+    /// Evaluate all submitted bets for this match
+    /// Set the `won` field of the `submitted_bet` table to either false or true.
+    async fn evaluate_bets(&self, desired_match_id: i32) -> anyhow::Result<()>;
 }
 
 #[async_trait]
@@ -393,10 +398,16 @@ impl MatchRepo for PgMatchRepo {
         let query_result: i32 = insert_into(game_match_event::table)
             .values(CreateGameMatchEvent::new(
                 desired_match_id,
-                desired_event_type,
+                desired_event_type.clone(),
             ))
             .returning(game_match_event::id)
             .get_result(&connection)?;
+
+        // if the match has ended, evaluate its bets
+        match desired_event_type {
+            GameMatchEventType::Ended(_) => self.evaluate_bets(desired_match_id).await?,
+            _ => {}
+        }
 
         Ok(query_result)
     }
@@ -409,5 +420,74 @@ impl MatchRepo for PgMatchRepo {
             .first(&self.get_connection().await?)?;
 
         Ok(query_result)
+    }
+
+    async fn evaluate_bets(&self, desired_match_id: i32) -> anyhow::Result<()> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+
+        // retrieve all unresolved bets and the ending event of the game they are tied to
+        // let query_result: Vec<(SubmittedBet, GameMatchEvent)> = submitted_bet::table
+        //     .filter(submitted_bet::won.is_null())
+        //     .inner_join(game_match::table.inner_join(game_match_event::table))
+        //     .filter(game_match_event::event_type.eq(GameMatchEventFilter::Ended.to_string()))
+        //     .select((submitted_bet::all_columns, game_match_event::all_columns))
+        //     .get_results(&connection)?;
+
+        // retrieve all unresolved bets and the ending event of the game they are tied to
+        let query_result: Vec<(SubmittedBet, GameMatchEvent)> = (game_match::table
+            .filter(game_match::id.eq(desired_match_id))
+            .inner_join(game_match_event::table))
+        .inner_join(submitted_bet::table)
+        .filter(
+            game_match_event::event_type
+                .eq(GameMatchEventFilter::Ended.to_string())
+                .and(submitted_bet::won.is_null()),
+        )
+        .select((submitted_bet::all_columns, game_match_event::all_columns))
+        .get_results(&connection)?;
+
+        // obtain those matches that have winners
+        let obtain_match_winners: Vec<(SubmittedBet, i32)> = query_result
+            .into_iter()
+            .map(|(bet, event)| {
+                (
+                    bet,
+                    event // obtain those matches that have set the winner and are able to be parsed as id's
+                        .event_value
+                        .clone()
+                        .unwrap_or(String::from("0"))
+                        .parse::<i32>()
+                        .ok(), // convert the results to options
+                )
+            }) // unconvertable results are mapped to 0 (but that will not happen thanks to guarantees of our interface)
+            .map(|(bet, winner_id)| (bet, winner_id.unwrap_or(0)))
+            .filter(|(_, winner_id)| *winner_id != 0)
+            .collect();
+
+        // filter those which are won -> get IDs of bets that have won
+        let won_bets: Vec<i32> = obtain_match_winners
+            .iter()
+            .filter(|(bet, winner_id)| bet.team_id == *winner_id)
+            .map(|(bet, _)| bet.id)
+            .collect();
+
+        // filter those which are lost -> get IDs of bets that have lost
+        let lost_bets: Vec<i32> = obtain_match_winners
+            .iter()
+            .filter(|(bet, winner_id)| bet.team_id != *winner_id)
+            .map(|(bet, _)| bet.id)
+            .collect();
+
+        // set all won games to won
+        let _ = update(submitted_bet::table.filter(submitted_bet::id.eq_any(won_bets)))
+            .set(submitted_bet::won.eq(true))
+            .execute(&connection)?;
+
+        // set all lost games to lost
+        let _ = update(submitted_bet::table.filter(submitted_bet::id.eq_any(lost_bets)))
+            .set(submitted_bet::won.eq(false))
+            .execute(&connection)?;
+
+        Ok(())
     }
 }

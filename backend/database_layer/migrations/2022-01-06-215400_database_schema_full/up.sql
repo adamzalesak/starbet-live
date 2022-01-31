@@ -97,7 +97,7 @@ CREATE TABLE "submitted_ticket" (
 CREATE TABLE "submitted_bet" (
     id SERIAL PRIMARY KEY,
     game_match_id INTEGER REFERENCES "game_match" NOT NULL,
-    submitted_ticket_id INTEGER REFERENCES "submitted_ticket",
+    submitted_ticket_id INTEGER REFERENCES "submitted_ticket" NOT NULL,
     team_id INTEGER REFERENCES "team" NOT NULL,
     bet_ratio TEXT NOT NULL,
     placed_at TEXT NOT NULL,

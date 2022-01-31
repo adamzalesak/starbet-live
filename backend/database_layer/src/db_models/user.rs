@@ -67,7 +67,7 @@ impl User {
         change_password_salt: Option<&str>,
         change_civil_id_number: Option<&str>,
         change_email: Option<&str>,
-        change_date_of_birth: Option<DateTime<Utc>>,
+        change_date_of_birth: Option<&str>,
         change_phone_number: Option<&str>,
         change_photo: Option<Option<&str>>,
     ) -> CreateUser {
@@ -121,7 +121,7 @@ impl CreateUser {
         user_password_salt: &str,
         civil_id_number: &str,
         email: &str,
-        date_of_birth: DateTime<Utc>,
+        date_of_birth: &str,
         phone_number: &str,
         photo: Option<&str>,
     ) -> CreateUser {
@@ -132,7 +132,7 @@ impl CreateUser {
             user_password_salt: String::from(user_password_salt),
             civil_id_number: String::from(civil_id_number),
             email: String::from(email),
-            date_of_birth: date_of_birth.to_string(),
+            date_of_birth: String::from(date_of_birth),
             phone_number: String::from(phone_number),
             created_at: TimeHandling::store(),
             balance: 0.0.to_string(),

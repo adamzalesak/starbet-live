@@ -342,6 +342,15 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         // obtain the ticket
         let ticket: Ticket = ticket_and_bets[0].0.clone();
         let bets: Vec<Bet> = ticket_and_bets.into_iter().map(|(_, bet)| bet).collect();
+        // check user balance first
+        let user_repo = PgUserRepo::new(&self.pool);
+        let balance: f64 = user_repo.get_balance(ticket.user_id).await?.parse()?;
+
+        if balance < paid_price {
+            anyhow::bail!("You do not have enough balance to do that!")
+        } else if paid_price < 0.0 {
+            anyhow::bail!("Cannot pay with negative amount of currency")
+        }
 
         // create the submit ticket now and create the submit bets now
         let submitted_ticket_id: i32 = insert_into(submitted_ticket::table)
@@ -365,6 +374,8 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
 
         // delete ticket
         let _ = delete(ticket::table.filter(ticket::id.eq(ticket.id))).execute(&connection)?;
+
+        user_repo.spend_balance(ticket.user_id, paid_price).await?;
 
         Ok(submitted_ticket_id)
     }

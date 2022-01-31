@@ -145,10 +145,10 @@ pub trait UserRepo {
     /// ---
     /// - desired_user_id: ID of the user we wish to withdraw the balance of
     /// - desired_withdrawal: amount of money the user wants to withdraw
-    async fn withdraw_balance(
+    async fn spend_balance(
         &self,
         desired_user_id: i32,
-        desired_withdrawal: f64,
+        desired_spending: f64,
     ) -> anyhow::Result<()>;
 }
 
@@ -246,12 +246,12 @@ impl UserRepo for PgUserRepo {
 
     /// Withdraw the user's balance
     /// Fails if the balance specified is higher than the current balance
-    async fn withdraw_balance(
+    async fn spend_balance(
         &self,
         desired_user_id: i32,
-        desired_withdrawal: f64,
+        desired_spending: f64,
     ) -> anyhow::Result<()> {
-        if desired_withdrawal <= 0.0 {
+        if desired_spending <= 0.0 {
             anyhow::bail!("Cannot 'withdraw' a negative balance!")
         }
 
@@ -259,13 +259,13 @@ impl UserRepo for PgUserRepo {
         let user_balance: String = self.get_balance(desired_user_id).await?;
         let converted_balance: f64 = user_balance.parse::<f64>()?;
 
-        if converted_balance < desired_withdrawal {
+        if converted_balance < desired_spending {
             anyhow::bail!("Cannot withdraw more money that user has.")
         }
 
         // update the balance
         let _ = update(user::table.find(desired_user_id))
-            .set(user::balance.eq((converted_balance - desired_withdrawal).to_string()))
+            .set(user::balance.eq((converted_balance - desired_spending).to_string()))
             .execute(&self.get_connection().await?)?;
 
         Ok(())

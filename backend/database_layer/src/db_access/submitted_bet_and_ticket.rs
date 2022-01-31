@@ -1,4 +1,6 @@
 use async_trait::async_trait;
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::connection::{PgPool, PgPooledConnection};
@@ -15,7 +17,7 @@ use crate::{
     db_models::{
         bet::{Bet, CreateBet},
         game_match::GameMatch,
-        game_match_event::{GameMatchEvent, GameMatchEventType},
+        game_match_event::{GameMatchEvent, GameMatchEventFilter},
         submitted_bet::{CreateSubmittedBet, SubmittedBet},
         submitted_ticket::{CreateSubmittedTicket, SubmittedTicket},
         ticket::{CreateTicket, ObtainedTicket, Ticket},
@@ -24,7 +26,7 @@ use crate::{
 };
 
 // schema imports
-use crate::schema::{bet, game, game_match, game_match_event, ticket, user};
+use crate::schema::{game_match, game_match_event, submitted_bet, submitted_ticket};
 
 pub struct PgSubmittedBetAndTicketRepo {
     pub pool: Arc<PgPool>,
@@ -41,8 +43,53 @@ impl PgSubmittedBetAndTicketRepo {
     /// ---
     /// - `Ok(())` after this method has ran successfully
     /// - `Err(_)` otherwise
-    async fn evaluate_submitted_bets(&self, desired_user_id: i32) -> anyhow::Result<()> {
-        todo!()
+    async fn evaluate_submitted_tickets(&self, desired_user_id: i32) -> anyhow::Result<()> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+
+        let tickets_to_reevaluate: Vec<(SubmittedTicket, SubmittedBet)> = submitted_ticket::table
+            .filter(
+                submitted_ticket::user_id
+                    .eq(desired_user_id)
+                    .and(submitted_ticket::won.is_null()),
+            )
+            .inner_join(submitted_bet::table)
+            .get_results(&connection)?;
+
+        let mut bind_match_and_bets: HashMap<SubmittedTicket, Vec<SubmittedBet>> = HashMap::new();
+
+        // bind the bets to the ticket
+        for (ticket, bet) in tickets_to_reevaluate {
+            let bets_vector = bind_match_and_bets.entry(ticket).or_insert(Vec::new());
+            bets_vector.push(bet);
+        }
+
+        let mut lost_matches: Vec<i32> = Vec::new();
+        let mut won_matches: Vec<i32> = Vec::new();
+
+        // look through the bets and set lost and won matches accordingly
+        for (ticket, bets) in bind_match_and_bets.iter() {
+            let win_status: Vec<Option<bool>> = bets.iter().map(|bet| bet.won.clone()).collect();
+
+            // if any bet.won is false, the match is lost
+            if win_status.contains(&Some(false)) {
+                lost_matches.push(ticket.id);
+            // this means there was no loss, also if all matches are over, this means the bet is won
+            } else if !win_status.contains(&None) {
+                won_matches.push(ticket.id);
+            }
+        }
+
+        // set lost matches
+        let _ = update(submitted_ticket::table.filter(submitted_ticket::id.eq_any(lost_matches)))
+            .set(submitted_ticket::won.eq(false))
+            .execute(&connection)?;
+
+        // set won matches
+        let _ = update(submitted_ticket::table.filter(submitted_ticket::id.eq_any(won_matches)))
+            .set(submitted_ticket::won.eq(true))
+            .execute(&connection)?;
+
+        Ok(())
     }
 }
 
@@ -77,8 +124,47 @@ impl Repo for PgSubmittedBetAndTicketRepo {
 
 #[async_trait]
 pub trait SubmittedBetAndTicketRepo {
+    /// Retrieve all user's previously submitted tickets
+    ///
+    /// Params
+    /// ---
+    /// - desired_user_id: ID of the user who's tickets we wish to display
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(Vec<(SubmittedTicket, Vec<SubmittedBet>)>)` with a list of tickets (each ticket has a list of its bets)
+    /// - `Err(_) if any errrors have occurred during tis operation
     async fn get_all(
         &self,
         desired_user_id: i32,
     ) -> anyhow::Result<Vec<(SubmittedTicket, Vec<SubmittedBet>)>>;
+}
+
+#[async_trait]
+impl SubmittedBetAndTicketRepo for PgSubmittedBetAndTicketRepo {
+    async fn get_all(
+        &self,
+        desired_user_id: i32,
+    ) -> anyhow::Result<Vec<(SubmittedTicket, Vec<SubmittedBet>)>> {
+        // firstly evaluate all submitted tickets
+        self.evaluate_submitted_tickets(desired_user_id).await?;
+
+        // perform join, only one call for the database needed
+        let query_result: Vec<(SubmittedTicket, SubmittedBet)> = submitted_ticket::table
+            .filter(submitted_ticket::user_id.eq(desired_user_id))
+            .inner_join(submitted_bet::table)
+            .order(submitted_ticket::submitted_at.desc())
+            .get_results(&self.get_connection().await?)?;
+
+        let mut dedup_output: HashMap<SubmittedTicket, Vec<SubmittedBet>> = HashMap::new();
+
+        // deduplicating the list
+        for (ticket, bet) in query_result {
+            let bets_vector = dedup_output.entry(ticket).or_insert(Vec::new());
+            bets_vector.push(bet);
+        }
+
+        // output as a vector
+        Ok(Vec::from_iter(dedup_output.into_iter()))
+    }
 }
