@@ -25,6 +25,7 @@ parking_lot = "0.10.0"
 
 reqwest = { version = "0.11", features = [ "json", "rustls" ] }
 gloo = "0.6.0"
+gloo-timers = "0.2.3"
 js-sys = "0.3.55"
 web-sys = "0"
 prost = "0"

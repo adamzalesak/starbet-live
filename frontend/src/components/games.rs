@@ -5,7 +5,7 @@ pub mod game {
     include!(concat!(env!("OUT_DIR"), concat!("/game.rs")));
 }
 
-use game::{game_service_client, CreateGameRequest, Game, ListGamesReply, ListGamesRequest};
+use game::{game_service_client, Game, ListGamesReply, ListGamesRequest};
 
 pub enum Msg {
     FetchGames,
@@ -40,12 +40,6 @@ impl Component for Games {
                 let grpc_client =
                     game_service_client::GameService::new(String::from("http://127.0.0.1:5430"));
                 ctx.link().send_future(async move {
-                    // grpc_client
-                    //     .create_game(CreateGameRequest {
-                    //         name: String::from("CS:GO"),
-                    //         logo_url: String::from("https://logos-download.com/wp-content/uploads/2016/04/Counter_Strike_logo-700x700.png"),
-                    //     })
-                    //     .await;
                     Msg::ReceiveResponse(grpc_client.list_games(ListGamesRequest {}).await)
                 });
                 false
@@ -55,7 +49,7 @@ impl Component for Games {
                 self.is_loading = false;
                 true
             }
-            Msg::ReceiveResponse(Err(_error)) => {
+            Msg::ReceiveResponse(Err(_)) => {
                 self.games = Vec::new();
                 self.is_loading = false;
                 self.is_error = true;
@@ -81,13 +75,13 @@ impl Component for Games {
                         {
                             self.games.clone().into_iter().map(|game| {
                                 html! {
-                                    <li key={game.id} class="flex gap-2 text-black font-bold rounded-md bg-white p-1 text-left cursor-pointer">
+                                    <li key={game.id} class="flex flex-row gap-2 text-black font-bold rounded-md bg-white p-1 text-left cursor-pointer">
                                         if game.logo_url != "" {
-                                            <div class="w-6 h-6">
+                                            <div class="w-6 h-6 my-auto">
                                                 <img src={game.logo_url} class="w-full" alt={game.name.clone()} />
                                             </div>
                                         }
-                                        { game.name }
+                                        <div>{ game.name }</div>
                                     </li>
                                 }
                             }).collect::<Html>()

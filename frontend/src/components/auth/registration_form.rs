@@ -80,21 +80,21 @@ impl Component for RegistrationForm {
                             field={Field::FirstName}
                             label="First name"
                             placeholder="Marc"
-                            // value={self.data.first_name.clone()}
+                            // value={self.data.first_name.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::LastName}
                             label="Last name"
                             placeholder="Barrow"
-                            // value={self.data.last_name.clone()}
+                            // value={self.data.last_name.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::CivilIdNumber}
                             label="Civil Id Number"
                             placeholder="XY837923"
-                            // value={self.data.civil_id_number.clone()}
+                            // value={self.data.civil_id_number.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         // date input doesn't have proper validation
@@ -103,7 +103,7 @@ impl Component for RegistrationForm {
                             field={Field::DateOfBirth}
                             label="Date Of Birth"
                             placeholder="hahah"
-                            // value={self.data.date_of_birth.clone()}
+                            // value={self.data.date_of_birth.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
@@ -111,14 +111,14 @@ impl Component for RegistrationForm {
                             field={Field::Email}
                             label="Email address"
                             placeholder="marcbarrow@email.com"
-                            // value={self.data.email.clone()}
+                            // value={self.data.email.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::PhoneNumber}
                             label="Phone number"
                             placeholder="+420 913 328 857"
-                            // value={self.data.phone_number.clone()}
+                            // value={self.data.phone_number.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
@@ -126,7 +126,7 @@ impl Component for RegistrationForm {
                             field={Field::Password}
                             label="Password"
                             placeholder="******"
-                            // value={self.data.phone_number.clone()}
+                            // value={self.data.password.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
@@ -134,7 +134,7 @@ impl Component for RegistrationForm {
                             field={Field::PasswordConfirmation}
                             label="Password confirmation"
                             placeholder="******"
-                            // value={self.data.phone_number.clone()}
+                            // value={self.data.password_confirmation.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                     </div>
@@ -143,28 +143,31 @@ impl Component for RegistrationForm {
                             field={Field::StreetName}
                             label="Street name"
                             placeholder="Eagle Drive"
-                            // value={self.data.street_name.clone()}
+                            // value={self.data.address.street_name.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::StreetNumber}
                             label="Street number"
                             placeholder="1218"
-                            // value={self.data.street_number.clone()}
+                            // value={self.data.address.street_number.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::City}
                             label="City"
                             placeholder="Southfield"
-                            // value={self.data.city.clone()}
+                            // value={self.data.address.city.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::Area}
                             label="Area"
                             placeholder=""
-                            // value={self.data.area.clone()}
+                            // value={match self.data.address.area.0.clone() {
+                            //     Some(val) => val,
+                            //     None => "".to_string(),
+                            // }}
                             on_change={ctx.link().callback(Msg::SetData)}
                             required={false}
                         />
@@ -172,14 +175,14 @@ impl Component for RegistrationForm {
                             field={Field::PostalCode}
                             label="Postal code"
                             placeholder="48034"
-                            // value={self.data.postal_code.clone()}
+                            // value={self.data.address.postal_code.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::Country}
                             label="Country"
                             placeholder="United States"
-                            // value={self.data.country.clone()}
+                            // value={self.data.address.country.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <div class="">

@@ -37,6 +37,26 @@ body {
   color: var(--danger);
 }
 
+.text-danger-light {
+  color: var(--danger-light);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-success-light {
+  color: var(--success-light);
+}
+
+.bg-success {
+  background-color: var(--success);
+}
+
+.bg-success-light {
+  background-color: var(--success-light);
+}
+
 .bg-dark-blue {
   background-color: var(--dark-blue);
 }

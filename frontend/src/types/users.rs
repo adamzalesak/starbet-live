@@ -45,6 +45,14 @@ pub struct UserInfo {
     pub current_balance: String,
 }
 
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum SubmitResult {
+    None,
+    Success,
+    Error,
+}
+
 // Enum represents individual fields in user's forms
 #[derive(Debug, Clone, PartialEq)]
 pub enum Field {

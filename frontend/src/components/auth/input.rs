@@ -85,7 +85,7 @@ pub fn text_input(props: &Props) -> Html {
             _ => match input_type_copy {
                 InputType::Email => temp_value.contains('@') && temp_value.contains('.'),
                 InputType::Password => temp_value.trim().len() >= 6,
-                InputType::Text => temp_value.trim().len() > 2 && temp_value.trim().len() <= 32,
+                InputType::Text => temp_value.trim().len() > 2 && temp_value.trim().len() <= 255,
                 InputType::Date => !temp_value.trim().is_empty(),
             },
         };

@@ -59,6 +59,7 @@ impl Component for LoginForm {
                             field={Field::Email}
                             label="Email address"
                             placeholder="EMAIL"
+                            // value={self.data.email.clone()}
                             on_change={ctx.link().callback(Msg::SetEmail)}
                             required={false}
                         />
@@ -67,6 +68,7 @@ impl Component for LoginForm {
                             field={Field::Password}
                             label="Password"
                             placeholder="PASSWORD"
+                            // value={self.data.password.clone()}
                             on_change={ctx.link().callback(Msg::SetPassword)}
                             required={false}
                         />
