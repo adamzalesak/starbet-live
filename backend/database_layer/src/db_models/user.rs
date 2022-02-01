@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 
 /// Read structure, used for data mapping of
 /// `user` record from the database
-#[derive(Queryable)]
+#[derive(Queryable, Clone)]
 pub struct User {
     pub id: i32,
     pub first_name: String,

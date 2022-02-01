@@ -192,9 +192,35 @@ impl UserRepo for PgUserRepo {
 
     /// Edit User's information
     async fn edit(&self, desired_user_id: i32, edited_record: CreateUser) -> anyhow::Result<()> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+
+        // check if the user already exists
+        let already_exists: Vec<User> = user::table
+            .filter(user::email.eq(edited_record.email.clone()))
+            .get_results(&connection)?;
+
+        match already_exists.len() {
+            0 => {}
+            1 => {
+                let found_record: User = already_exists[0].clone();
+
+                if &found_record.email == &edited_record.email && found_record.id != desired_user_id
+                {
+                    anyhow::bail!(
+                        "Cannot change the email address to an address that is already in use!"
+                    );
+                }
+            }
+            _ => {
+                anyhow::bail!(
+                    "Internal error. Multiple accounts with the same email have been found"
+                )
+            }
+        }
+
         let _ = update(user::table.find(desired_user_id))
             .set(edited_record)
-            .execute(&self.get_connection().await?)?;
+            .execute(&connection)?;
 
         Ok(())
     }
