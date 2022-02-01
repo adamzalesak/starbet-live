@@ -132,24 +132,49 @@ pub trait MatchRepo {
         filter_by_game: Option<i32>,
     ) -> anyhow::Result<Vec<(GameMatch, GameMatchEvent)>>;
 
-    /// Update a match record.
-    /// Update ratios, possibly the supposed start and the shown state of the match
-    /// Fails, if the supposed start is less than 2 seconds away
-    /// TODO! solve this thing
+    /// Update a status of a match -> the display string
     ///
     /// Params
     /// ---
     /// - desired_match_id: ID of the match we wish to update the info of
-    /// - edited_info: structure containing info that needs to be updated.
+    /// - new_status: new display string for the match
     ///
     /// Returns
     /// ---
     /// - Ok(()) if the update was successful
     /// - Err(_) if an error has occurred
-    async fn update_info(
+    async fn update_status(&self, _desired_match_id: i32, new_status: &str) -> anyhow::Result<()>;
+
+    /// Obtain matches' game ratios.
+    /// Useful for recalculating the new ratio values.
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the match we wish to get the ratios of
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(first_ratio, second_ratio)` if the values could be obtained and parsed
+    /// - `Err(_)` otherwise
+    async fn get_ratios(&self, desired_match_id: i32) -> anyhow::Result<(f64, f64)>;
+
+    /// Set matches' game ratios. Useful after placing a bet
+    ///
+    /// Params
+    /// ---
+    /// - desired_match_id: ID of the match we wish to set the ratios of
+    /// - first: first ratio to set
+    /// - second: second ratio to set
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(())` if the values were set correctly
+    /// - `Err(_)` otherwise
+    async fn set_ratios(
         &self,
         desired_match_id: i32,
-        edited_info: GameMatchUpdate,
+        first: f64,
+        second: f64,
     ) -> anyhow::Result<()>;
 
     /// Create an event for the match
@@ -349,23 +374,45 @@ impl MatchRepo for PgMatchRepo {
         Ok(query_result)
     }
 
-    /// TODO!
-    /// Update a match record.
-    /// Update ratios, possibly the supposed start and the shown state of the match
-    /// Fails, if the supposed start is less than 2 seconds away
-    async fn update_info(
+    /// Update match display string -> status
+    async fn update_status(&self, desired_match_id: i32, new_status: &str) -> anyhow::Result<()> {
+        let _ = update(game_match::table.filter(game_match::id.eq(desired_match_id)))
+            .set(game_match::state.eq(new_status))
+            .execute(&self.get_connection().await?)?;
+
+        Ok(())
+    }
+
+    /// Obtain matches' game ratios.
+    /// Useful for recalculating the new ratio values.
+    async fn get_ratios(&self, desired_match_id: i32) -> anyhow::Result<(f64, f64)> {
+        let (first_ratio_retrieved, second_ratio_retrieved): (String, String) = game_match::table
+            .find(desired_match_id)
+            .select((game_match::team_one_ratio, game_match::team_two_ratio))
+            .get_result(&self.get_connection().await?)?;
+
+        // return the retrieved values
+        match (first_ratio_retrieved.parse::<f64>(), second_ratio_retrieved.parse::<f64>()) {
+            (Ok(first), Ok(second)) => Ok((first, second)),
+            _ => anyhow::bail!("Could not retrieve game ratios. There has been a problem with input types while creating or manipulating with the bet ratios. Please, contact your site administrator."),
+        }
+    }
+
+    /// Set matches' game ratios. Useful after placing a bet
+    async fn set_ratios(
         &self,
-        _desired_match_id: i32,
-        edited_match: GameMatchUpdate,
+        desired_match_id: i32,
+        first: f64,
+        second: f64,
     ) -> anyhow::Result<()> {
-        // let table = update(game_match::table.find(desired_match_id));
+        let _ = update(game_match::table.filter(game_match::id.eq(desired_match_id)))
+            .set((
+                game_match::team_one_ratio.eq(first.to_string()),
+                game_match::team_two_ratio.eq(second.to_string()),
+            ))
+            .execute(&self.get_connection().await?)?;
 
-        // let _ = match edited_match.supposed_start_at {
-        //     Some(new_start) => table.set(()).execute(&self.get_connection().await?)?,
-        //     None => {}
-        // };
-
-        todo!()
+        Ok(())
     }
 
     /// Create an event for the match

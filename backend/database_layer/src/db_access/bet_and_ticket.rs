@@ -243,6 +243,17 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         // retrieve the ticket
         let desired_ticket: Ticket = ticket::table.find(desired_ticket_id).first(&connection)?;
 
+        // does the same person already have a bet on the match in the ticket?
+        let already_has_bet: usize = (bet::table
+            .filter(bet::game_match_id.eq(new_bet.game_match_id))
+            .inner_join(ticket::table))
+        .filter(ticket::id.eq(desired_ticket.id))
+        .execute(&connection)?;
+
+        if already_has_bet != 0 {
+            anyhow::bail!("Cannot put more bets on the same match!");
+        }
+
         // update the new ticket validity
         // either when no validity has been set, or when the valid date is bigger than on the current ticket
         if desired_ticket.valid_until.as_str() == ""
