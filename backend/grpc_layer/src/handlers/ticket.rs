@@ -1,4 +1,4 @@
-use bytes::{BufMut, BytesMut};
+use bytes::BytesMut;
 use prost::Message;
 use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
@@ -8,7 +8,7 @@ use crate::game_match::Match;
 use crate::ticket::ticket_service_server::TicketService;
 use crate::ticket::{
     GetCurrentTicketReply, GetCurrentTicketRequest, ListTicketsReply, ListTicketsRequest,
-    SubmitTicketReply, SubmitTicketRequest,
+    SubmitTicketReply, SubmitTicketRequest, Ticket,
 };
 
 use database_layer::{
@@ -68,50 +68,42 @@ impl TicketService for MyTicketService {
         &self,
         request: Request<ListTicketsRequest>,
     ) -> Result<Response<ListTicketsReply>, Status> {
-        /*
         let request = request.into_inner();
 
         match self.submitted_repo.get_all(request.user_id).await {
             Ok(tickets_bets) => Ok(Response::new(ListTicketsReply {
-                tickets: tickets_bets.iter().map(|(ticket, bets)| Ticket {
-                    id: ticket.id,
-                    amount: ticket.amount,
-                    ratio
-                    bets: bets
-                        .iter()
-                        .map(|bet| Bet {
-                            id: bet.id,
-                            ticket_id: bet.ticket_id,
-                            match_id: bet.game_match_id,
-                            team_id: bet.team_id,
-                        })
-                        .collect(),
-                }).collect()
+                tickets: tickets_bets
                     .iter()
-                    .map(|bet| Bet {
-                        id: bet.id,
-                        ticket_id: bet.ticket_id,
-                        match_id: bet.game_match_id,
-                        team_id: bet.team_id,
+                    .map(|(ticket, bets)| Ticket {
+                        id: ticket.id,
+                        submitted_at: ticket.submitted_at.clone(),
+                        price_paid: ticket.price_paid.clone(),
+                        total_ratio: ticket.total_ratio.clone(),
+                        won: ticket.won,
+                        bets: bets
+                            .iter()
+                            .map(|bet| Bet {
+                                id: bet.id,
+                                ticket_id: bet.submitted_ticket_id,
+                                match_id: bet.game_match_id,
+                                team_id: bet.team_id,
+                            })
+                            .collect(),
                     })
                     .collect(),
             })),
-            Response::new(ListTicketsReply { tickets: vec![] })
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
-        */
-        Err(Status::new(Code::from_i32(13), "TODO"))
     }
 
     async fn submit_ticket(
         &self,
         request: Request<SubmitTicketRequest>,
     ) -> Result<Response<SubmitTicketReply>, Status> {
-        /*
         let request = request.into_inner();
         match self
             .repo
-            .submit_ticket(request.ticket_id, request.price_paid)
+            .submit_ticket(request.ticket_id, request.price_paid.into())
             .await
         {
             Ok(submitted_ticket_id) => {
@@ -119,7 +111,7 @@ impl TicketService for MyTicketService {
                     Ok(submitted_bets) => {
                         for bet in submitted_bets {
                             let game_match;
-                            match self.match_repo.get(bet.match_id).await {
+                            match self.match_repo.get(bet.game_match_id).await {
                                 Ok(gmatch) => game_match = gmatch,
                                 Err(err) => {
                                     return Err(Status::new(Code::from_i32(13), err.to_string()))
@@ -153,7 +145,5 @@ impl TicketService for MyTicketService {
             }
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
-        */
-        Err(Status::new(Code::from_i32(13), "TODO"))
     }
 }

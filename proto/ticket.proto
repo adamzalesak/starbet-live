@@ -13,9 +13,9 @@ service TicketService {
 message Ticket {
     int32 id = 1;
     string submitted_at = 2;
-    float price_paid = 3;
+    string price_paid = 3;
     string total_ratio = 4;
-    bool won = 5;
+    optional bool won = 5;
     repeated bet.Bet bets = 6;
 }
 
