@@ -19,6 +19,7 @@ pub enum Msg {
     Submit,
     SetLoading(bool),
     SetData((String, Field, bool)),
+    // ReceiveResponse(Result<CreateMatchReply, Box<dyn std::error::Error>>),
 }
 
 pub struct RegistrationForm {
@@ -67,13 +68,19 @@ impl Component for RegistrationForm {
 
                 // let grpc_client =
                 //     user_service_client::UserService::new(String::from("http://127.0.0.1:5430"));
-                // let name = self.data.name.0.trim().to_string();
-                // let logo_url = self.data.logo_url.0.trim().to_string();
 
                 // ctx.link().send_future(async move {
                 //     Msg::ReceiveResponse(
                 //         grpc_client
-                //             .create_game(CreateUserRequest { name, logo_url })
+                //             .create_game(CreateUserRequest {  
+                //                 first_name: self.data.first_name.0.trim().to_string(),
+                //                 last_name: self.data.last_name.0.trim().to_string(),
+                //                 civil_id_number: self.data.civil_id_number.0.trim().to_string(),
+                //                 date_of_birth: self.data.date_of_birth.0.trim().to_string(),
+                //                 email: self.data.email.0.trim().to_string(),
+                //                 phone_number: self.data.phone_number.0.trim().to_string(),
+                //                 address: self.data.address,
+                // })
                 //             .await,
                 //     )
                 // });
@@ -113,19 +120,19 @@ impl Component for RegistrationForm {
                     self.error = String::new();
                 }
             }
-            Msg::ReceiveResponse(Ok(_)) => {
-                self.submit_result = SubmitResult::Success;
-                let link = ctx.link().clone();
-                Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
-            }
-            Msg::ReceiveResponse(Err(_)) => {
-                self.submit_result = SubmitResult::Error;
-                let link = ctx.link().clone();
-                Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
-            }
-            Msg::ResetSubmitResult => {
-                self.submit_result = SubmitResult::None;
-            }
+            // Msg::ReceiveResponse(Ok(_)) => {
+            //     self.submit_result = SubmitResult::Success;
+            //     let link = ctx.link().clone();
+            //     Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
+            // }
+            // Msg::ReceiveResponse(Err(_)) => {
+            //     self.submit_result = SubmitResult::Error;
+            //     let link = ctx.link().clone();
+            //     Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
+            // }
+            // Msg::ResetSubmitResult => {
+            //     self.submit_result = SubmitResult::None;
+            // }
         }
         true
     }
@@ -240,23 +247,23 @@ impl Component for RegistrationForm {
                         html! { }
                     }
                 }
-                {
-                    if self.submit_result == SubmitResult::Success {
-                        html! {
-                            <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
-                                {"User successfully registered"}
-                            </div>
-                        }
-                    } else if self.submit_result == SubmitResult::Error {
-                        html! {
-                            <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md transition-all">
-                                {"Something went wrong :( please try again later"}
-                            </div>
-                        }
-                    } else {
-                        html! {}
-                    }
-                }
+                // {
+                //     if self.submit_result == SubmitResult::Success {
+                //         html! {
+                //             <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
+                //                 {"User successfully registered"}
+                //             </div>
+                //         }
+                //     } else if self.submit_result == SubmitResult::Error {
+                //         html! {
+                //             <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md transition-all">
+                //                 {"Something went wrong :( please try again later"}
+                //             </div>
+                //         }
+                //     } else {
+                //         html! {}
+                //     }
+                // }
                 {
                     if !self.error.is_empty() {
                         html! {
