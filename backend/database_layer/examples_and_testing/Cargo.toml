@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-bigdecimal = "0.3.0"
+clap = "3.0.13"
 diesel = { version = "1.4.4", features = [ "postgres", "r2d2" ] }
 dotenv = "0.15.0"
 chrono = { version = "0.4", features = [ "serde" ] }
