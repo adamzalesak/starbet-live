@@ -1,3 +1,4 @@
+use crate::components::loading_animation::LoadingAnimation;
 use crate::store::{games::game::Game, GamesRequest, GamesStore};
 use log::info;
 use yew::prelude::*;
@@ -70,7 +71,7 @@ impl Component for Games {
                 <div class="font-bold mb-2">{"Games"}</div>
 
                 if self.is_loading {
-                    <h1>{"loading"}</h1>
+                    <LoadingAnimation color="white" />
                 }
                 else if self.is_error {
                     <h1>{"error"}</h1>
