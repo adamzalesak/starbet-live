@@ -133,15 +133,28 @@ pub trait SubmittedBetAndTicketRepo {
     /// Returns
     /// ---
     /// - `Ok(Vec<(SubmittedTicket, Vec<SubmittedBet>)>)` with a list of tickets (each ticket has a list of its bets)
-    /// - `Err(_) if any errrors have occurred during tis operation
+    /// - `Err(_) if any errrors have occurred during this operation
     async fn get_all(
         &self,
         desired_user_id: i32,
     ) -> anyhow::Result<Vec<(SubmittedTicket, Vec<SubmittedBet>)>>;
+
+    /// Retrieve all bets that are bound to a certain ticket
+    ///
+    /// Params
+    /// ---
+    /// - desired_ticket_id: ID of the ticket we wish to get its bets of
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(Vec<SubmittedBets>)` if the ticket exists and we retrieved its bets
+    /// - `Err(_)` if any errors have occurred during this operation
+    async fn get_bets(&self, desired_ticket_id: i32) -> anyhow::Result<Vec<SubmittedBet>>;
 }
 
 #[async_trait]
 impl SubmittedBetAndTicketRepo for PgSubmittedBetAndTicketRepo {
+    /// Retrieve all user's previously submitted tickets
     async fn get_all(
         &self,
         desired_user_id: i32,
@@ -166,5 +179,14 @@ impl SubmittedBetAndTicketRepo for PgSubmittedBetAndTicketRepo {
 
         // output as a vector
         Ok(Vec::from_iter(dedup_output.into_iter()))
+    }
+
+    /// Retrieve all bets that are bound to a certain ticket
+    async fn get_bets(&self, desired_ticket_id: i32) -> anyhow::Result<Vec<SubmittedBet>> {
+        let query_result: Vec<SubmittedBet> = submitted_bet::table
+            .filter(submitted_bet::submitted_ticket_id.eq(desired_ticket_id))
+            .get_results(&self.get_connection().await?)?;
+
+        Ok(query_result)
     }
 }
