@@ -169,10 +169,21 @@ impl UserRepo for PgUserRepo {
         new_user: CreateUser,
         new_user_address: CreateUserAddress,
     ) -> anyhow::Result<(i32, i32)> {
+        let connection: PgPooledConnection = self.get_connection().await?;
+
+        // check if the user already exists
+        let already_exists: Vec<User> = user::table
+            .filter(user::email.eq(new_user.email.clone()))
+            .get_results(&connection)?;
+
+        if already_exists.len() != 0 {
+            anyhow::bail!("The user already exists!");
+        }
+
         let new_user_id: i32 = insert_into(user::table)
             .values(new_user)
             .returning(user::id)
-            .get_result(&self.get_connection().await?)?;
+            .get_result(&connection)?;
 
         let new_user_address_id = self.add_new_address(new_user_id, new_user_address).await?;
 
