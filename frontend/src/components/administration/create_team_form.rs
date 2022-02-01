@@ -1,5 +1,5 @@
 use crate::{
-    components::auth::input::{InputType, TextInput},
+    components::{auth::input::TextInput, loading_animation::LoadingAnimation},
     types::{CreateTeamFormData, Field, SubmitResult},
 };
 use gloo_timers::callback::Timeout;
@@ -14,6 +14,7 @@ use team::{team_service_client, CreateTeamReply, CreateTeamRequest};
 
 pub enum Msg {
     Submit,
+    SetLoading(bool),
     SetName((String, Field, bool)),
     SetDescription((String, Field, bool)),
     SetLogoUrl((String, Field, bool)),
@@ -23,6 +24,7 @@ pub enum Msg {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CreateTeamForm {
+    is_loading: bool,
     data: CreateTeamFormData,
     submit_result: SubmitResult,
 }
@@ -33,6 +35,7 @@ impl Component for CreateTeamForm {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
+            is_loading: false,
             submit_result: SubmitResult::None,
             data: CreateTeamFormData::new(),
         }
@@ -45,12 +48,13 @@ impl Component for CreateTeamForm {
                     warn!("Inserted data are not valid");
                     return false;
                 }
+                ctx.link().send_message(Msg::SetLoading(true));
 
                 let grpc_client =
                     team_service_client::TeamService::new(String::from("http://127.0.0.1:5430"));
-                let name = self.data.name.0.clone();
-                let description = self.data.description.0.clone();
-                let logo = self.data.logo_url.0.clone();
+                let name = self.data.name.0.trim().to_string();
+                let description = self.data.description.0.trim().to_string();
+                let logo = self.data.logo_url.0.trim().to_string();
 
                 ctx.link().send_future(async move {
                     Msg::ReceiveResponse(
@@ -63,6 +67,11 @@ impl Component for CreateTeamForm {
                             .await,
                     )
                 });
+                ctx.link().send_message(Msg::SetLoading(false));
+                true
+            }
+            Msg::SetLoading(val) => {
+                self.is_loading = val;
                 true
             }
             Msg::SetName((new_data, _, is_valid)) => {
@@ -122,6 +131,13 @@ impl Component for CreateTeamForm {
                         placeholder="https://logos-download.com/wp-content/uploads/2016/06/Fnatic_logo_wordmark.png"
                         on_change={ctx.link().callback(Msg::SetLogoUrl)}
                     />
+                    {
+                        if self.is_loading {
+                            html! { <LoadingAnimation color="dark-blue" /> }
+                        } else {
+                            html! { }
+                        }
+                    }
                     {
                         if self.submit_result == SubmitResult::Success {
                             html! {

@@ -10,3 +10,4 @@ pub mod layout_no_sidebars;
 pub mod layout_profile;
 pub mod ticket;
 pub mod user;
+pub mod loading_animation;

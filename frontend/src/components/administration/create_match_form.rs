@@ -1,13 +1,16 @@
 use crate::{
-    components::auth::{
-        input::{InputType, TextInput},
-        input_number::{NumberInput, NumberType},
+    components::{
+        auth::{
+            input::{InputType, TextInput},
+            input_number::{NumberInput, NumberType},
+        },
+        loading_animation::LoadingAnimation,
     },
     types::{CreateMatchFormData, Field, SubmitResult},
 };
 use chrono::{DateTime, Utc};
 use gloo_timers::callback::Timeout;
-use log::{info, warn};
+use log::warn;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
@@ -23,6 +26,7 @@ use game_match::{match_service_client, CreateMatchReply, CreateMatchRequest};
 
 pub enum Msg {
     Submit,
+    SetLoading(bool),
     SetGameId((f32, bool)),
     SetTeam1Id((f32, bool)),
     SetTeam2Id((f32, bool)),
@@ -35,6 +39,7 @@ pub enum Msg {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CreateMatchForm {
+    is_loading: bool,
     data: CreateMatchFormData,
     submit_result: SubmitResult,
 }
@@ -45,6 +50,7 @@ impl Component for CreateMatchForm {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
+            is_loading: false,
             submit_result: SubmitResult::None,
             data: CreateMatchFormData::new(),
         }
@@ -57,6 +63,7 @@ impl Component for CreateMatchForm {
                     warn!("Inserted data are not valid");
                     return false;
                 }
+                ctx.link().send_message(Msg::SetLoading(true));
 
                 let datetime = match DateTime::parse_from_rfc3339(&format!(
                     "{}:00+01:00",
@@ -94,6 +101,11 @@ impl Component for CreateMatchForm {
                             .await,
                     )
                 });
+                ctx.link().send_message(Msg::SetLoading(false));
+                true
+            }
+            Msg::SetLoading(val) => {
+                self.is_loading = val;
                 true
             }
             Msg::SetGameId((new_data, is_valid)) => {
@@ -189,6 +201,13 @@ impl Component for CreateMatchForm {
                         placeholder=""
                         on_change={ctx.link().callback(Msg::SetStartAt)}
                     />
+                    {
+                        if self.is_loading {
+                            html! { <LoadingAnimation color="dark-blue" /> }
+                        } else {
+                            html! { }
+                        }
+                    }
                     {
                         if self.submit_result == SubmitResult::Success {
                             html! {

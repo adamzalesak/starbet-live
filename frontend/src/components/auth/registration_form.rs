@@ -1,16 +1,30 @@
 use super::input::InputType;
 use crate::types::users::Field;
-use crate::{components::auth::input::TextInput, types::users::UserRegistrationFormData};
-use log::info;
+use crate::{
+    components::{auth::input::TextInput, loading_animation::LoadingAnimation},
+    types::{SubmitResult, UserRegistrationFormData},
+};
+use chrono::{DateTime, Utc};
+use gloo_timers::callback::Timeout;
+use log::{info, warn};
 use yew::prelude::*;
+
+// pub mod user {
+//     include!(concat!(env!("OUT_DIR"), concat!("/user.rs")));
+// }
+
+// use user::{user_service_client, CreateUserReply, CreateUserRequest, Address};
 
 pub enum Msg {
     Submit,
+    SetLoading(bool),
     SetData((String, Field, bool)),
 }
 
 pub struct RegistrationForm {
+    is_loading: bool,
     error: String,
+    submit_result: SubmitResult,
     data: UserRegistrationFormData,
 }
 
@@ -20,12 +34,14 @@ impl Component for RegistrationForm {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
+            is_loading: false,
             error: String::new(),
+            submit_result: SubmitResult::None,
             data: UserRegistrationFormData::new(),
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Submit => {
                 if !self.data.is_valid() {
@@ -34,7 +50,38 @@ impl Component for RegistrationForm {
                 } else {
                     self.error = String::new();
                 }
-                info!("Submiting registration form {:?}", self.data);
+                ctx.link().send_message(Msg::SetLoading(true));
+                // convert date string to chrono datetime and check age
+                let datetime = match DateTime::parse_from_rfc3339(&format!(
+                    "{}T00:00:00+01:00",
+                    self.data.date_of_birth.0
+                )) {
+                    Ok(val) => val,
+                    _ => {
+                        warn!("Inserted date is not valid");
+                        return false;
+                    }
+                };
+                let datetime_utc = datetime.with_timezone(&Utc);
+                // add age check
+
+                // let grpc_client =
+                //     user_service_client::UserService::new(String::from("http://127.0.0.1:5430"));
+                // let name = self.data.name.0.trim().to_string();
+                // let logo_url = self.data.logo_url.0.trim().to_string();
+
+                // ctx.link().send_future(async move {
+                //     Msg::ReceiveResponse(
+                //         grpc_client
+                //             .create_game(CreateUserRequest { name, logo_url })
+                //             .await,
+                //     )
+                // });
+
+                ctx.link().send_message(Msg::SetLoading(false));
+            }
+            Msg::SetLoading(val) => {
+                self.is_loading = val;
             }
             Msg::SetData((new_data, field, is_valid)) => {
                 match field {
@@ -66,6 +113,19 @@ impl Component for RegistrationForm {
                     self.error = String::new();
                 }
             }
+            Msg::ReceiveResponse(Ok(_)) => {
+                self.submit_result = SubmitResult::Success;
+                let link = ctx.link().clone();
+                Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
+            }
+            Msg::ReceiveResponse(Err(_)) => {
+                self.submit_result = SubmitResult::Error;
+                let link = ctx.link().clone();
+                Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
+            }
+            Msg::ResetSubmitResult => {
+                self.submit_result = SubmitResult::None;
+            }
         }
         true
     }
@@ -79,21 +139,18 @@ impl Component for RegistrationForm {
                             field={Field::FirstName}
                             label="First name"
                             placeholder="Marc"
-                            // value={self.data.first_name.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::LastName}
                             label="Last name"
                             placeholder="Barrow"
-                            // value={self.data.last_name.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::CivilIdNumber}
                             label="Civil Id Number"
                             placeholder="XY837923"
-                            // value={self.data.civil_id_number.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         // date input doesn't have proper validation
@@ -102,7 +159,6 @@ impl Component for RegistrationForm {
                             field={Field::DateOfBirth}
                             label="Date Of Birth"
                             placeholder="hahah"
-                            // value={self.data.date_of_birth.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
@@ -110,14 +166,12 @@ impl Component for RegistrationForm {
                             field={Field::Email}
                             label="Email address"
                             placeholder="marcbarrow@email.com"
-                            // value={self.data.email.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::PhoneNumber}
                             label="Phone number"
                             placeholder="+420 913 328 857"
-                            // value={self.data.phone_number.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
@@ -125,7 +179,6 @@ impl Component for RegistrationForm {
                             field={Field::Password}
                             label="Password"
                             placeholder="******"
-                            // value={self.data.password.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
@@ -133,7 +186,6 @@ impl Component for RegistrationForm {
                             field={Field::PasswordConfirmation}
                             label="Password confirmation"
                             placeholder="******"
-                            // value={self.data.password_confirmation.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                     </div>
@@ -142,31 +194,24 @@ impl Component for RegistrationForm {
                             field={Field::StreetName}
                             label="Street name"
                             placeholder="Eagle Drive"
-                            // value={self.data.address.street_name.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::StreetNumber}
                             label="Street number"
                             placeholder="1218"
-                            // value={self.data.address.street_number.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::City}
                             label="City"
                             placeholder="Southfield"
-                            // value={self.data.address.city.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::Area}
                             label="Area"
                             placeholder=""
-                            // value={match self.data.address.area.0.clone() {
-                            //     Some(val) => val,
-                            //     None => "".to_string(),
-                            // }}
                             on_change={ctx.link().callback(Msg::SetData)}
                             required={false}
                         />
@@ -174,27 +219,49 @@ impl Component for RegistrationForm {
                             field={Field::PostalCode}
                             label="Postal code"
                             placeholder="48034"
-                            // value={self.data.address.postal_code.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
                         <TextInput
                             field={Field::Country}
                             label="Country"
                             placeholder="United States"
-                            // value={self.data.address.country.0.clone()}
                             on_change={ctx.link().callback(Msg::SetData)}
                         />
-                        <div class="">
+                        <div>
                             <input type="checkbox" id="conditions" name="conditions" value="conditions" required={true} />
                             <label for="conditions">{" Accept conditions"}</label>
                         </div>
                     </div>
                 </div>
                 {
+                    if self.is_loading {
+                        html! { <LoadingAnimation color="dark-blue" /> }
+                    } else {
+                        html! { }
+                    }
+                }
+                {
+                    if self.submit_result == SubmitResult::Success {
+                        html! {
+                            <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
+                                {"User successfully registered"}
+                            </div>
+                        }
+                    } else if self.submit_result == SubmitResult::Error {
+                        html! {
+                            <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md transition-all">
+                                {"Something went wrong :( please try again later"}
+                            </div>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+                {
                     if !self.error.is_empty() {
                         html! {
-                            <div class="text-danger text-center mx-auto my-1">
-                                <div class="inline-block bg-danger-light py-2 px-3 rounded-md">{self.error.clone()}</div>
+                            <div class="mx-auto my-1 p-1 w-9/12 lg:w-6/12 text-center bg-danger-light text-danger rounded-md transition-all">
+                                {self.error.clone()}
                             </div>
                         }
                     } else {

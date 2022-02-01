@@ -1,5 +1,5 @@
 use crate::{
-    components::auth::input::TextInput,
+    components::{auth::input::TextInput, loading_animation::LoadingAnimation},
     types::{CreateGameFormData, Field, SubmitResult},
 };
 use gloo_timers::callback::Timeout;
@@ -14,6 +14,7 @@ use game::{game_service_client, CreateGameReply, CreateGameRequest};
 
 pub enum Msg {
     Submit,
+    SetLoading(bool),
     SetName((String, Field, bool)),
     SetLogoUrl((String, Field, bool)),
     ResetSubmitResult,
@@ -22,6 +23,7 @@ pub enum Msg {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CreateGameForm {
+    is_loading: bool,
     data: CreateGameFormData,
     submit_result: SubmitResult,
 }
@@ -32,6 +34,7 @@ impl Component for CreateGameForm {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
+            is_loading: false,
             submit_result: SubmitResult::None,
             data: CreateGameFormData::new(),
         }
@@ -44,11 +47,12 @@ impl Component for CreateGameForm {
                     warn!("Inserted data are not valid");
                     return false;
                 }
+                ctx.link().send_message(Msg::SetLoading(true));
 
                 let grpc_client =
                     game_service_client::GameService::new(String::from("http://127.0.0.1:5430"));
-                let name = self.data.name.0.clone();
-                let logo_url = self.data.logo_url.0.clone();
+                let name = self.data.name.0.trim().to_string();
+                let logo_url = self.data.logo_url.0.trim().to_string();
 
                 ctx.link().send_future(async move {
                     Msg::ReceiveResponse(
@@ -57,6 +61,12 @@ impl Component for CreateGameForm {
                             .await,
                     )
                 });
+                
+                ctx.link().send_message(Msg::SetLoading(false));
+                true
+            }
+            Msg::SetLoading(val) => {
+                self.is_loading = val;
                 true
             }
             Msg::SetName((new_data, _, is_valid)) => {
@@ -105,6 +115,13 @@ impl Component for CreateGameForm {
                         placeholder="https://logos-download.com/wp-content/uploads/2016/04/Counter_Strike_logo-700x700.png"
                         on_change={ctx.link().callback(Msg::SetLogoUrl)}
                     />
+                    {
+                        if self.is_loading {
+                            html! { <LoadingAnimation color="dark-blue" /> }
+                        } else {
+                            html! { }
+                        }
+                    }
                     {
                         if self.submit_result == SubmitResult::Success {
                             html! {

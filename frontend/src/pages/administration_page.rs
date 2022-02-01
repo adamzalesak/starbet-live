@@ -5,7 +5,6 @@ use crate::components::administration::{
 };
 use crate::store::UserStore;
 use crate::types::{MainRoute, UserInfo};
-use log::info;
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
