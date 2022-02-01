@@ -1,15 +1,57 @@
 use yew::prelude::*;
 
+pub mod team {
+    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
+}
+use team::Team;
+
 pub enum Msg {}
 
-pub struct MatchItem {}
+pub struct MatchItem {
+    id: i32,
+    game_id: i32,
+    team_one_name: String,
+    team_two_name: String,
+    team_one_ratio: String,
+    team_two_ratio: String,
+    state: String,
+}
+
+#[derive(Properties, PartialEq)]
+pub struct MatchItemProps {
+    pub id: i32,
+    pub game_id: i32,
+    pub team_one_name: String,
+    pub team_two_name: String,
+    pub team_one_ratio: String,
+    pub team_two_ratio: String,
+    pub state: String,
+}
 
 impl Component for MatchItem {
     type Message = Msg;
-    type Properties = ();
+    type Properties = MatchItemProps;
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self {}
+    fn create(ctx: &Context<Self>) -> Self {
+        let MatchItemProps {
+            id,
+            game_id,
+            team_one_name,
+            team_two_name,
+            team_one_ratio,
+            team_two_ratio,
+            state,
+        } = ctx.props().clone();
+
+        Self {
+            id: id.clone(),
+            game_id: game_id.clone(),
+            team_one_name: team_one_name.clone(),
+            team_two_name: team_two_name.clone(),
+            team_one_ratio: team_one_ratio.clone(),
+            team_two_ratio: team_two_ratio.clone(),
+            state: state.clone(),
+        }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {

@@ -1,5 +1,6 @@
-use yew::prelude::*;
 use crate::components::loading_animation::LoadingAnimation;
+use crate::store::{matches::game_match::Match, MatchesRequest, MatchesStore};
+use yew::prelude::*;
 
 use super::match_item::MatchItem;
 
@@ -9,13 +10,15 @@ pub mod game_match {
 pub mod team {
     include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
 }
-use game_match::{
-    match_service_client, GameEventType, ListMatchesReply, ListMatchesRequest, Match,
+use game_match::{match_service_client, GameEventType, ListMatchesReply, ListMatchesRequest};
+use team::Team;
+use yew_agent::{
+    utils::store::{Bridgeable, ReadOnly, StoreWrapper},
+    Bridge,
 };
 
 pub enum Msg {
-    Fetch,
-    ReceiveResponse(Result<ListMatchesReply, Box<dyn std::error::Error>>),
+    MatchesStore(ReadOnly<MatchesStore>),
 }
 
 pub struct MatchesGame {
@@ -26,6 +29,8 @@ pub struct MatchesGame {
     matches: Vec<Match>,
     is_loading: bool,
     is_error: bool,
+
+    matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
 }
 
 #[derive(Properties, PartialEq)]
@@ -42,9 +47,6 @@ impl Component for MatchesGame {
     fn create(ctx: &Context<Self>) -> Self {
         let MatchesGameProps { id, name, logo_url } = ctx.props().clone();
 
-        // todo uncomment after error fix
-        // ctx.link().send_message(Msg::Fetch);
-
         Self {
             id: id.clone(),
             name: name.clone(),
@@ -53,38 +55,23 @@ impl Component for MatchesGame {
             matches: Vec::new(),
             is_loading: false,
             is_error: false,
+            matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::Fetch => {
-                self.is_loading = true;
-                self.is_error = false;
-                let grpc_client =
-                    match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
-
+            Msg::MatchesStore(state) => {
+                let state = state.borrow();
                 let game_id = self.id.clone();
-                ctx.link().send_future(async move {
-                    Msg::ReceiveResponse(
-                        grpc_client
-                            .list_matches(ListMatchesRequest {
-                                game_id: game_id,
-                                game_event_type: GameEventType::Live as i32,
-                            })
-                            .await,
-                    )
-                });
-            }
-            Msg::ReceiveResponse(Ok(response)) => {
-                self.matches = response.game_matches;
-                self.is_loading = false;
-                self.is_error = false;
-            }
-            Msg::ReceiveResponse(Err(_)) => {
-                self.matches = Vec::new();
-                self.is_loading = false;
-                self.is_error = true;
+                self.matches = state
+                    .matches
+                    .clone()
+                    .into_iter()
+                    .filter(|match_item| match_item.game_id == game_id)
+                    .collect();
+                self.is_loading = state.is_loading;
+                self.is_error = state.is_error;
             }
         }
         true
@@ -109,9 +96,18 @@ impl Component for MatchesGame {
                     } else {{
                         self.matches.clone().into_iter().map(|match_item| {
                             let match_id = match_item.id.clone();
+                            let m = match_item.clone();
                             html! {
                                 <li key={ match_id }>
-                                    <MatchItem />
+                                    <MatchItem
+                                        id={m.id}
+                                        game_id={m.game_id}
+                                        team_one_name={m.team_one.unwrap().name}
+                                        team_two_name={m.team_two.unwrap().name}
+                                        team_one_ratio={m.team_one_ratio}
+                                        team_two_ratio={m.team_two_ratio}
+                                        state={m.state}
+                                    />
                                 </li>
                             }
                         }).collect::<Html>()

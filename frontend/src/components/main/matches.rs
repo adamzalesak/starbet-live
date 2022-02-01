@@ -1,5 +1,8 @@
 use crate::components::loading_animation::LoadingAnimation;
-use crate::store::{games::game::Game, GamesRequest, GamesStore};
+use crate::store::{
+    games::game::Game, matches::game_match::Match, GamesRequest, GamesStore, MatchesRequest,
+    MatchesStore,
+};
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
@@ -14,6 +17,8 @@ use super::matches_game::MatchesGame;
 
 pub enum Msg {
     GamesStore(ReadOnly<GamesStore>),
+    MatchesStore(ReadOnly<MatchesStore>),
+    FetchMatches,
 }
 pub struct Matches {
     games: Vec<Game>,
@@ -21,6 +26,7 @@ pub struct Matches {
     is_loading: bool,
     is_error: bool,
     games_store: Box<dyn Bridge<StoreWrapper<GamesStore>>>,
+    matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
 }
 
 impl Component for Matches {
@@ -34,10 +40,11 @@ impl Component for Matches {
             is_loading: false,
             is_error: false,
             games_store: GamesStore::bridge(ctx.link().callback(Msg::GamesStore)),
+            matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::GamesStore(state) => {
                 let state = state.borrow();
@@ -45,6 +52,19 @@ impl Component for Matches {
                 self.filter_ids = state.filter_ids.clone();
                 self.is_loading = state.is_loading.clone();
                 self.is_error = state.is_error.clone();
+
+                ctx.link().send_message(Msg::FetchMatches);
+            }
+            Msg::MatchesStore(state) => {
+                let state = state.borrow();
+            }
+            Msg::FetchMatches => {
+                self.matches_store.send(MatchesRequest::Reset);
+                self.games.clone().into_iter().for_each(|game| {
+                    if !self.filter_ids.contains(&game.id) {
+                        self.matches_store.send(MatchesRequest::Fetch(game.id));
+                    }
+                });
             }
         }
         true
