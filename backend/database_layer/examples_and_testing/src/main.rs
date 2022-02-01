@@ -5,6 +5,7 @@ use clap::{App, Arg};
 mod game_match;
 mod seed;
 mod team_in_game;
+mod user_repo_test;
 
 use game_match::create_game_match;
 use seed::seed;
@@ -27,41 +28,45 @@ async fn main() -> anyhow::Result<()> {
                 .takes_value(false),
         )
         .arg(
-            Arg::new("add_team_to_game")
-                .short('1')
-                .long("team-to-game")
-                .help("Add a team to the game")
-                .required(false)
-                .takes_value(false),
+            Arg::new("user")
+                .short('u')
+                .long("user")
+                .takes_value(true)
+                .value_name("user-option")
+                .help("Usage: --user add / get / create / edit / get-address / add-address / get-balance / add-balance "),
         )
-        .arg(
-            Arg::new("remove_team_from_game")
-                .short('2')
-                .long("remove-from-game")
-                .help("Remove team from the game")
-                .required(false)
-                .takes_value(false),
-        )
-        .arg(
-            Arg::new("create_game_match")
-                .short('3')
-                .long("create-match")
-                .help("Create a game match")
-                .required(false)
-                .takes_value(false),
-        )
+        // .arg(
+        //     Arg::new("add_team_to_game")
+        //         .short('1')
+        //         .long("team-to-game")
+        //         .help("Add a team to the game")
+        //         .required(false)
+        //         .takes_value(false),
+        // )
+        // .arg(
+        //     Arg::new("remove_team_from_game")
+        //         .short('2')
+        //         .long("remove-from-game")
+        //         .help("Remove team from the game")
+        //         .required(false)
+        //         .takes_value(false),
+        // )
+        // .arg(
+        //     Arg::new("create_game_match")
+        //         .short('3')
+        //         .long("create-match")
+        //         .help("Create a game match")
+        //         .required(false)
+        //         .takes_value(false),
+        // )
         .get_matches();
 
     if testing_app.is_present("seed") {
         seed().await?;
     }
 
-    if testing_app.is_present("add_team_to_game") {
-        add_team_to_the_game().await?;
-    } else if testing_app.is_present("remove_team_from_game") {
-        remove_team_from_game().await?;
-    } else if testing_app.is_present("create_game_match") {
-        create_game_match().await?;
+    if testing_app.is_present("user") {
+        user_repo_test::run(testing_app.value_of("user")).await?;
     }
 
     println!("App ran successfully");
