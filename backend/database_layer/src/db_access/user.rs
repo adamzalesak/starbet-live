@@ -194,11 +194,12 @@ impl UserRepo for PgUserRepo {
         let connection: PgPooledConnection = self.get_connection().await?;
 
         // check if the user already exists
-        let already_exists: Vec<User> = user::table
+        let already_exists: usize = user::table
             .filter(user::email.eq(new_user.email.clone()))
-            .get_results(&connection)?;
+            .or_filter(user::civil_id_number.eq(new_user.civil_id_number.clone()))
+            .execute(&connection)?;
 
-        if already_exists.len() != 0 {
+        if already_exists != 0 {
             anyhow::bail!("The user already exists!");
         }
 
