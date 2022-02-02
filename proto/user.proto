@@ -4,6 +4,7 @@ package user;
 
 service UserService {
     rpc GetUser (GetUserRequest) returns (GetUserReply);
+    rpc AuthUser (AuthUserRequest) returns (AuthUserReply);
     rpc CreateUser (CreateUserRequest) returns (CreateUserReply);
     rpc EditUser (EditUserRequest) returns (EditUserReply);
 }
@@ -23,7 +24,6 @@ message User {
     string first_name = 2;
     string last_name = 3;
     string password = 4;
-    string password_salt = 5;
     string civil_id_number = 6;
     string email = 7;
     string date_of_birth = 8;
@@ -38,6 +38,15 @@ message GetUserRequest {
 }
 
 message GetUserReply {
+    User user = 1;
+}
+
+message AuthUserRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message AuthUserReply {
     User user = 1;
 }
 

@@ -3,8 +3,8 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::user::user_service_server::UserService;
 use crate::user::{
-    Address, CreateUserReply, CreateUserRequest, EditUserReply, EditUserRequest, GetUserReply,
-    GetUserRequest, User,
+    Address, AuthUserReply, AuthUserRequest, CreateUserReply, CreateUserRequest, EditUserReply,
+    EditUserRequest, GetUserReply, GetUserRequest, User,
 };
 
 use database_layer::{
@@ -30,6 +30,13 @@ impl MyUserService {
 
 #[tonic::async_trait]
 impl UserService for MyUserService {
+    async fn auth_user(
+        &self,
+        request: Request<AuthUserRequest>,
+    ) -> Result<Response<AuthUserReply>, Status> {
+        Err(Status::new(Code::from_i32(13), "TODO"))
+    }
+
     async fn get_user(
         &self,
         request: Request<GetUserRequest>,
@@ -43,7 +50,6 @@ impl UserService for MyUserService {
                         first_name: user.first_name,
                         last_name: user.last_name,
                         password: user.user_password,
-                        password_salt: user.user_password_salt,
                         civil_id_number: user.civil_id_number,
                         date_of_birth: user.date_of_birth,
                         email: user.email,
@@ -81,7 +87,6 @@ impl UserService for MyUserService {
             &request.first_name,
             &request.last_name,
             &request.password,
-            &request.password_salt,
             &request.civil_id_number,
             &request.date_of_birth,
             &request.email,
@@ -114,7 +119,6 @@ impl UserService for MyUserService {
                     request.first_name.as_deref(),
                     request.last_name.as_deref(),
                     request.password.as_deref(),
-                    request.password_salt.as_deref(),
                     request.civil_id_number.as_deref(),
                     request.date_of_birth.as_deref(),
                     request.email.as_deref(),

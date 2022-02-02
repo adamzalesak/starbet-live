@@ -38,12 +38,7 @@ impl BetService for MyBetService {
         request: Request<CreateBetRequest>,
     ) -> Result<Response<CreateBetReply>, Status> {
         let request = request.into_inner();
-        let create_bet = CreateBet::new(
-            request.match_id,
-            request.ticket_id,
-            request.team_id,
-            "", // TODO
-        );
+        let create_bet = CreateBet::new(request.match_id, request.ticket_id, request.team_id);
 
         match self.repo.place_a_bet(request.ticket_id, create_bet).await {
             Ok(bet) => {

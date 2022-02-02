@@ -24,10 +24,11 @@ message Match {
     string team_two_ratio = 6;
     string supposed_start_at = 7;
     string state = 8;
+    GameEventType game_event_type = 9;
+    optional int32 winner_id = 10;
 }
 
 message ListMatchesRequest {
-    int32 game_id = 1;
     GameEventType game_event_type = 2;
 }
 
@@ -52,6 +53,7 @@ message CreateMatchReply {
 message CreateGameEventRequest {
     GameEventType game_event_type = 1;
     int32 match_id = 2;
+    optional int32 winner_id = 3;
 }
 
 message CreateGameEventReply {}

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tonic::{Code, Request, Response, Status};
 
 use crate::bet::Bet;
-use crate::game_match::Match;
+use crate::game_match::{GameEventType, Match};
 use crate::ticket::ticket_service_server::TicketService;
 use crate::ticket::{
     GetCurrentTicketReply, GetCurrentTicketRequest, ListTicketsReply, ListTicketsRequest,
@@ -19,7 +19,7 @@ use database_layer::{
         repo::Repo,
         submitted_bet_and_ticket::{PgSubmittedBetAndTicketRepo, SubmittedBetAndTicketRepo},
     },
-    db_models::ticket::ObtainedTicket,
+    db_models::{game_match_event::GameMatchEventType, ticket::ObtainedTicket},
 };
 use ws_layer::Clients;
 
@@ -110,13 +110,30 @@ impl TicketService for MyTicketService {
                 match self.submitted_repo.get_bets(submitted_ticket_id).await {
                     Ok(submitted_bets) => {
                         for bet in submitted_bets {
-                            let game_match;
-                            match self.match_repo.get(bet.game_match_id).await {
-                                Ok(gmatch) => game_match = gmatch,
+                            /*
+                            let ratios  = self.match_repo.get_ratios();
+                            1. 1.1
+                            2. 0.95
+                            self.match_repo.set_ratios(ratios);
+                            */
+                            let game_match_info;
+                            match self.match_repo.get_show_info(bet.game_match_id).await {
+                                Ok(match_info) => game_match_info = match_info,
                                 Err(err) => {
                                     return Err(Status::new(Code::from_i32(13), err.to_string()))
                                 }
                             }
+                            let (game_match, game_event_type) = game_match_info;
+                            let mut winner_id = None;
+                            let grpc_event_type = match game_event_type.extract_event().unwrap() {
+                                GameMatchEventType::Upcoming => GameEventType::Upcoming,
+                                GameMatchEventType::Live(_) => GameEventType::Live,
+                                GameMatchEventType::Ended(id) => {
+                                    winner_id = Some(id);
+                                    GameEventType::Ended
+                                }
+                                _ => GameEventType::Upcoming,
+                            };
                             let game_match = Match {
                                 id: game_match.id,
                                 game_id: game_match.game_id,
@@ -126,6 +143,8 @@ impl TicketService for MyTicketService {
                                 team_two_ratio: game_match.team_two_ratio,
                                 supposed_start_at: game_match.supposed_start_at,
                                 state: game_match.state,
+                                game_event_type: grpc_event_type.into(),
+                                winner_id: winner_id,
                             };
 
                             let mut buf = BytesMut::with_capacity(64);

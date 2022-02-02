@@ -2,7 +2,7 @@ use std::convert::*;
 
 use crate::bet;
 use crate::game;
-use crate::game_match::Match;
+use crate::game_match::{GameEventType, Match};
 use crate::team;
 
 use database_layer::db_models::{bet::Bet, game_match::GameMatch, team::Team};
@@ -29,6 +29,8 @@ impl From<&'_ GameMatch> for Match {
             team_two_ratio: game_match.team_two_ratio.clone(),
             supposed_start_at: game_match.supposed_start_at.clone(),
             state: game_match.state.clone(),
+            winner_id: None,
+            game_event_type: GameEventType::Upcoming.into(),
         }
     }
 }
