@@ -75,23 +75,28 @@ impl Component for Games {
                 else {
                     <ul class="flex flex-col gap-1.5 overflow-auto">
                         {
-                            self.games.clone().into_iter().map(|game| {
-                                let disabled = self.filter_ids.contains(&game.id);
-                                let game_id = game.id.clone();
-                                html! {
-                                    <li
-                                        key={ game.id }
-                                        onclick={ if disabled { ctx.link().callback(move |_|Msg::FilterRemove(game_id)) } else { ctx.link().callback(move |_|Msg::FilterAdd(game_id)) } }
-                                        class={format!("flex flex-row gap-2 rounded-md p-1 text-black text-left font-bold cursor-pointer {}", if disabled {"bg-gray-400"} else {"bg-white"})}>
-                                        if game.logo_url != "" {
-                                            <div class="w-6 h-6 my-auto">
-                                                <img src={game.logo_url.clone()} class="w-full" alt={game.name.clone()} />
-                                            </div>
-                                        }
-                                        <div>{ game.name.clone() }</div>
-                                    </li>
-                                }
-                            }).collect::<Html>()
+                            if self.games.is_empty() {
+                                html! { <div class="bg-blue rounded-md p-1" >{ "No games to show" }</div> }
+                            } else {
+                                self.games.clone().into_iter().map(|game| {
+                                    let disabled = self.filter_ids.contains(&game.id);
+                                    let game_id = game.id.clone();
+                                    html! {
+                                        <li
+                                            key={ game.id }
+                                            onclick={ if disabled { ctx.link().callback(move |_|Msg::FilterRemove(game_id)) } else { ctx.link().callback(move |_|Msg::FilterAdd(game_id)) } }
+                                            class={format!("flex flex-row gap-2 rounded-md p-1 text-black text-left font-bold cursor-pointer {}", 
+                                                    if disabled {"bg-gray-400"} else {"bg-white"})}>
+                                            if game.logo_url != "" {
+                                                <div class="w-6 h-6 my-auto">
+                                                    <img src={game.logo_url.clone()} class="w-full" alt={game.name.clone()} />
+                                                </div>
+                                            }
+                                            <div>{ game.name.clone() }</div>
+                                        </li>
+                                    }
+                                }).collect::<Html>()
+                            }
                         }
                     </ul>
                 }

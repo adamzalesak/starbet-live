@@ -3,7 +3,6 @@ use crate::{
     store::{TicketRequest, TicketStore},
     types::BetInfo,
 };
-use log::info;
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
@@ -48,8 +47,6 @@ impl Component for Ticket {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::TicketStore(state) => {
-                info!("Received update");
-
                 let state = state.borrow();
 
                 if state.bets.len() != self.bets.len() {

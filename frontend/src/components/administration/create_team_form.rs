@@ -89,7 +89,8 @@ impl Component for CreateTeamForm {
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
                 true
             }
-            Msg::ReceiveResponse(Err(_)) => {
+            Msg::ReceiveResponse(Err(err)) => {
+                warn!("{}", err.to_string());
                 self.submit_result = SubmitResult::Error;
                 let link = ctx.link().clone();
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();

@@ -1,7 +1,15 @@
-use crate::types::grpc_types::game::{game_service_client, CreateGameReply, CreateGameRequest};
+use crate::types::grpc_types::team::{
+    team_service_client, AddTeamToGameReply, AddTeamToGameRequest,
+};
 use crate::{
-    components::{auth::input::TextInput, loading_animation::LoadingAnimation},
-    types::{CreateGameFormData, Field, SubmitResult},
+    components::{
+        auth::{
+            input::TextInput,
+            input_number::{NumberInput, NumberType},
+        },
+        loading_animation::LoadingAnimation,
+    },
+    types::{CreateTeamFormData, Field, SubmitResult},
 };
 use anyhow;
 use gloo_timers::callback::Timeout;
@@ -12,20 +20,21 @@ use yew::prelude::*;
 pub enum Msg {
     Submit,
     SetLoading(bool),
-    SetName((String, Field, bool)),
-    SetLogoUrl((String, Field, bool)),
+    SetGameId((f32, bool)),
+    SetTeamId((f32, bool)),
     ResetSubmitResult,
-    ReceiveResponse(anyhow::Result<CreateGameReply>),
+    ReceiveResponse(anyhow::Result<AddTeamToGameReply>),
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct CreateGameForm {
+pub struct CreateTeamPlaysGameForm {
     is_loading: bool,
-    data: CreateGameFormData,
+    game_id: (f32, bool),
+    team_id: (f32, bool),
     submit_result: SubmitResult,
 }
 
-impl Component for CreateGameForm {
+impl Component for CreateTeamPlaysGameForm {
     type Message = Msg;
     type Properties = ();
 
@@ -33,32 +42,33 @@ impl Component for CreateGameForm {
         Self {
             is_loading: false,
             submit_result: SubmitResult::None,
-            data: CreateGameFormData::new(),
+            game_id: (0.0, false),
+            team_id: (0.0, false),
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Submit => {
-                if !self.data.is_valid() {
+                if !self.game_id.1 || !self.team_id.1 {
                     warn!("Inserted data are not valid");
                     return false;
                 }
                 ctx.link().send_message(Msg::SetLoading(true));
 
                 let grpc_client =
-                    game_service_client::GameService::new(String::from("http://127.0.0.1:5430"));
-                let name = self.data.name.0.trim().to_string();
-                let logo_url = self.data.logo_url.0.trim().to_string();
+                    team_service_client::TeamService::new(String::from("http://127.0.0.1:5430"));
+
+                let team_id: i32 = self.team_id.0 as i32;
+                let game_id: i32 = self.game_id.0 as i32;
 
                 ctx.link().send_future(async move {
                     Msg::ReceiveResponse(
                         grpc_client
-                            .create_game(CreateGameRequest { name, logo_url })
+                            .add_team_to_game(AddTeamToGameRequest { team_id, game_id })
                             .await,
                     )
                 });
-
                 ctx.link().send_message(Msg::SetLoading(false));
                 true
             }
@@ -66,12 +76,12 @@ impl Component for CreateGameForm {
                 self.is_loading = val;
                 true
             }
-            Msg::SetName((new_data, _, is_valid)) => {
-                self.data.name = (new_data, is_valid);
+            Msg::SetGameId((new_data, is_valid)) => {
+                self.game_id = (new_data, is_valid);
                 false
             }
-            Msg::SetLogoUrl((new_data, _, is_valid)) => {
-                self.data.logo_url = (new_data, is_valid);
+            Msg::SetTeamId((new_data, is_valid)) => {
+                self.team_id = (new_data, is_valid);
                 false
             }
             Msg::ReceiveResponse(Ok(_)) => {
@@ -97,22 +107,23 @@ impl Component for CreateGameForm {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <div class="bg-light-grey p-2 rounded-md mb-2">
-                <div class="text-center font-bold text-lg">{"Create game"}</div>
+                <div class="text-center font-bold text-lg">{"Create team plays game"}</div>
                 <form onsubmit={ ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit }) }
                         class="flex flex-col gap-1 text-black admin-form">
-                    <TextInput
-                        field={Field::FirstName} // ignore it, just for id
-                        label="Name"
-                        placeholder="Counter-Strike: Global Offensive"
-                        on_change={ctx.link().callback(Msg::SetName)}
-                    />
-                    <TextInput
-                        field={Field::LastName} // ignore it, just for id
-                        label="Logo Url"
-                        // value={self.data.logo_url.0.clone()}
-                        placeholder="https://logos-download.com/wp-content/uploads/2016/04/Counter_Strike_logo-700x700.png"
-                        on_change={ctx.link().callback(Msg::SetLogoUrl)}
-                    />
+                    <div class="grid grid-cols-2 gap-2">
+                        <NumberInput
+                            number_type={NumberType::Id}
+                            label="Team ID"
+                            placeholder="28"
+                            on_change={ctx.link().callback(Msg::SetTeamId)}
+                        />
+                        <NumberInput
+                            number_type={NumberType::Id}
+                            label="Game ID"
+                            placeholder="7"
+                            on_change={ctx.link().callback(Msg::SetGameId)}
+                        />
+                    </div>
                     {
                         if self.is_loading {
                             html! { <LoadingAnimation color="dark-blue" /> }
@@ -124,7 +135,7 @@ impl Component for CreateGameForm {
                         if self.submit_result == SubmitResult::Success {
                             html! {
                                 <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
-                                    {"Game successfully created"}
+                                    {"Team successfully created"}
                                 </div>
                             }
                         } else if self.submit_result == SubmitResult::Error {
@@ -139,7 +150,7 @@ impl Component for CreateGameForm {
                     }
                     <button type="submit"
                             class="block w-6/12 mx-auto p-1 bg-blue text-white uppercase font-light rounded-md transition-all">
-                        {"Create game"}
+                        {"Add team to game"}
                     </button>
                 </form>
 

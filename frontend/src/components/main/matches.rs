@@ -115,17 +115,21 @@ impl Component for Matches {
             } else {
                 <ul class="flex flex-col gap-2 overflow-auto">
                 {
-                    self.games.clone().into_iter().map(|game| {
-                        let disabled = self.filter_ids.contains(&game.id);
-                        let game_id = game.id.clone();
-                        html! {
-                            if !disabled {
-                                <li key={ game.id }>
-                                    <MatchesGame id={game.id} name={game.name} logo_url={game.logo_url} />
-                                </li>
+                    if self.games.is_empty() {
+                        html! { <div class="bg-blue rounded-md p-1 text-center text-white" >{ "No live matches to show" }</div> }
+                    } else {
+                        self.games.clone().into_iter().map(|game| {
+                            let disabled = self.filter_ids.contains(&game.id);
+                            let game_id = game.id.clone();
+                            html! {
+                                if !disabled {
+                                    <li key={ game.id }>
+                                        <MatchesGame id={game.id} name={game.name} logo_url={game.logo_url} />
+                                    </li>
+                                }
                             }
-                        }
-                    }).collect::<Html>()
+                        }).collect::<Html>()
+                    }
                 }
                 </ul>
             }

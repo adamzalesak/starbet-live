@@ -133,7 +133,7 @@ impl Component for CreateMatchForm {
                 true
             }
             Msg::ReceiveResponse(Err(err)) => {
-                log::warn!("cringe? {}", err.to_string());
+                warn!("{}", err.to_string());
                 self.submit_result = SubmitResult::Error;
                 let link = ctx.link().clone();
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
