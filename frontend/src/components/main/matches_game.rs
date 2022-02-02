@@ -50,7 +50,7 @@ impl Component for MatchesGame {
             matches: Vec::new(),
             is_loading: false,
             is_error: false,
-            
+
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
         }
     }
@@ -74,6 +74,9 @@ impl Component for MatchesGame {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        if self.matches.is_empty() {
+            return html! {};
+        }
         html! {
             <li>
                 <div class="flex gap-2 px-3 py-1 text-white font-bold bg-grey rounded-t-md">
