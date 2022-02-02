@@ -27,7 +27,7 @@ pub enum Msg {
     SetLoading(bool),
     SetEvent(EventType),
     SetMatchId((f32, bool)),
-    SetWinningTeamId((f32, bool)),
+    SetWinnerId((f32, bool)),
     ResetSubmitResult,
     ReceiveResponse(anyhow::Result<CreateGameEventReply>),
 }
@@ -37,7 +37,7 @@ pub struct ChangeMatchEvent {
     is_loading: bool,
     match_id: (f32, bool),
     event_type: Option<EventType>,
-    winning_team_id: Option<(f32, bool)>,
+    winner_id: Option<(f32, bool)>,
     submit_result: SubmitResult,
 }
 
@@ -51,7 +51,7 @@ impl Component for ChangeMatchEvent {
             submit_result: SubmitResult::None,
             event_type: None,
             match_id: (0.0, false),
-            winning_team_id: None,
+            winner_id: None,
         }
     }
 
@@ -62,7 +62,7 @@ impl Component for ChangeMatchEvent {
                     warn!("Inserted data are not valid");
                     return false;
                 }
-                if self.event_type == Some(EventType::Ended) && self.winning_team_id == None {
+                if self.event_type == Some(EventType::Ended) && self.winner_id == None {
                     warn!("Insert ID of winning team");
                     return false;
                 }
@@ -78,6 +78,10 @@ impl Component for ChangeMatchEvent {
                     Some(EventType::Ended) => GameEventType::Ended as i32,
                     None => return false,
                 };
+                let winner_id = match self.winner_id {
+                    Some((val, _)) => Some(val as i32),
+                    None => None,
+                };
 
                 ctx.link().send_future(async move {
                     Msg::ReceiveResponse(
@@ -85,6 +89,7 @@ impl Component for ChangeMatchEvent {
                             .create_game_event(CreateGameEventRequest {
                                 match_id,
                                 game_event_type,
+                                winner_id,
                             })
                             .await,
                     )
@@ -104,8 +109,8 @@ impl Component for ChangeMatchEvent {
                 self.match_id = (new_data, is_valid);
                 false
             }
-            Msg::SetWinningTeamId((new_data, is_valid)) => {
-                self.winning_team_id = Some((new_data, is_valid));
+            Msg::SetWinnerId((new_data, is_valid)) => {
+                self.winner_id = Some((new_data, is_valid));
                 false
             }
             Msg::ReceiveResponse(Ok(_)) => {
@@ -164,7 +169,7 @@ impl Component for ChangeMatchEvent {
                                     number_type={NumberType::Id}
                                     label="Winning team ID"
                                     placeholder="31"
-                                    on_change={ctx.link().callback(Msg::SetWinningTeamId)}
+                                    on_change={ctx.link().callback(Msg::SetWinnerId)}
                                 />
                             }
                         } else {
