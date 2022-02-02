@@ -53,6 +53,18 @@ pub trait UserRepo {
     /// - `Err(_)` if an error occurred
     async fn get(&self, desired_user_id: i32) -> anyhow::Result<User>;
 
+    /// Get User by email
+    ///
+    /// Params
+    /// ---
+    /// - desired_user_email: Email of the user we wish to validate
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(Option<User>)` optional -> whether the user has or has not been found (so GRPC layer could just send it)
+    /// - `Err(_)` on error
+    async fn get_by_email(&self, desired_user_email: &str) -> anyhow::Result<Option<User>>;
+
     /// Create a new User record in the database
     ///
     /// Params
@@ -159,6 +171,16 @@ impl UserRepo for PgUserRepo {
         let query_result: User = user::table
             .find(desired_id)
             .get_result(&self.get_connection().await?)?;
+
+        Ok(query_result)
+    }
+
+    /// Get user by email. Return Ok(None) if such user does not exist
+    async fn get_by_email(&self, desired_user_email: &str) -> anyhow::Result<Option<User>> {
+        let query_result: Option<User> = user::table
+            .filter(user::email.eq(desired_user_email))
+            .first(&self.get_connection().await?)
+            .optional()?;
 
         Ok(query_result)
     }

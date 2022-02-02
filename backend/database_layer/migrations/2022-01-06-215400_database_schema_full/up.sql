@@ -4,7 +4,6 @@ CREATE TABLE "user" (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     user_password TEXT NOT NULL,
-    user_password_salt TEXT NOT NULL,
     civil_id_number TEXT NOT NULL,
     date_of_birth TEXT NOT NULL,
     email TEXT NOT NULL,
@@ -111,6 +110,5 @@ CREATE TABLE "bet" (
     game_match_id INTEGER REFERENCES "game_match" NOT NULL,
     ticket_id INTEGER REFERENCES "ticket" NOT NULL,
     team_id INTEGER REFERENCES "team" NOT NULL,
-    bet_ratio TEXT NOT NULL,
     created_at TEXT NOT NULL
 );

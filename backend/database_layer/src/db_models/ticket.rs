@@ -1,4 +1,6 @@
-use crate::db_models::{bet::Bet, submitted_ticket::CreateSubmittedTicket, user::User};
+use crate::db_models::{
+    bet::Bet, game_match::GameMatch, submitted_ticket::CreateSubmittedTicket, user::User,
+};
 use crate::{schema::ticket, type_storing::time_handling::TimeHandling};
 use chrono::{Duration, Utc};
 
@@ -32,25 +34,36 @@ pub struct CreateTicket {
 }
 
 impl Ticket {
-    pub fn submit(&self, paid_price: f64, bets: &[Bet]) -> anyhow::Result<CreateSubmittedTicket> {
+    pub fn submit(
+        &self,
+        paid_price: f64,
+        bets_and_matches: &[(Bet, GameMatch)],
+    ) -> anyhow::Result<CreateSubmittedTicket> {
         if self.valid_until <= Utc::now().to_string() {
             anyhow::bail!("Cannot send an invalid ticket!")
-        } else if bets.len() == 0 {
+        } else if bets_and_matches.len() == 0 {
             anyhow::bail!("Cannot submit an empty ticket!")
         }
 
-        let ratio: Option<f64> = bets
+        let total_ratio = bets_and_matches
             .iter()
-            .map(|bet| bet.bet_ratio.parse::<f64>().ok())
+            .map(|(bet, game_match)| {
+                if bet.team_id == game_match.team_one_id {
+                    game_match.team_one_ratio.clone()
+                } else {
+                    game_match.team_two_ratio.clone()
+                }
+            })
+            .map(|ratio| ratio.parse::<f64>().ok())
             .filter_map(|parsed_ratio| parsed_ratio)
             .reduce(|element_one, element_two| element_one * element_two);
 
-        if ratio.is_none() {
+        if total_ratio.is_none() {
             anyhow::bail!("Could not compute the ratio for the final bet!")
         }
 
         // ratio will always get obtained via unwrap
-        let winnable_price = ratio.unwrap_or(1.0) * paid_price;
+        let winnable_price = total_ratio.unwrap_or(1.0) * paid_price;
 
         // create the new submitted ticket
         Ok(CreateSubmittedTicket {
@@ -58,7 +71,7 @@ impl Ticket {
             submitted_at: TimeHandling::store(),
             price_paid: paid_price.to_string(),
             winnable_price: winnable_price.to_string(),
-            total_ratio: ratio.unwrap_or(1.0).to_string(),
+            total_ratio: total_ratio.unwrap_or(1.0).to_string(),
             won: None,
         })
     }

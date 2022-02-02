@@ -86,6 +86,15 @@ pub trait BetAndTicketRepo {
     /// Get the current ticket
     /// Either open a new one if the old one is invalid, or the last one was submitted
     /// Or retrieve the valid unfinished ticket from the database
+    ///
+    /// Params
+    /// ---
+    /// - desired_user_id: ID of the user we wish to retrieve the ticket of
+    ///
+    /// Returns
+    /// ---
+    /// - `Ok(ObtainedTicket)` with the obtained ticket for the user
+    /// - `Err(_)` if an error occurred
     async fn get_user_current_ticket(&self, desired_user_id: i32)
         -> anyhow::Result<ObtainedTicket>;
 
@@ -340,19 +349,28 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         let connection: PgPooledConnection = self.get_connection().await?;
 
         // obtain current ticket, along with the bets
-        let ticket_and_bets: Vec<(Ticket, Bet)> = ticket::table
+        let tickets_bets_and_games: Vec<(Ticket, Bet, GameMatch)> = ticket::table
             .filter(ticket::id.eq(desired_ticket_id))
-            .inner_join(bet::table)
+            .inner_join(bet::table.inner_join(game_match::table))
+            .select((
+                ticket::all_columns,
+                bet::all_columns,
+                game_match::all_columns,
+            ))
             .get_results(&connection)?;
 
         // the ticket is empty
-        if ticket_and_bets.len() == 0 {
+        if tickets_bets_and_games.len() == 0 {
             anyhow::bail!("Cannot submit an empty ticket!")
         }
 
         // obtain the ticket
-        let ticket: Ticket = ticket_and_bets[0].0.clone();
-        let bets: Vec<Bet> = ticket_and_bets.into_iter().map(|(_, bet)| bet).collect();
+        let ticket: Ticket = tickets_bets_and_games[0].0.clone();
+        let bets_and_matches: Vec<(Bet, GameMatch)> = tickets_bets_and_games
+            .into_iter()
+            .map(|(_, bet, game_match)| (bet, game_match))
+            .collect();
+
         // check user balance first
         let user_repo = PgUserRepo::new(&self.pool);
         let balance: f64 = user_repo.get_balance(ticket.user_id).await?.parse()?;
@@ -365,12 +383,11 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
 
         // create the submit ticket now and create the submit bets now
         let submitted_ticket_id: i32 = insert_into(submitted_ticket::table)
-            .values(ticket.submit(paid_price, &bets)?)
+            .values(ticket.submit(paid_price, &bets_and_matches)?)
             .returning(submitted_ticket::id)
             .get_result(&connection)?;
 
-        // create submitted bets
-        let submitted_bets = Bet::submit_bets(submitted_ticket_id, &bets);
+        let submitted_bets = Bet::submit_bets(submitted_ticket_id, &bets_and_matches)?;
 
         // add bets to the submitted ticket
         let _ = insert_into(submitted_bet::table)
@@ -378,7 +395,7 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
             .execute(&connection)?;
 
         // get ids of the bets that need to be deleted
-        let original_bets_id: Vec<i32> = bets.iter().map(|bet| bet.id).collect();
+        let original_bets_id: Vec<i32> = bets_and_matches.iter().map(|(bet, _)| bet.id).collect();
 
         // delete bets that are bound to the ticket
         let _ = delete(bet::table.filter(bet::id.eq_any(original_bets_id))).execute(&connection)?;

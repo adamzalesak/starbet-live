@@ -4,7 +4,6 @@ table! {
         game_match_id -> Int4,
         ticket_id -> Int4,
         team_id -> Int4,
-        bet_ratio -> Text,
         created_at -> Text,
     }
 }

@@ -439,6 +439,22 @@ impl MatchRepo for PgMatchRepo {
             _ => anyhow::bail!("Internal error! More than 1 events of the same type exist"),
         }
 
+        // check if the team belongs to the match (when setting the winner of the match)
+        match desired_event_type {
+            GameMatchEventType::Ended(id) => {
+                let game_match: GameMatch = game_match::table
+                    .find(desired_match_id)
+                    .get_result(&connection)?;
+
+                if !(game_match.team_one_id != id || game_match.team_two_id != id) {
+                    anyhow::bail!(
+                        "The team you wish to select as the winner does not belong to this match"
+                    );
+                }
+            }
+            _ => {}
+        }
+
         // create an event
         let query_result: i32 = insert_into(game_match_event::table)
             .values(CreateGameMatchEvent::new(

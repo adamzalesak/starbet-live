@@ -18,7 +18,6 @@ pub struct Bet {
     pub game_match_id: i32,
     pub ticket_id: i32,
     pub team_id: i32,
-    pub bet_ratio: String,
     pub created_at: String,
 }
 
@@ -30,28 +29,36 @@ pub struct CreateBet {
     pub game_match_id: i32,
     pub ticket_id: i32,
     pub team_id: i32,
-    pub bet_ratio: String,
     pub created_at: String,
 }
 
 impl Bet {
-    pub fn submit_bets(desired_submitted_ticket_id: i32, bets: &[Bet]) -> Vec<CreateSubmittedBet> {
+    pub fn submit_bets(
+        desired_submitted_ticket_id: i32,
+        bets_and_tickets: &[(Bet, GameMatch)],
+    ) -> anyhow::Result<Vec<CreateSubmittedBet>> {
         let mut submitted_bets: Vec<CreateSubmittedBet> = Vec::new();
         let submission_date = TimeHandling::store();
 
-        for bet in bets {
+        for (bet, game_match) in bets_and_tickets {
+            let bet_ratio = if bet.team_id == game_match.team_one_id {
+                &game_match.team_one_ratio
+            } else {
+                &game_match.team_two_ratio
+            };
+
             submitted_bets.push(CreateSubmittedBet {
                 game_match_id: bet.game_match_id,
                 submitted_ticket_id: desired_submitted_ticket_id,
                 team_id: bet.team_id,
-                bet_ratio: bet.bet_ratio.clone(),
+                bet_ratio: bet_ratio.parse::<f64>()?.to_string(),
                 placed_at: bet.created_at.clone(),
                 submitted_at: submission_date.clone(),
                 won: None,
             })
         }
 
-        submitted_bets
+        Ok(submitted_bets)
     }
 }
 
@@ -62,17 +69,15 @@ impl CreateBet {
     /// ---
     /// - game_match_id: ID of the match we place the bet on
     /// - ticket_id: ID of the ticket this bet is put into
-    /// - bet_ratio: ratio of the bet
     ///
     /// Returns
     /// ---
     /// - new `bet` insert structure
-    pub fn new(game_match_id: i32, ticket_id: i32, team_id: i32, bet_ratio: &str) -> CreateBet {
+    pub fn new(game_match_id: i32, ticket_id: i32, team_id: i32) -> CreateBet {
         CreateBet {
             game_match_id,
             ticket_id,
             team_id,
-            bet_ratio: String::from(bet_ratio),
             created_at: TimeHandling::store(),
         }
     }
