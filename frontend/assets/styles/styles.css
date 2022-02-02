@@ -15,6 +15,7 @@
 
   --grey: #4e4e4e;
   --light-grey: #e5e5e5;
+  --light-dark-grey: #bbbbbb;
 
   --white: #ffffff;
   --black: #000000;
@@ -168,6 +169,9 @@ body {
   color: var(--black);
 }
 
+.admin-page > div:nth-child(even) {
+  background-color: var(--light-dark-grey);
+}
 
 /* -------------------------------------------------------------------- */
 /* loading animation */

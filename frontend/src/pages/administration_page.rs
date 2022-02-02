@@ -1,7 +1,6 @@
 use crate::components::administration::{
-    create_game_form::CreateGameForm,
-    create_match_form::CreateMatchForm,
-    create_team_form::CreateTeamForm,
+    change_match_event::ChangeMatchEvent, create_game_form::CreateGameForm,
+    create_match_form::CreateMatchForm, create_team_form::CreateTeamForm,
     create_team_plays_game_form::CreateTeamPlaysGameForm,
 };
 use crate::store::UserStore;
@@ -51,12 +50,13 @@ impl Component for AdministrationPage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <>
+            <div class="admin-page">
                 <CreateGameForm />
                 <CreateTeamForm />
                 <CreateTeamPlaysGameForm />
                 <CreateMatchForm />
-            </>
+                <ChangeMatchEvent />
+            </div>
         }
     }
 }
