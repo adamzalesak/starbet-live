@@ -4,6 +4,7 @@ package team;
 service TeamService {
     rpc GetTeam (GetTeamRequest) returns (GetTeamReply);
     rpc CreateTeam (CreateTeamRequest) returns (CreateTeamReply);
+    rpc AddTeamToGame (AddTeamToGameRequest) returns (AddTeamToGameReply);
 }
 
 message Team {
@@ -31,7 +32,7 @@ message CreateTeamReply {
     int32 id = 1;
 }
 
-/*
+
 message AddTeamToGameRequest {
     int32 team_id = 1;
     int32 game_id = 2;
@@ -39,6 +40,7 @@ message AddTeamToGameRequest {
 
 message AddTeamToGameReply {}
 
+/*
 message RemoveTeamFromGameRequest {
     int32 team_id = 1;
     int32 game_id = 2;

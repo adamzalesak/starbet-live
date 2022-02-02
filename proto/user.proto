@@ -22,12 +22,15 @@ message User {
     int32 id = 1;
     string first_name = 2;
     string last_name = 3;
-    string civil_id_number = 4;
-    string date_of_birth = 5;
-    string email = 6;
-    string phone_number = 7;
-    optional string photo = 8;
-    Address address = 9;
+    string password = 4;
+    string password_salt = 5;
+    string civil_id_number = 6;
+    string email = 7;
+    string date_of_birth = 8;
+    string phone_number = 9;
+    string balance = 10;
+    optional string photo = 11;
+    Address address = 12;
 }
 
 message GetUserRequest {

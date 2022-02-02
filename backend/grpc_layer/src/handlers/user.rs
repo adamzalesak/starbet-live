@@ -42,10 +42,13 @@ impl UserService for MyUserService {
                         id: user.id,
                         first_name: user.first_name,
                         last_name: user.last_name,
+                        password: user.user_password,
+                        password_salt: user.user_password_salt,
                         civil_id_number: user.civil_id_number,
                         date_of_birth: user.date_of_birth,
                         email: user.email,
                         phone_number: user.phone_number,
+                        balance: user.balance,
                         photo: user.photo,
                         address: Some(Address {
                             street_name: address.street_name,
