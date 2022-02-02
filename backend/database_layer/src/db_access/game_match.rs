@@ -327,7 +327,7 @@ impl MatchRepo for PgMatchRepo {
         let query_result: (GameMatch, GameMatchEvent) = game_match::table
             .filter(game_match::id.eq(desired_match_id))
             .inner_join(game_match_event::table)
-            .order(game_match_event::created_at.desc())
+            .order((game_match::id, game_match_event::created_at.desc()))
             .distinct_on(game_match::id)
             .get_result(&self.get_connection().await?)?;
 
@@ -341,12 +341,10 @@ impl MatchRepo for PgMatchRepo {
         filter_by_time_period: Option<GameMatchEventFilter>,
         filter_by_game: Option<i32>,
     ) -> anyhow::Result<Vec<(GameMatch, GameMatchEvent)>> {
-        // join the match table with the latest event
         let basic_query = game_match::table
             .inner_join(game_match_event::table)
-            .order(game_match_event::created_at.desc())
-            .distinct_on(game_match::id)
-            .order_by(game_match::supposed_start_at.desc());
+            .order((game_match::id, game_match_event::created_at.desc()))
+            .distinct_on(game_match::id);
 
         // filter by method parameters
         let query_result: Vec<(GameMatch, GameMatchEvent)> =

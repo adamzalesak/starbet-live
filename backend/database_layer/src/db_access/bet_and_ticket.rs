@@ -286,7 +286,7 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
             .inner_join(
                 bet::table.inner_join(game_match::table.inner_join(game_match_event::table)),
             )
-            .order(game_match_event::created_at.desc())
+            .order((bet::id, game_match_event::created_at.desc()))
             .filter(game_match_event::event_type.eq(GameMatchEventFilter::Live.to_string()))
             .or_filter(game_match_event::event_type.eq(GameMatchEventFilter::Overtime.to_string()))
             .distinct_on(bet::id)
