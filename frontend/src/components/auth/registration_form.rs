@@ -9,11 +9,7 @@ use gloo_timers::callback::Timeout;
 use log::{info, warn};
 use yew::prelude::*;
 
-// pub mod user {
-//     include!(concat!(env!("OUT_DIR"), concat!("/user.rs")));
-// }
-
-// use user::{user_service_client, CreateUserReply, CreateUserRequest, Address};
+// use crate::types::grpc_types::user::{user_service_client, CreateUserReply, CreateUserRequest, Address};
 
 pub enum Msg {
     Submit,

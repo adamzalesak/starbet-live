@@ -10,5 +10,11 @@ fn main() {
     //     .unwrap();
     rust_grpc_web::configure()
         .compile(&["../proto/game_match.proto"], &["../proto/"])
-        .unwrap()
+        .unwrap();
+    rust_grpc_web::configure()
+        .compile(&["../proto/ticket.proto"], &["../proto/"])
+        .unwrap();
+    rust_grpc_web::configure()
+        .compile(&["../proto/bet.proto"], &["../proto/"])
+        .unwrap();
 }

@@ -29,6 +29,7 @@ gloo-timers = "0.2.3"
 js-sys = "0.3.55"
 web-sys = "0"
 prost = "0"
+bytes = "1"
 
 wasm-sockets = "0.2.2"
 urlencoding = "2.1.0"

@@ -1,9 +1,5 @@
+use crate::types::grpc_types::team::Team;
 use yew::prelude::*;
-
-pub mod team {
-    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
-}
-use team::Team;
 
 pub enum Msg {}
 

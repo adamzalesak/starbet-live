@@ -1,14 +1,9 @@
+use crate::types::grpc_types::game::{game_service_client, Game, ListGamesReply, ListGamesRequest};
+use crate::types::tickets::BetInfo;
 use anyhow;
 use std::collections::HashMap;
 use yew_agent::utils::store::{Store, StoreWrapper};
 use yew_agent::AgentLink;
-
-use crate::types::tickets::BetInfo;
-
-pub mod game {
-    include!(concat!(env!("OUT_DIR"), concat!("/game.rs")));
-}
-use game::{game_service_client, Game, ListGamesReply, ListGamesRequest};
 
 #[derive(Debug)]
 pub enum GamesRequest {

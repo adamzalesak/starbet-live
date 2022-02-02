@@ -1,18 +1,12 @@
+use super::match_item::MatchItem;
 use crate::components::loading_animation::LoadingAnimation;
-use crate::store::{matches::game_match::Match, MatchesRequest, MatchesStore};
+use crate::store::{MatchesRequest, MatchesStore};
+use crate::types::grpc_types::game_match::{
+    match_service_client, GameEventType, ListMatchesReply, ListMatchesRequest, Match,
+};
+use crate::types::grpc_types::team::Team;
 use anyhow;
 use yew::prelude::*;
-
-use super::match_item::MatchItem;
-
-pub mod game_match {
-    include!(concat!(env!("OUT_DIR"), concat!("/game_match.rs")));
-}
-pub mod team {
-    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
-}
-use game_match::{match_service_client, GameEventType, ListMatchesReply, ListMatchesRequest};
-use team::Team;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
     Bridge,

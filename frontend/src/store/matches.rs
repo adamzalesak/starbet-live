@@ -1,31 +1,26 @@
+use crate::types::grpc_types::game_match::{
+    match_service_client, GameEventType, ListMatchesReply, ListMatchesRequest, Match,
+};
+use crate::types::tickets::BetInfo;
+use anyhow;
 use gloo::console::info;
 use std::collections::HashMap;
 use yew_agent::utils::store::{Store, StoreWrapper};
 use yew_agent::AgentLink;
 
-use crate::types::tickets::BetInfo;
-
-pub mod game_match {
-    include!(concat!(env!("OUT_DIR"), concat!("/game_match.rs")));
-}
-pub mod team {
-    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
-}
-use game_match::{
-    match_service_client, GameEventType, ListMatchesReply, ListMatchesRequest, Match,
-};
-
 #[derive(Debug)]
 pub enum MatchesRequest {
     Fetch(i32),
     Reset,
+    Update(Match),
 }
 
 #[derive(Debug)]
 pub enum Action {
-    ReceiveResponse(Result<ListMatchesReply, Box<dyn std::error::Error>>),
+    ReceiveResponse(anyhow::Result<ListMatchesReply>),
     SetLoading(bool),
     Reset,
+    Update(Match),
 }
 
 pub struct MatchesStore {
@@ -56,20 +51,22 @@ impl Store for MatchesStore {
                 let grpc_client =
                     match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
                 info!("MatchesRequest::Fetch", game_id);
-                // todo uncomment after bug fixed
-                // link.send_future(async move {
-                //     Action::ReceiveResponse(
-                //         grpc_client
-                //             .list_matches(ListMatchesRequest {
-                //                 game_id: game_id,
-                //                 game_event_type: GameEventType::Live as i32,
-                //             })
-                //             .await,
-                //     )
-                // });
+                link.send_future(async move {
+                    Action::ReceiveResponse(
+                        grpc_client
+                            .list_matches(ListMatchesRequest {
+                                game_id: game_id,
+                                game_event_type: 1,
+                            })
+                            .await,
+                    )
+                });
             }
             MatchesRequest::Reset => {
                 link.send_message(Action::Reset);
+            }
+            MatchesRequest::Update(match_item) => {
+                link.send_message(Action::Update(match_item));
             }
         }
     }
@@ -82,14 +79,26 @@ impl Store for MatchesStore {
             }
             Action::ReceiveResponse(Ok(result)) => {
                 self.matches.extend(result.game_matches);
+                self.matches.sort_by_key(|match_item| match_item.id);
                 self.is_loading = false;
             }
-            Action::ReceiveResponse(Err(_)) => {
+            Action::ReceiveResponse(Err(err)) => {
+                log::warn!("cringe? {}", err.to_string());
                 self.is_loading = false;
                 self.is_error = true;
             }
             Action::Reset => {
                 self.matches = Vec::new();
+            }
+            Action::Update(match_item) => {
+                self.matches = self
+                    .matches
+                    .clone()
+                    .into_iter()
+                    .filter(|m| m.id != match_item.id)
+                    .collect::<Vec<Match>>();
+                self.matches.push(match_item);
+                self.matches.sort_by_key(|match_item| match_item.id);
             }
         }
     }

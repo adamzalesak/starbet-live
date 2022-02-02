@@ -1,16 +1,12 @@
 use crate::components::loading_animation::LoadingAnimation;
-use crate::store::{games::game::Game, GamesRequest, GamesStore};
+use crate::store::{GamesRequest, GamesStore};
+use crate::types::grpc_types::game::{game_service_client, Game, ListGamesReply, ListGamesRequest};
 use log::info;
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
     Bridge,
 };
-
-pub mod game {
-    include!(concat!(env!("OUT_DIR"), concat!("/game.rs")));
-}
-use game::{game_service_client, ListGamesReply, ListGamesRequest};
 
 pub enum Msg {
     GamesStore(ReadOnly<GamesStore>),

@@ -1,3 +1,4 @@
+use crate::types::grpc_types::game::{game_service_client, CreateGameReply, CreateGameRequest};
 use crate::{
     components::{auth::input::TextInput, loading_animation::LoadingAnimation},
     types::{CreateGameFormData, Field, SubmitResult},
@@ -7,11 +8,6 @@ use gloo_timers::callback::Timeout;
 use log::warn;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
-
-pub mod game {
-    include!(concat!(env!("OUT_DIR"), concat!("/game.rs")));
-}
-use game::{game_service_client, CreateGameReply, CreateGameRequest};
 
 pub enum Msg {
     Submit,

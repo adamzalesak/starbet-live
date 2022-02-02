@@ -1,3 +1,4 @@
+use crate::types::grpc_types::team::{team_service_client, CreateTeamReply, CreateTeamRequest};
 use crate::{
     components::{auth::input::TextInput, loading_animation::LoadingAnimation},
     types::{CreateTeamFormData, Field, SubmitResult},
@@ -7,11 +8,6 @@ use gloo_timers::callback::Timeout;
 use log::warn;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
-
-pub mod team {
-    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
-}
-use team::{team_service_client, CreateTeamReply, CreateTeamRequest};
 
 pub enum Msg {
     Submit,

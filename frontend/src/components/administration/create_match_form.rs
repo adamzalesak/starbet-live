@@ -1,3 +1,6 @@
+use crate::types::grpc_types::game_match::{
+    match_service_client, CreateMatchReply, CreateMatchRequest,
+};
 use crate::{
     components::{
         auth::{
@@ -14,16 +17,6 @@ use gloo_timers::callback::Timeout;
 use log::warn;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
-
-pub mod game_match {
-    include!(concat!(env!("OUT_DIR"), concat!("/game_match.rs")));
-}
-
-pub mod team {
-    include!(concat!(env!("OUT_DIR"), concat!("/team.rs")));
-}
-
-use game_match::{match_service_client, CreateMatchReply, CreateMatchRequest};
 
 pub enum Msg {
     Submit,
