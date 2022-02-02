@@ -3,17 +3,14 @@ use crate::types::grpc_types::team::{
 };
 use crate::{
     components::{
-        auth::{
-            input::TextInput,
-            input_number::{NumberInput, NumberType},
-        },
+        auth::input_number::{NumberInput, NumberType},
         loading_animation::LoadingAnimation,
     },
-    types::{CreateTeamFormData, Field, SubmitResult},
+    types::SubmitResult,
 };
 use anyhow;
 use gloo_timers::callback::Timeout;
-use log::warn;
+use log::{error, warn};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
@@ -91,7 +88,7 @@ impl Component for CreateTeamPlaysGameForm {
                 true
             }
             Msg::ReceiveResponse(Err(err)) => {
-                warn!("{}", err.to_string());
+                error!("{}", err.to_string());
                 self.submit_result = SubmitResult::Error;
                 let link = ctx.link().clone();
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
@@ -135,13 +132,13 @@ impl Component for CreateTeamPlaysGameForm {
                         if self.submit_result == SubmitResult::Success {
                             html! {
                                 <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
-                                    {"Team successfully created"}
+                                    {"Team successfully added to game"}
                                 </div>
                             }
                         } else if self.submit_result == SubmitResult::Error {
                             html! {
                                 <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md  transition-all">
-                                    {"Something went wrong :( please try again later"}
+                                    { "Something went wrong :( check console for error message" }
                                 </div>
                             }
                         } else {

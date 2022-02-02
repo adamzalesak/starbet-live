@@ -5,7 +5,7 @@ use crate::{
 };
 use anyhow;
 use gloo_timers::callback::Timeout;
-use log::warn;
+use log::{error, warn};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
@@ -23,6 +23,7 @@ pub enum Msg {
 pub struct CreateTeamForm {
     is_loading: bool,
     data: CreateTeamFormData,
+    error: String,
     submit_result: SubmitResult,
 }
 
@@ -35,6 +36,7 @@ impl Component for CreateTeamForm {
             is_loading: false,
             submit_result: SubmitResult::None,
             data: CreateTeamFormData::new(),
+            error: String::new(),
         }
     }
 
@@ -90,7 +92,7 @@ impl Component for CreateTeamForm {
                 true
             }
             Msg::ReceiveResponse(Err(err)) => {
-                warn!("{}", err.to_string());
+                error!("{}", err.to_string());
                 self.submit_result = SubmitResult::Error;
                 let link = ctx.link().clone();
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
@@ -146,7 +148,7 @@ impl Component for CreateTeamForm {
                         } else if self.submit_result == SubmitResult::Error {
                             html! {
                                 <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md  transition-all">
-                                    {"Something went wrong :( please try again later"}
+                                    { "Something went wrong :( check console for error message" }
                                 </div>
                             }
                         } else {

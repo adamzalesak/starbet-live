@@ -19,7 +19,7 @@ pub enum Msg {
 
 pub struct AdministrationPage {
     user: UserInfo,
-    user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
+    _user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
 
 impl Component for AdministrationPage {
@@ -29,7 +29,7 @@ impl Component for AdministrationPage {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             user: UserInfo::new(),
-            user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
+            _user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
         }
     }
 

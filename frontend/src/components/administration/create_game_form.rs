@@ -5,7 +5,7 @@ use crate::{
 };
 use anyhow;
 use gloo_timers::callback::Timeout;
-use log::warn;
+use log::{error, warn};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
@@ -81,7 +81,7 @@ impl Component for CreateGameForm {
                 true
             }
             Msg::ReceiveResponse(Err(err)) => {
-                warn!("{}", err.to_string());
+                error!("{}", err.to_string());
                 self.submit_result = SubmitResult::Error;
                 let link = ctx.link().clone();
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
@@ -109,7 +109,6 @@ impl Component for CreateGameForm {
                     <TextInput
                         field={Field::LastName} // ignore it, just for id
                         label="Logo Url"
-                        // value={self.data.logo_url.0.clone()}
                         placeholder="https://logos-download.com/wp-content/uploads/2016/04/Counter_Strike_logo-700x700.png"
                         on_change={ctx.link().callback(Msg::SetLogoUrl)}
                     />
@@ -130,7 +129,7 @@ impl Component for CreateGameForm {
                         } else if self.submit_result == SubmitResult::Error {
                             html! {
                                 <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md  transition-all">
-                                    {"Something went wrong :( please try again later"}
+                                    { "Something went wrong :( check console for error message" }
                                 </div>
                             }
                         } else {
