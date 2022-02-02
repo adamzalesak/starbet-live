@@ -56,7 +56,7 @@ pub async fn edit_user() -> anyhow::Result<()> {
         .edit(
             user.id,
             user.edit_user(
-                results[1], results[2], None, results[3], results[4], None, results[5], None,
+                results[1], results[2], None, results[3], None, results[4], results[5], None,
             ),
         )
         .await
