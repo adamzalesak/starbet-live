@@ -1,7 +1,9 @@
-use crate::types::grpc_types::game::{game_service_client, CreateGameReply, CreateGameRequest};
 use crate::{
     components::{auth::input::TextInput, loading_animation::LoadingAnimation},
-    types::{CreateGameFormData, Field, SubmitResult},
+    types::{
+        grpc_types::game::{game_service_client, CreateGameReply, CreateGameRequest},
+        CreateGameFormData, Field, SubmitResult,
+    },
 };
 use anyhow;
 use gloo_timers::callback::Timeout;

@@ -1,7 +1,9 @@
-use crate::types::grpc_types::team::{team_service_client, CreateTeamReply, CreateTeamRequest};
 use crate::{
     components::{auth::input::TextInput, loading_animation::LoadingAnimation},
-    types::{CreateTeamFormData, Field, SubmitResult},
+    types::{
+        grpc_types::team::{team_service_client, CreateTeamReply, CreateTeamRequest},
+        CreateTeamFormData, Field, SubmitResult,
+    },
 };
 use anyhow;
 use gloo_timers::callback::Timeout;

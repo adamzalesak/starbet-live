@@ -13,6 +13,6 @@ pub mod ticket {
 pub mod bet {
     include!(concat!(env!("OUT_DIR"), concat!("/bet.rs")));
 }
-// pub mod user {
-//     include!(concat!(env!("OUT_DIR"), concat!("/user.rs")));
-// }
+pub mod user {
+    include!(concat!(env!("OUT_DIR"), concat!("/user.rs")));
+}

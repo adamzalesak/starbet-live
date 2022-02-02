@@ -1,21 +1,23 @@
 use super::input::InputType;
-use crate::types::users::Field;
 use crate::{
     components::{auth::input::TextInput, loading_animation::LoadingAnimation},
-    types::{SubmitResult, UserRegistrationFormData},
+    types::{
+        grpc_types::user::{user_service_client, Address, CreateUserReply, CreateUserRequest},
+        Field, MainRoute, SubmitResult, UserRegistrationFormData,
+    },
 };
 use chrono::{DateTime, Utc};
 use gloo_timers::callback::Timeout;
-use log::{info, warn};
+use log::{error, warn};
 use yew::prelude::*;
-
-// use crate::types::grpc_types::user::{user_service_client, CreateUserReply, CreateUserRequest, Address};
+use yew_router::prelude::*;
 
 pub enum Msg {
     Submit,
     SetLoading(bool),
     SetData((String, Field, bool)),
-    // ReceiveResponse(Result<CreateMatchReply, Box<dyn std::error::Error>>),
+    ResetSubmitResult,
+    ReceiveResponse(anyhow::Result<CreateUserReply>),
 }
 
 pub struct RegistrationForm {
@@ -59,27 +61,47 @@ impl Component for RegistrationForm {
                         return false;
                     }
                 };
+
                 let datetime_utc = datetime.with_timezone(&Utc);
                 // add age check
 
-                // let grpc_client =
-                //     user_service_client::UserService::new(String::from("http://127.0.0.1:5430"));
+                let grpc_client =
+                    user_service_client::UserService::new(String::from("http://127.0.0.1:5430"));
 
-                // ctx.link().send_future(async move {
-                //     Msg::ReceiveResponse(
-                //         grpc_client
-                //             .create_game(CreateUserRequest {  
-                //                 first_name: self.data.first_name.0.trim().to_string(),
-                //                 last_name: self.data.last_name.0.trim().to_string(),
-                //                 civil_id_number: self.data.civil_id_number.0.trim().to_string(),
-                //                 date_of_birth: self.data.date_of_birth.0.trim().to_string(),
-                //                 email: self.data.email.0.trim().to_string(),
-                //                 phone_number: self.data.phone_number.0.trim().to_string(),
-                //                 address: self.data.address,
-                // })
-                //             .await,
-                //     )
-                // });
+                let reg_data = self.data.clone();
+
+                ctx.link().send_future(async move {
+                    Msg::ReceiveResponse(
+                        grpc_client
+                            .create_user(CreateUserRequest {
+                                first_name: reg_data.first_name.0.trim().to_string(),
+                                last_name: reg_data.last_name.0.trim().to_string(),
+                                password: reg_data.password.0.trim().to_string(),
+                                password_salt: "".to_string(),
+                                civil_id_number: reg_data.civil_id_number.0.trim().to_string(),
+                                date_of_birth: datetime_utc.to_string(),
+                                email: reg_data.email.0.trim().to_string(),
+                                phone_number: reg_data.phone_number.0.trim().to_string(),
+                                photo: None,
+                                address: Some(Address {
+                                    street_name: reg_data.address.street_name.0.trim().to_string(),
+                                    street_number: reg_data
+                                        .address
+                                        .street_number
+                                        .0
+                                        .trim()
+                                        .to_string(),
+                                    city: reg_data.address.city.0.trim().to_string(),
+                                    // area: if self.data.address.area == Some("".to_string()) {} else {},
+                                    area: Some("".to_string()),
+                                    postal_code: reg_data.address.postal_code.0.trim().to_string(),
+                                    country: reg_data.address.country.0.trim().to_string(),
+                                    valid_from: js_sys::Date::new_0().to_iso_string().into(),
+                                }),
+                            })
+                            .await,
+                    )
+                });
 
                 ctx.link().send_message(Msg::SetLoading(false));
             }
@@ -116,19 +138,25 @@ impl Component for RegistrationForm {
                     self.error = String::new();
                 }
             }
-            // Msg::ReceiveResponse(Ok(_)) => {
-            //     self.submit_result = SubmitResult::Success;
-            //     let link = ctx.link().clone();
-            //     Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
-            // }
-            // Msg::ReceiveResponse(Err(_)) => {
-            //     self.submit_result = SubmitResult::Error;
-            //     let link = ctx.link().clone();
-            //     Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
-            // }
-            // Msg::ResetSubmitResult => {
-            //     self.submit_result = SubmitResult::None;
-            // }
+            Msg::ReceiveResponse(Ok(_)) => {
+                self.submit_result = SubmitResult::Success;
+                let link = ctx.link().clone();
+                Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
+            }
+            Msg::ReceiveResponse(Err(err)) => {
+                error!("{}", err.to_string());
+                self.submit_result = SubmitResult::Error;
+                let link = ctx.link().clone();
+                Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
+            }
+            Msg::ResetSubmitResult => {
+                let flag = self.submit_result == SubmitResult::Success;
+                self.submit_result = SubmitResult::None;
+                if flag {
+                    let history = ctx.link().history().unwrap();
+                    history.push(MainRoute::Home);
+                }
+            }
         }
         true
     }
@@ -243,28 +271,28 @@ impl Component for RegistrationForm {
                         html! { }
                     }
                 }
-                // {
-                //     if self.submit_result == SubmitResult::Success {
-                //         html! {
-                //             <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
-                //                 {"User successfully registered"}
-                //             </div>
-                //         }
-                //     } else if self.submit_result == SubmitResult::Error {
-                //         html! {
-                //             <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md transition-all">
-                //                 {"Something went wrong :( please try again later"}
-                //             </div>
-                //         }
-                //     } else {
-                //         html! {}
-                //     }
-                // }
                 {
                     if !self.error.is_empty() {
                         html! {
                             <div class="mx-auto my-1 p-1 w-9/12 lg:w-6/12 text-center bg-danger-light text-danger rounded-md transition-all">
                                 {self.error.clone()}
+                            </div>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+                {
+                    if self.submit_result == SubmitResult::Success {
+                        html! {
+                            <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-success-light text-success rounded-md transition-all">
+                                {"User successfully registered"}
+                            </div>
+                        }
+                    } else if self.submit_result == SubmitResult::Error {
+                        html! {
+                            <div class="mx-auto my-1 p-1 w-full lg:w-9/12 text-center bg-danger-light text-danger rounded-md transition-all">
+                                { "Something went wrong :( check console for error message" }
                             </div>
                         }
                     } else {

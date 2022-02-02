@@ -1,12 +1,12 @@
-use crate::types::grpc_types::team::{
-    team_service_client, AddTeamToGameReply, AddTeamToGameRequest,
-};
 use crate::{
     components::{
         auth::input_number::{NumberInput, NumberType},
         loading_animation::LoadingAnimation,
     },
-    types::SubmitResult,
+    types::{
+        grpc_types::team::{team_service_client, AddTeamToGameReply, AddTeamToGameRequest},
+        SubmitResult,
+    },
 };
 use anyhow;
 use gloo_timers::callback::Timeout;

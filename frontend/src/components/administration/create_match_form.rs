@@ -1,6 +1,3 @@
-use crate::types::grpc_types::game_match::{
-    match_service_client, CreateMatchReply, CreateMatchRequest,
-};
 use crate::{
     components::{
         auth::{
@@ -9,7 +6,10 @@ use crate::{
         },
         loading_animation::LoadingAnimation,
     },
-    types::{CreateMatchFormData, Field, SubmitResult},
+    types::{
+        grpc_types::game_match::{match_service_client, CreateMatchReply, CreateMatchRequest},
+        CreateMatchFormData, Field, SubmitResult,
+    },
 };
 use anyhow;
 use chrono::{DateTime, Utc};
