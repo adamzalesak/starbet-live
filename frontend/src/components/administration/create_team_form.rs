@@ -2,6 +2,7 @@ use crate::{
     components::{auth::input::TextInput, loading_animation::LoadingAnimation},
     types::{CreateTeamFormData, Field, SubmitResult},
 };
+use anyhow;
 use gloo_timers::callback::Timeout;
 use log::warn;
 use serde::{Deserialize, Serialize};
@@ -19,7 +20,7 @@ pub enum Msg {
     SetDescription((String, Field, bool)),
     SetLogoUrl((String, Field, bool)),
     ResetSubmitResult,
-    ReceiveResponse(Result<CreateTeamReply, Box<dyn std::error::Error>>),
+    ReceiveResponse(anyhow::Result<CreateTeamReply>),
 }
 
 #[derive(Serialize, Deserialize, Clone)]

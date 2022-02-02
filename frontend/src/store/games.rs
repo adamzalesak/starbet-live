@@ -1,3 +1,4 @@
+use anyhow;
 use std::collections::HashMap;
 use yew_agent::utils::store::{Store, StoreWrapper};
 use yew_agent::AgentLink;
@@ -20,7 +21,7 @@ pub enum GamesRequest {
 pub enum Action {
     FilterAdd(i32),
     FilterRemove(i32),
-    ReceiveResponse(Result<ListGamesReply, Box<dyn std::error::Error>>),
+    ReceiveResponse(anyhow::Result<ListGamesReply>),
     SetLoading(bool),
 }
 

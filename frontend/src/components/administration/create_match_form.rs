@@ -8,6 +8,7 @@ use crate::{
     },
     types::{CreateMatchFormData, Field, SubmitResult},
 };
+use anyhow;
 use chrono::{DateTime, Utc};
 use gloo_timers::callback::Timeout;
 use log::warn;
@@ -34,7 +35,7 @@ pub enum Msg {
     SetTeam2Ratio((f32, bool)),
     SetStartAt((String, Field, bool)),
     ResetSubmitResult,
-    ReceiveResponse(Result<CreateMatchReply, Box<dyn std::error::Error>>),
+    ReceiveResponse(anyhow::Result<CreateMatchReply>),
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -138,7 +139,8 @@ impl Component for CreateMatchForm {
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();
                 true
             }
-            Msg::ReceiveResponse(Err(_)) => {
+            Msg::ReceiveResponse(Err(err)) => {
+                log::warn!("cringe? {}", err.to_string());
                 self.submit_result = SubmitResult::Error;
                 let link = ctx.link().clone();
                 Timeout::new(5000, move || link.send_message(Msg::ResetSubmitResult)).forget();

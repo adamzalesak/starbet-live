@@ -1,0 +1,3 @@
+[submodule "frontend/rust-grpc-web"]
+	path = frontend/rust-grpc-web
+	url = https://github.com/Crabster/rust-grpc-web

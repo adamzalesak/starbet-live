@@ -1,5 +1,6 @@
 use crate::components::loading_animation::LoadingAnimation;
 use crate::store::{matches::game_match::Match, MatchesRequest, MatchesStore};
+use anyhow;
 use yew::prelude::*;
 
 use super::match_item::MatchItem;
