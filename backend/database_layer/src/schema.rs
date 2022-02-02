@@ -101,7 +101,6 @@ table! {
         first_name -> Text,
         last_name -> Text,
         user_password -> Text,
-        user_password_salt -> Text,
         civil_id_number -> Text,
         date_of_birth -> Text,
         email -> Text,
