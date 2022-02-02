@@ -61,7 +61,6 @@ pub async fn create_user() -> anyhow::Result<()> {
                 results[0],
                 results[1],
                 "",
-                "",
                 results[2],
                 results[3],
                 &Utc::now().to_string(),

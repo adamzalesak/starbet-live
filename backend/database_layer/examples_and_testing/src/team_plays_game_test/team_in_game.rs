@@ -38,23 +38,18 @@ async fn add_or_remove(op: bool) -> anyhow::Result<()> {
     io::stdin().read_line(&mut input)?;
     let game_id: i32 = input.trim().parse()?;
 
-    match op {
-        true => match pg_team.add_to_game(team_id, game_id).await {
-            Ok(_) => {
-                println!("Success!");
-            }
-            Err(error) => {
-                println!("ERROR: {}", error);
-            }
-        },
-        false => match pg_team.remove_from_game(team_id, game_id).await {
-            Ok(_) => {
-                println!("Success!");
-            }
-            Err(error) => {
-                println!("ERROR: {}", error);
-            }
-        },
+    let result = match op {
+        true => pg_team.add_to_game(team_id, game_id).await,
+        false => pg_team.remove_from_game(team_id, game_id).await,
+    };
+
+    match result {
+        Ok(_) => {
+            println!("Success!");
+        }
+        Err(error) => {
+            println!("ERROR: {}", error);
+        }
     }
 
     Ok(())

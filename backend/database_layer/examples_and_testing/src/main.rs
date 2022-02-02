@@ -2,14 +2,12 @@
 
 use clap::{App, Arg};
 
-mod game_match;
+mod game_match_repo_test;
 mod seed;
-mod team_in_game;
+mod team_plays_game_test;
 mod user_repo_test;
 
-use game_match::create_game_match;
 use seed::seed;
-use team_in_game::{add_team_to_the_game, remove_team_from_game};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -32,33 +30,23 @@ async fn main() -> anyhow::Result<()> {
                 .short('u')
                 .long("user")
                 .takes_value(true)
-                .value_name("user-option")
+                .value_name("user-value")
                 .help("Usage: --user add / get / create / edit / get-address / add-address / get-balance / add-balance "),
+        ).arg(
+            Arg::new("team_plays_game")
+                .short('1')
+                .long("team-plays-game")
+                .takes_value(true)
+                .value_name("team_plays_game_value")
+                .help("Usage: --team-plays-game add / remove"),
+        ).arg(
+            Arg::new("game_match")
+                .short('2')
+                .long("game-match")
+                .takes_value(true)
+                .value_name("game_match_value")
+                .help("Usage: --game_match create / get / get all"),
         )
-        // .arg(
-        //     Arg::new("add_team_to_game")
-        //         .short('1')
-        //         .long("team-to-game")
-        //         .help("Add a team to the game")
-        //         .required(false)
-        //         .takes_value(false),
-        // )
-        // .arg(
-        //     Arg::new("remove_team_from_game")
-        //         .short('2')
-        //         .long("remove-from-game")
-        //         .help("Remove team from the game")
-        //         .required(false)
-        //         .takes_value(false),
-        // )
-        // .arg(
-        //     Arg::new("create_game_match")
-        //         .short('3')
-        //         .long("create-match")
-        //         .help("Create a game match")
-        //         .required(false)
-        //         .takes_value(false),
-        // )
         .get_matches();
 
     if testing_app.is_present("seed") {
@@ -67,8 +55,12 @@ async fn main() -> anyhow::Result<()> {
 
     if testing_app.is_present("user") {
         user_repo_test::run(testing_app.value_of("user")).await?;
+    } else if testing_app.is_present("team_plays_game") {
+        team_plays_game_test::run(testing_app.value_of("team_plays_game")).await?;
+    } else if testing_app.is_present("game_match") {
+        game_match_repo_test::run(testing_app.value_of("game_match")).await?;
     }
 
-    println!("App ran successfully");
+    println!("\n\n=================\nApp ran successfully\n=================");
     Ok(())
 }

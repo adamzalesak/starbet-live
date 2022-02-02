@@ -1,17 +1,14 @@
-pub mod create_user;
-pub mod get_user;
-use create_user::create_user;
-use get_user::get_user;
+pub mod team_in_game;
+use team_in_game::{add_team_to_the_game, remove_team_from_game};
 
-/// run user testing options
 pub async fn run(argument: Option<&str>) -> anyhow::Result<()> {
     match argument {
         Some(arg) => match arg {
-            "get" => {
-                get_user().await?;
+            "add" => {
+                add_team_to_the_game().await?;
             }
-            "create" => {
-                create_user().await?;
+            "remove" => {
+                remove_team_from_game().await?;
             }
             _ => anyhow::bail!("Wrong argument specified"),
         },
