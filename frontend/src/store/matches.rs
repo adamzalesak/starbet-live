@@ -54,10 +54,7 @@ impl Store for MatchesStore {
                 link.send_future(async move {
                     Action::ReceiveResponse(
                         grpc_client
-                            .list_matches(ListMatchesRequest {
-                                game_id: game_id,
-                                game_event_type: 1,
-                            })
+                            .list_matches(ListMatchesRequest { game_event_type: 1 })
                             .await,
                     )
                 });

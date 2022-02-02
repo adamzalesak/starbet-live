@@ -77,7 +77,6 @@ impl Component for RegistrationForm {
                                 first_name: reg_data.first_name.0.trim().to_string(),
                                 last_name: reg_data.last_name.0.trim().to_string(),
                                 password: reg_data.password.0.trim().to_string(),
-                                password_salt: "".to_string(),
                                 civil_id_number: reg_data.civil_id_number.0.trim().to_string(),
                                 date_of_birth: datetime_utc.to_string(),
                                 email: reg_data.email.0.trim().to_string(),
