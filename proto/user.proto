@@ -54,7 +54,6 @@ message CreateUserRequest {
     string first_name = 1;
     string last_name = 2;
     string password = 3;
-    string password_salt = 4;
     string civil_id_number = 5;
     string date_of_birth = 6;
     string email = 7;
@@ -72,7 +71,6 @@ message EditUserRequest {
     optional string first_name = 2;
     optional string last_name = 3;
     optional string password = 4;
-    optional string password_salt = 5;
     optional string civil_id_number = 6;
     optional string date_of_birth = 7;
     optional string email = 8;
