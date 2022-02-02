@@ -143,7 +143,7 @@ pub trait MatchRepo {
     /// ---
     /// - Ok(()) if the update was successful
     /// - Err(_) if an error has occurred
-    async fn update_status(&self, _desired_match_id: i32, new_status: &str) -> anyhow::Result<()>;
+    async fn update_status(&self, desired_match_id: i32, new_status: &str) -> anyhow::Result<()>;
 
     /// Obtain matches' game ratios.
     /// Useful for recalculating the new ratio values.
