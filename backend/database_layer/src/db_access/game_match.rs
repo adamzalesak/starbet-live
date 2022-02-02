@@ -73,8 +73,8 @@ pub trait MatchRepo {
     async fn create(&self, new_match: CreateGameMatch) -> anyhow::Result<i32>;
 
     /// Delete a game match
-    /// Only possible if the match is "`Upcoming`" and there are no bets tied to the match yet.
-    /// Deleting the match does not work, if the match is about to start in 5 seconds
+    /// Only possible if there are no bets tied to the match yet.
+    /// Deleting the match does not work, if the match is about to start in 2 seconds
     ///
     /// Params
     /// ---
@@ -269,13 +269,13 @@ impl MatchRepo for PgMatchRepo {
     }
 
     /// Delete a game match
-    /// Only possible if the match is upcoming and there are no bets tied to the match yet.
-    /// Deleting the match does not work, if the match is about to start in 5 seconds
+    /// Only possible if there are no bets tied to the match yet.
+    /// Deleting the match does not work, if the match is about to start in 2 seconds
     async fn delete(&self, desired_match_id: i32) -> anyhow::Result<GameMatch> {
         let connection: PgPooledConnection = self.get_connection().await?;
 
         let any_bets: usize = submitted_bet::table
-            .filter(bet::game_match_id.eq(desired_match_id))
+            .filter(submitted_bet::game_match_id.eq(desired_match_id))
             .execute(&connection)?;
 
         // there are bets submitted on the match
