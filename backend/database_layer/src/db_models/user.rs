@@ -48,8 +48,8 @@ impl User {
     /// - change_first_name: ability to change the first name
     /// - change_last_name: ability to change the last name
     /// - change_civil_id_number: ability to change the cvil id number
-    /// - change_email: ability to change the email address
     /// - change_date_of_birth: ability to change the date of birth
+    /// - change_email: ability to change the email address
     /// - change_phone_number: ability to change the phone number
     /// - change_photo: ability to change the profile photo
     ///
@@ -63,8 +63,8 @@ impl User {
         change_last_name: Option<&str>,
         change_password: Option<&str>,
         change_civil_id_number: Option<&str>,
-        change_email: Option<&str>,
         change_date_of_birth: Option<&str>,
+        change_email: Option<&str>,
         change_phone_number: Option<&str>,
         change_photo: Option<Option<&str>>,
     ) -> CreateUser {
@@ -75,11 +75,11 @@ impl User {
             user_password: change_password.map_or_else(|| self.user_password.clone(), String::from),
             civil_id_number: change_civil_id_number
                 .map_or_else(|| self.civil_id_number.clone(), String::from),
-            email: change_email.map_or_else(|| self.email.clone(), String::from),
             date_of_birth: change_date_of_birth.map_or_else(
                 || self.date_of_birth.clone(),
                 |new_date_of_birth| new_date_of_birth.to_string(),
             ),
+            email: change_email.map_or_else(|| self.email.clone(), String::from),
             phone_number: change_phone_number
                 .map_or_else(|| self.phone_number.clone(), String::from),
             created_at: self.created_at.clone(),
@@ -100,8 +100,8 @@ impl CreateUser {
     /// - first_name: first name of the user
     /// - last_name: last name of the user
     /// - civil_id_number: user's civil id number
-    /// - email: user's email
     /// - date_of_birth: user's birth date
+    /// - email: user's email
     /// - phone_number: user's phone number
     /// - photo: optional - url to the photo
     ///
