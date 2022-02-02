@@ -218,6 +218,7 @@ impl UserRepo for PgUserRepo {
         let connection: PgPooledConnection = self.get_connection().await?;
 
         // check if the user already exists
+        // TODO!!!! add support for
         let already_exists: Vec<User> = user::table
             .filter(user::email.eq(edited_record.email.clone()))
             .get_results(&connection)?;
@@ -227,10 +228,11 @@ impl UserRepo for PgUserRepo {
             1 => {
                 let found_record: User = already_exists[0].clone();
 
+                // check if the address is in use
                 if &found_record.email == &edited_record.email && found_record.id != desired_user_id
                 {
                     anyhow::bail!(
-                        "Cannot change the email address to an address that is already in use!"
+                        "Cannot change the email address to an email address that is already in use!"
                     );
                 }
             }

@@ -16,22 +16,23 @@ use database_layer::{
     },
 };
 
-pub async fn edit_user() -> anyhow::Result<()> {
+pub async fn new_address() -> anyhow::Result<()> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL")?;
     let database_connection_pool: Arc<PgPool> =
         Arc::new(db_connect_create_pool(&database_url).await?);
     let pg_user: PgUserRepo = PgUserRepo::new(&database_connection_pool);
 
-    println!("EDIT a user");
+    println!("Add a new address to the user:");
 
     let messages = [
         "User's ID:",
-        "Edit User's first name:",
-        "Edit User's last name:",
-        "Edit User's civil ID number:",
-        "Edit User's email:",
-        "Edit User's phone number:",
+        "User's address - street name:",
+        "User's address - street number:",
+        "User's address - city:",
+        "User's address - area:",
+        "User's address - postal code:",
+        "User's address - country:",
     ];
 
     let mut input;
@@ -44,24 +45,28 @@ pub async fn edit_user() -> anyhow::Result<()> {
         results.push(input.clone());
     }
 
-    let results: Vec<Option<&str>> = results
-        .iter()
-        .map(|user_input| user_input.trim())
-        .map(|string| if string == "" { None } else { Some(string) })
-        .collect();
+    let results: Vec<&str> = results.iter().map(|user_input| user_input.trim()).collect();
 
-    let user = pg_user.get(results[0].unwrap_or("0").parse()?).await?;
+    let area = if results[4] == "" {
+        None
+    } else {
+        Some(results[4])
+    };
+
+    let user_id = results[0].parse()?;
 
     match pg_user
-        .edit(
-            user.id,
-            user.edit_user(
-                results[1], results[2], None, results[3], results[4], None, results[5], None,
+        .add_new_address(
+            user_id,
+            CreateUserAddress::new(
+                results[1], results[2], results[3], area, results[5], results[6],
             ),
         )
         .await
     {
-        Ok(_) => println!("User {} updated", user.id),
+        Ok(id) => {
+            println!("User [{}] with address [{}] has been created", user_id, id);
+        }
         Err(error) => println!("ERROR: {}", error),
     }
 
