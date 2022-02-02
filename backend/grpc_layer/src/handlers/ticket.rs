@@ -110,13 +110,40 @@ impl TicketService for MyTicketService {
                 match self.submitted_repo.get_bets(submitted_ticket_id).await {
                     Ok(submitted_bets) => {
                         for bet in submitted_bets {
-                            /*
-                            let ratios  = self.match_repo.get_ratios();
-                            1. 1.1
-                            2. 0.95
-                            self.match_repo.set_ratios(ratios);
-                            */
-                            let game_match_info;
+                            let mut game_match_info;
+                            let ratios;
+                            match self.match_repo.get_ratios(bet.game_match_id).await {
+                                Ok(match_ratios) => ratios = match_ratios,
+                                Err(err) => {
+                                    return Err(Status::new(Code::from_i32(13), err.to_string()))
+                                }
+                            }
+                            match self.match_repo.get_show_info(bet.game_match_id).await {
+                                Ok(match_info) => game_match_info = match_info,
+                                Err(err) => {
+                                    return Err(Status::new(Code::from_i32(13), err.to_string()))
+                                }
+                            }
+                            let (mut ratio1, mut ratio2) = ratios;
+                            let (game_match, _) = game_match_info;
+                            if game_match.team_one_id == bet.team_id {
+                                ratio1 *= 0.95;
+                                ratio2 *= 1.1;
+                            } else {
+                                ratio2 *= 0.95;
+                                ratio1 *= 1.1;
+                            }
+
+                            match self
+                                .match_repo
+                                .set_ratios(bet.game_match_id, ratio1, ratio2)
+                                .await
+                            {
+                                Ok(_) => {}
+                                Err(err) => {
+                                    return Err(Status::new(Code::from_i32(13), err.to_string()))
+                                }
+                            }
                             match self.match_repo.get_show_info(bet.game_match_id).await {
                                 Ok(match_info) => game_match_info = match_info,
                                 Err(err) => {

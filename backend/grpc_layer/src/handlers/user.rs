@@ -34,7 +34,42 @@ impl UserService for MyUserService {
         &self,
         request: Request<AuthUserRequest>,
     ) -> Result<Response<AuthUserReply>, Status> {
-        Err(Status::new(Code::from_i32(13), "TODO"))
+        let request = request.into_inner();
+        match self.repo.get_by_email(&request.email).await {
+            Ok(Some(user)) => {
+                if user.user_password != request.password {
+                    return Err(Status::new(Code::from_i32(13), "Wrong password"));
+                }
+                match self.repo.get_current_address(user.id).await {
+                    Ok(address) => Ok(Response::new(AuthUserReply {
+                        user: Some(User {
+                            id: user.id,
+                            first_name: user.first_name,
+                            last_name: user.last_name,
+                            password: user.user_password,
+                            civil_id_number: user.civil_id_number,
+                            date_of_birth: user.date_of_birth,
+                            email: user.email,
+                            phone_number: user.phone_number,
+                            balance: user.balance,
+                            photo: user.photo,
+                            address: Some(Address {
+                                street_name: address.street_name,
+                                street_number: address.street_number,
+                                city: address.city,
+                                area: address.area,
+                                postal_code: address.postal_code,
+                                country: address.country,
+                                valid_from: address.valid_from,
+                            }),
+                        }),
+                    })),
+                    Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
+                }
+            }
+            Ok(None) => Err(Status::new(Code::from_i32(13), "Email doesn't exist")),
+            Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
+        }
     }
 
     async fn get_user(
