@@ -50,6 +50,7 @@ impl Component for MatchesGame {
             matches: Vec::new(),
             is_loading: false,
             is_error: false,
+            
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
         }
     }
@@ -60,7 +61,7 @@ impl Component for MatchesGame {
                 let state = state.borrow();
                 let game_id = self.id.clone();
                 self.matches = state
-                    .matches
+                    .matches_live
                     .clone()
                     .into_iter()
                     .filter(|match_item| match_item.game_id == game_id)

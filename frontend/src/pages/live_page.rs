@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::components::main::matches::Matches;
+use crate::components::main::live_matches::Matches;
 
 pub enum Msg {}
 

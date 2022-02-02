@@ -10,21 +10,23 @@ use yew_agent::AgentLink;
 
 #[derive(Debug)]
 pub enum MatchesRequest {
-    Fetch(i32),
-    Reset,
+    Fetch,
     Update(Match),
 }
 
 #[derive(Debug)]
 pub enum Action {
-    ReceiveResponse(anyhow::Result<ListMatchesReply>),
+    ReceiveResponseUpcoming(anyhow::Result<ListMatchesReply>),
+    ReceiveResponseLive(anyhow::Result<ListMatchesReply>),
+    ReceiveResponseEnded(anyhow::Result<ListMatchesReply>),
     SetLoading(bool),
-    Reset,
     Update(Match),
 }
 
 pub struct MatchesStore {
-    pub matches: Vec<Match>,
+    pub matches_upcoming: Vec<Match>,
+    pub matches_live: Vec<Match>,
+    pub matches_ended: Vec<Match>,
     pub is_loading: bool,
     pub is_error: bool,
 }
@@ -36,7 +38,9 @@ impl Store for MatchesStore {
     // store's initialization
     fn new() -> Self {
         Self {
-            matches: Vec::new(),
+            matches_upcoming: Vec::new(),
+            matches_live: Vec::new(),
+            matches_ended: Vec::new(),
             is_loading: false,
             is_error: false,
         }
@@ -45,22 +49,42 @@ impl Store for MatchesStore {
     // incoming requests
     fn handle_input(&self, link: AgentLink<StoreWrapper<Self>>, msg: Self::Input) {
         match msg {
-            MatchesRequest::Fetch(game_id) => {
+            MatchesRequest::Fetch => {
                 link.send_message(Action::SetLoading(true));
 
                 let grpc_client =
                     match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
-                info!("MatchesRequest::Fetch", game_id);
                 link.send_future(async move {
-                    Action::ReceiveResponse(
+                    Action::ReceiveResponseUpcoming(
                         grpc_client
-                            .list_matches(ListMatchesRequest { game_event_type: 1 })
+                            .list_matches(ListMatchesRequest {
+                                game_event_type: GameEventType::Upcoming as i32,
+                            })
                             .await,
                     )
                 });
-            }
-            MatchesRequest::Reset => {
-                link.send_message(Action::Reset);
+                let grpc_client =
+                    match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
+                link.send_future(async move {
+                    Action::ReceiveResponseLive(
+                        grpc_client
+                            .list_matches(ListMatchesRequest {
+                                game_event_type: GameEventType::Live as i32,
+                            })
+                            .await,
+                    )
+                });
+                let grpc_client =
+                    match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
+                link.send_future(async move {
+                    Action::ReceiveResponseEnded(
+                        grpc_client
+                            .list_matches(ListMatchesRequest {
+                                game_event_type: GameEventType::Ended as i32,
+                            })
+                            .await,
+                    )
+                });
             }
             MatchesRequest::Update(match_item) => {
                 link.send_message(Action::Update(match_item));
@@ -74,28 +98,74 @@ impl Store for MatchesStore {
             Action::SetLoading(value) => {
                 self.is_loading = true;
             }
-            Action::ReceiveResponse(Ok(result)) => {
-                self.matches.extend(result.game_matches);
-                self.matches.sort_by_key(|match_item| match_item.id);
+
+            Action::ReceiveResponseUpcoming(Ok(result)) => {
+                self.matches_upcoming = result.game_matches;
+                self.matches_upcoming.sort_by_key(|m| m.id);
                 self.is_loading = false;
             }
-            Action::ReceiveResponse(Err(err)) => {
-                log::warn!("cringe? {}", err.to_string());
+            Action::ReceiveResponseUpcoming(Err(err)) => {
+                log::error!("{}", err.to_string());
                 self.is_loading = false;
                 self.is_error = true;
             }
-            Action::Reset => {
-                self.matches = Vec::new();
+            Action::ReceiveResponseLive(Ok(result)) => {
+                self.matches_live = result.game_matches;
+                self.matches_live.sort_by_key(|m| m.id);
+                self.is_loading = false;
             }
+            Action::ReceiveResponseLive(Err(err)) => {
+                log::error!("{}", err.to_string());
+                self.is_loading = false;
+                self.is_error = true;
+            }
+            Action::ReceiveResponseEnded(Ok(result)) => {
+                self.matches_ended = result.game_matches;
+                self.matches_ended.sort_by_key(|m| m.id);
+                self.is_loading = false;
+            }
+            Action::ReceiveResponseEnded(Err(err)) => {
+                log::error!("{}", err.to_string());
+                self.is_loading = false;
+                self.is_error = true;
+            }
+
             Action::Update(match_item) => {
-                self.matches = self
-                    .matches
+                let match_id = match_item.clone().id;
+                self.matches_upcoming = self
+                    .matches_upcoming
                     .clone()
                     .into_iter()
-                    .filter(|m| m.id != match_item.id)
-                    .collect::<Vec<Match>>();
-                self.matches.push(match_item);
-                self.matches.sort_by_key(|match_item| match_item.id);
+                    .filter(|m| m.id != match_id)
+                    .collect();
+                self.matches_live = self
+                    .matches_upcoming
+                    .clone()
+                    .into_iter()
+                    .filter(|m| m.id != match_id)
+                    .collect();
+                self.matches_ended = self
+                    .matches_upcoming
+                    .clone()
+                    .into_iter()
+                    .filter(|m| m.id != match_id)
+                    .collect();
+
+                match match_item.game_event_type {
+                    0 => {
+                        self.matches_upcoming.push(match_item);
+                        self.matches_upcoming.sort_by_key(|m| m.id);
+                    }
+                    1 => {
+                        self.matches_live.push(match_item);
+                        self.matches_live.sort_by_key(|m| m.id);
+                    }
+                    2 => {
+                        self.matches_ended.push(match_item);
+                        self.matches_ended.sort_by_key(|m| m.id);
+                    }
+                    _ => {}
+                }
             }
         }
     }

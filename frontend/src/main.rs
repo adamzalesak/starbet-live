@@ -6,9 +6,18 @@ use crate::pages::{
     live_page::LivePage, not_found::NotFoundPage, privacy_policy_page::PrivacyPolicyPage,
     results_page::ResultsPage, upcoming_page::UpcomingPage,
 };
+use crate::store::{MatchesRequest, MatchesStore};
+use crate::types::grpc_types::game_match::Match;
+use bytes::BytesMut;
 use pages::registration_page::RegistrationPage;
+use prost::{DecodeError, Message as ProstMessage};
 use types::{MainRoute, ProfileRoute};
+use wasm_sockets::{self, Message, WebSocketError};
 use yew::prelude::*;
+use yew_agent::{
+    utils::store::{Bridgeable, ReadOnly, StoreWrapper},
+    Bridge,
+};
 use yew_router::{prelude::Redirect, BrowserRouter, Switch};
 
 mod components;
@@ -17,19 +26,61 @@ mod services;
 mod store;
 mod types;
 
-enum Msg {}
+enum Msg {
+    MatchesStore(ReadOnly<MatchesStore>),
+    FetchMatches,
+    ReceiveMatchUpdate(Result<Match, DecodeError>),
+}
 
-struct App {}
+struct App {
+    matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
+    ws_client: wasm_sockets::EventClient,
+}
 
 impl Component for App {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self {}
+    fn create(ctx: &Context<Self>) -> Self {
+        let mut client = wasm_sockets::EventClient::new("ws://127.0.0.1:50052/match").unwrap();
+
+        let callback = ctx
+            .link()
+            .callback(|match_item: Result<Match, DecodeError>| Msg::ReceiveMatchUpdate(match_item));
+
+        client.set_on_message(Some(Box::new(
+            move |_: &wasm_sockets::EventClient, message: wasm_sockets::Message| {
+                if let Message::Binary(data) = message {
+                    let mut buf = BytesMut::with_capacity(64);
+                    buf.extend_from_slice(&data);
+                    callback.emit(Match::decode(buf));
+                };
+            },
+        )));
+
+        ctx.link().send_message(Msg::FetchMatches);
+
+        Self {
+            matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
+            ws_client: client,
+        }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        match msg {
+            Msg::MatchesStore(state) => {
+                let state = state.borrow();
+            }
+            Msg::FetchMatches => {
+                self.matches_store.send(MatchesRequest::Fetch);
+            }
+            Msg::ReceiveMatchUpdate(Ok(match_item)) => {
+                self.matches_store.send(MatchesRequest::Update(match_item));
+            }
+            Msg::ReceiveMatchUpdate(Err(err)) => {
+                log::error!("WebSocket message decode error");
+            }
+        }
         false
     }
 
