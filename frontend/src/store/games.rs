@@ -1,5 +1,4 @@
 use crate::types::grpc_types::game::{game_service_client, Game, ListGamesReply, ListGamesRequest};
-use crate::types::tickets::BetInfo;
 use anyhow;
 use std::collections::HashMap;
 use yew_agent::utils::store::{Store, StoreWrapper};

@@ -9,7 +9,7 @@ use crate::{
         profile_tickets::ProfileTickets, registration_page::RegistrationPage,
         results_page::ResultsPage, upcoming_page::UpcomingPage,
     },
-    store::{MatchesRequest, MatchesStore, UserRequest, UserStore},
+    store::{MatchesRequest, MatchesStore, TicketRequest, TicketStore, UserRequest, UserStore},
     types::{grpc_types::game_match::Match, MainRoute, ProfileRoute},
 };
 use bytes::BytesMut;
@@ -32,6 +32,7 @@ enum Msg {
     UserStore(ReadOnly<UserStore>),
     InitUser,
     MatchesStore(ReadOnly<MatchesStore>),
+    TicketStore(ReadOnly<TicketStore>),
     FetchMatches,
     ReceiveMatchUpdate(Result<Match, DecodeError>),
 }
@@ -40,6 +41,7 @@ struct App {
     user_id: i32,
     user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
     matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
+    ticket_store: Box<dyn Bridge<StoreWrapper<TicketStore>>>,
     ws_client: wasm_sockets::EventClient,
 }
 
@@ -72,15 +74,14 @@ impl Component for App {
             user_id: 0,
             user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
+            ticket_store: TicketStore::bridge(ctx.link().callback(Msg::TicketStore)),
             ws_client: client,
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::MatchesStore(state) => {
-                let state = state.borrow();
-            }
+            Msg::MatchesStore(_) => {}
             Msg::FetchMatches => {
                 self.matches_store.send(MatchesRequest::Fetch);
             }
@@ -90,10 +91,17 @@ impl Component for App {
             Msg::ReceiveMatchUpdate(Err(err)) => {
                 log::error!("WebSocket message decode error");
             }
-            Msg::UserStore(_) => {}
+            Msg::UserStore(state) => {
+                let state = state.borrow();
+                if let Some(user) = state.user.clone() {
+                    self.ticket_store
+                        .send(TicketRequest::SetUserId(user.id.clone()));
+                }
+            }
             Msg::InitUser => {
                 self.user_store.send(UserRequest::InitializeUser);
             }
+            Msg::TicketStore(_) => {}
         }
         false
     }

@@ -1,7 +1,6 @@
 use crate::types::grpc_types::game_match::{
     match_service_client, GameEventType, ListMatchesReply, ListMatchesRequest, Match,
 };
-use crate::types::tickets::BetInfo;
 use anyhow;
 use gloo::console::info;
 use std::collections::HashMap;

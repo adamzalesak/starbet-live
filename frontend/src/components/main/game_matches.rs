@@ -142,8 +142,10 @@ impl Component for GameMatches {
                                             <MatchItemLive
                                                 id={m.id}
                                                 game_id={m.game_id}
-                                                team_one_name={m.team_one.unwrap().name}
-                                                team_two_name={m.team_two.unwrap().name}
+                                                team_one_id={m.team_one.clone().unwrap().id}
+                                                team_two_id={m.team_two.clone().unwrap().id}
+                                                team_one_name={m.team_one.clone().unwrap().name}
+                                                team_two_name={m.team_two.clone().unwrap().name}
                                                 team_one_ratio={m.team_one_ratio}
                                                 team_two_ratio={m.team_two_ratio}
                                                 state={m.state}

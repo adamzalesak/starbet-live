@@ -1,7 +1,7 @@
 use super::ticket_item::TicketItem;
+use crate::types::grpc_types::bet::Bet;
 use crate::{
     store::{TicketRequest, TicketStore},
-    types::BetInfo,
 };
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
 use web_sys::HtmlInputElement;
@@ -18,7 +18,7 @@ pub enum Msg {
 }
 
 pub struct Ticket {
-    bets: Vec<BetInfo>,
+    bets: Vec<Bet>,
     rate: f32,
     ticket_value: f32,
     ticket_store: Box<dyn Bridge<StoreWrapper<TicketStore>>>,
@@ -44,14 +44,19 @@ impl Component for Ticket {
         }
     }
 
+    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
+        if first_render {
+            self.ticket_store.send(TicketRequest::LoadTicket);
+        }
+    }
+
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::TicketStore(state) => {
                 let state = state.borrow();
 
-                if state.bets.len() != self.bets.len() {
-                    self.bets = state.bets.values().cloned().collect();
-                }
+                self.bets = state.bets.clone();
+
                 self.ticket_value = state.ticket_value;
                 self.rate = state.rate;
             }
