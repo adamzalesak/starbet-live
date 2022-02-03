@@ -86,7 +86,7 @@ impl Component for TicketItem {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <li class="rounded-md border border-dark-blue p-1 mb-1">
+            <div class="rounded-md border border-dark-blue p-1 mb-1">
                 <div class="font-bold flex flex-row justify-between">
                     <div>
                         <span>{self.team_one_name.clone()}</span>
@@ -105,7 +105,7 @@ impl Component for TicketItem {
                     </div>
                     <span>{self.bet_ratio.clone()}</span>
                 </div>
-            </li>
+            </div>
         }
     }
 }

@@ -1,8 +1,6 @@
 use super::ticket_item::TicketItem;
+use crate::store::{TicketRequest, TicketStore};
 use crate::types::grpc_types::bet::Bet;
-use crate::{
-    store::{TicketRequest, TicketStore},
-};
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
@@ -91,7 +89,7 @@ impl Component for Ticket {
                         }
                     }
                     {
-                        for self.bets.iter().map(|x| html! { <TicketItem bet={x.clone()} /> })
+                        for self.bets.iter().map(|x| html! { <li key={x.clone().id}><TicketItem bet={x.clone()} /></li> })
                     }
                 </ul>
 
