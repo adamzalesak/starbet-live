@@ -290,7 +290,7 @@ pub async fn seed() -> anyhow::Result<()> {
         //
         // team navi
         (team_ids[2], game_ids[0]),
-        (team_ids[2], game_ids[4]),
+        (team_ids[2], game_ids[5]),
         //
         // team cloud9
         (team_ids[3], game_ids[2]),
@@ -300,7 +300,7 @@ pub async fn seed() -> anyhow::Result<()> {
         (team_ids[4], game_ids[0]),
         (team_ids[4], game_ids[2]),
         (team_ids[4], game_ids[3]),
-        (team_ids[4], game_ids[4]),
+        (team_ids[4], game_ids[5]),
     ];
 
     // add teams to games
