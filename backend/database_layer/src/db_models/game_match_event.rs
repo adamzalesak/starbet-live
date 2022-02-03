@@ -69,6 +69,19 @@ impl Display for GameMatchEventType {
     }
 }
 
+impl GameMatchEventFilter {
+    pub fn from_str(input: &str) -> anyhow::Result<GameMatchEventFilter> {
+        match input {
+            "Upcoming" => Ok(GameMatchEventFilter::Upcoming),
+            "Live" => Ok(GameMatchEventFilter::Live),
+            "Cancelled" => Ok(GameMatchEventFilter::Cancelled),
+            "Overtime" => Ok(GameMatchEventFilter::Overtime),
+            "Ended" => Ok(GameMatchEventFilter::Ended),
+            _ => anyhow::bail!("Cannot convert to a event filter"),
+        }
+    }
+}
+
 impl Display for GameMatchEventFilter {
     /// Implement the display trait for converting the enum and writing the result to the database
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

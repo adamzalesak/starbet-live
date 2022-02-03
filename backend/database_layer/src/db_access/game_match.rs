@@ -341,32 +341,31 @@ impl MatchRepo for PgMatchRepo {
         filter_by_time_period: Option<GameMatchEventFilter>,
         filter_by_game: Option<i32>,
     ) -> anyhow::Result<Vec<(GameMatch, GameMatchEvent)>> {
-        let basic_query = game_match::table
+        let basic_query: Vec<(GameMatch, GameMatchEvent)> = game_match::table
             .inner_join(game_match_event::table)
             .order((game_match::id, game_match_event::created_at.desc()))
-            .distinct_on(game_match::id);
+            .distinct_on(game_match::id)
+            .get_results(&self.get_connection().await?)?;
 
         // filter by method parameters
         let query_result: Vec<(GameMatch, GameMatchEvent)> =
             match (filter_by_time_period, filter_by_game) {
-                // filter by both period and a game id
                 (Some(period), Some(game)) => basic_query
-                    .filter(
-                        (game_match_event::event_type.eq(period.to_string()))
-                            .and(game_match::game_id.eq(game)),
-                    )
-                    .get_results(&self.get_connection().await?)?,
-
-                // filter by period
+                    .into_iter()
+                    .filter(|(game_match, game_event)| {
+                        game_match.game_id == game && game_event.event_type == period.to_string()
+                    })
+                    .collect(),
                 (Some(period), None) => basic_query
-                    .filter(game_match_event::event_type.eq(period.to_string()))
-                    .get_results(&self.get_connection().await?)?,
-                // fiter by game id
+                    .into_iter()
+                    .filter(|(game_match, game_event)| game_event.event_type == period.to_string())
+                    .collect(),
+
                 (None, Some(game)) => basic_query
-                    .filter(game_match::game_id.eq(game))
-                    .get_results(&self.get_connection().await?)?,
-                // nofilter
-                _ => basic_query.get_results(&self.get_connection().await?)?,
+                    .into_iter()
+                    .filter(|(game_match, game_event)| game_match.game_id == game)
+                    .collect(),
+                _ => basic_query,
             };
 
         Ok(query_result)
