@@ -74,7 +74,7 @@ impl Component for Ticket {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-         <div class="bg-dark-blue text-white rounded-md p-1 h-4/6 max-h-full">
+         <div class="bg-dark-blue text-white rounded-md p-1 h-full max-h-full">
             <div class="bg-light-grey rounded-md text-black flex flex-col h-full">
                 <div class="font-bold text-center pt-1 pb-3 bg-dark-blue text-white">{"Current ticket"}</div>
                 <ul class="overflow-auto m-1 mb-auto bg-light-grey">

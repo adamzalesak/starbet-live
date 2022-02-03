@@ -43,7 +43,7 @@ impl Component for Layout {
                     </section>
                     <section class="w-3/12 lg:w-2/12 bg-light-grey p-2 flex flex-col justify-between gap-2 transition-all">
                         <Ticket />
-                        <LatestBets />
+                        // <LatestBets />
                     </section>
                 </main>
             </>
