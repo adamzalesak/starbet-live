@@ -121,7 +121,42 @@ impl MatchService for MyMatchService {
         );
 
         match self.repo.create(create_match).await {
-            Ok(match_id) => Ok(Response::new(CreateMatchReply { id: match_id })),
+            Ok(match_id) => {
+                match self.repo.get(match_id).await {
+                    Ok(game_match) => {
+                        let mut teams = HashMap::new();
+                        for team_id in vec![game_match.team_one_id, game_match.team_two_id] {
+                            if !teams.contains_key(&team_id) {
+                                let team = match self.team_repo.get(team_id).await {
+                                    Ok(team) => Ok(Team::from(&team)),
+                                    Err(err) => {
+                                        Err(Status::new(Code::from_i32(13), err.to_string()))
+                                    }
+                                }?;
+                                teams.insert(team_id, team);
+                            }
+                        }
+
+                        let mut grpc_match = Match::from(&game_match);
+                        grpc_match.team_one =
+                            Some(teams.get(&game_match.team_one_id).unwrap().clone());
+                        grpc_match.team_two =
+                            Some(teams.get(&game_match.team_two_id).unwrap().clone());
+                        grpc_match.game_event_type = GameEventType::Upcoming.into();
+
+                        let mut buf = BytesMut::with_capacity(64);
+                        let _ = grpc_match.encode(&mut buf);
+                        for client in self.ws_clients.lock().await.values() {
+                            if let Some(sender) = &client.sender {
+                                let _ = sender
+                                    .send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+                            }
+                        }
+                    }
+                    Err(err) => return Err(Status::new(Code::from_i32(13), err.to_string())),
+                };
+                Ok(Response::new(CreateMatchReply { id: match_id }))
+            }
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
     }
