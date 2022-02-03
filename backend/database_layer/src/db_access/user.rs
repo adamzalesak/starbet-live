@@ -1,21 +1,19 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use crate::diesel::{delete, insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
+use crate::diesel::{insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
 
 use crate::connection::{PgPool, PgPooledConnection};
 
 // type and structure imports
 use super::repo::Repo;
 use crate::db_models::{
-    game_match_event::GameMatchEventType,
-    ticket::{CreateTicket, ObtainedTicket, Ticket},
     user::{CreateUser, User},
     user_address::{CreateUserAddress, UserAddress},
 };
 
 // schema imports
-use crate::schema::{bet, game_match, game_match_event, ticket, user, user_address};
+use crate::schema::{user, user_address};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -229,8 +227,7 @@ impl UserRepo for PgUserRepo {
                 let found_record: User = already_exists[0].clone();
 
                 // check if the address is in use
-                if &found_record.email == &edited_record.email && found_record.id != desired_user_id
-                {
+                if found_record.email == edited_record.email && found_record.id != desired_user_id {
                     anyhow::bail!(
                         "Cannot change the email address to an email address that is already in use!"
                     );

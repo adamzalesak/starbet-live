@@ -2,9 +2,9 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::connection::{PgPool, PgPooledConnection};
-use crate::diesel::{delete, insert_into, prelude::*, sql_query, update, QueryDsl, RunQueryDsl};
+use crate::diesel::{delete, insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
 use crate::type_storing::time_handling::TimeHandling;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 
 // type and structure imports
 use crate::{
@@ -17,14 +17,11 @@ use crate::{
         game_match::GameMatch,
         game_match_event::{GameMatchEvent, GameMatchEventFilter, GameMatchEventType},
         ticket::{CreateTicket, ObtainedTicket, Ticket},
-        user_address::UserAddress,
     },
 };
 
 // schema imports
-use crate::schema::{
-    bet, game, game_match, game_match_event, submitted_bet, submitted_ticket, ticket, user,
-};
+use crate::schema::{bet, game_match, game_match_event, submitted_bet, submitted_ticket, ticket};
 
 /// Structure containing a reference to a database connection pool
 /// and methods to access the database
@@ -323,14 +320,16 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         // unwrap_or called to avoid panics.
         // it is fixed in this api, because whenever the type is "Live" or "Overtime", it always has the
         // "event_value" field filled with a DateTime string representation
-        if in_ticket.valid_until.clone() == with_event.event_value.clone().unwrap_or("".into()) {
+        if in_ticket.valid_until.clone()
+            == with_event.event_value.clone().unwrap_or_else(|| "".into())
+        {
             // in case this was the only bet, the new valid date is set to 10 days from now
             let new_validity = bets_and_info
                 .iter()
                 .map(|(_, _, event)| event.event_value.clone())
-                .filter_map(|event_value| event_value)
+                .flatten()
                 .min()
-                .unwrap_or((Utc::now() + Duration::days(10)).to_string());
+                .unwrap_or_else(|| (Utc::now() + Duration::days(10)).to_string());
 
             // set the new validity
             let _ = update(ticket::table.filter(ticket::id.eq(desired_ticket_id)))
@@ -339,7 +338,7 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         }
 
         // remove the bet from the ticket
-        let _ = delete(bet::table.filter(bet::id.eq(desired_bet_id))).execute(&connection)?;
+        let _ = delete(bet::table.filter(bet::id.eq(bet_to_remove.id))).execute(&connection)?;
 
         Ok(())
     }
@@ -360,7 +359,7 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
             .get_results(&connection)?;
 
         // the ticket is empty
-        if tickets_bets_and_games.len() == 0 {
+        if tickets_bets_and_games.is_empty() {
             anyhow::bail!("Cannot submit an empty ticket!")
         }
 

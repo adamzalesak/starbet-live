@@ -1,10 +1,9 @@
 use crate::db_models::user::User;
-use crate::{schema::submitted_ticket, type_storing::time_handling::TimeHandling};
-use chrono::{Duration, Utc};
+use crate::schema::submitted_ticket;
 
 use std::hash::{Hash, Hasher};
 
-#[derive(Identifiable, Associations, Queryable, PartialEq, Eq, Clone)]
+#[derive(Identifiable, Associations, Queryable, Clone)]
 #[belongs_to(User)]
 #[table_name = "submitted_ticket"]
 pub struct SubmittedTicket {
@@ -23,6 +22,14 @@ impl Hash for SubmittedTicket {
         self.id.hash(state);
     }
 }
+
+impl PartialEq for SubmittedTicket {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for SubmittedTicket {}
 
 #[derive(Insertable)]
 #[table_name = "submitted_ticket"]

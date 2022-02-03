@@ -70,7 +70,7 @@ impl Display for GameMatchEventType {
 }
 
 impl GameMatchEventFilter {
-    pub fn from_str(input: &str) -> anyhow::Result<GameMatchEventFilter> {
+    pub fn from_input(input: &str) -> anyhow::Result<GameMatchEventFilter> {
         match input {
             "Upcoming" => Ok(GameMatchEventFilter::Upcoming),
             "Live" => Ok(GameMatchEventFilter::Live),

@@ -52,7 +52,6 @@ impl CreateSubmittedBet {
         team_id: i32,
         bet_ratio: &str,
         placed_at: &str,
-        submitted_at: &str,
     ) -> CreateSubmittedBet {
         CreateSubmittedBet {
             game_match_id,

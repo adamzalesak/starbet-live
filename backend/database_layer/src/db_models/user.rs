@@ -1,6 +1,5 @@
 use crate::schema::user;
 use crate::type_storing::time_handling::TimeHandling;
-use chrono::{DateTime, Utc};
 
 /// Read structure, used for data mapping of
 /// `user` record from the database
@@ -97,13 +96,13 @@ impl CreateUser {
     ///
     /// Params
     /// ---
-    /// - first_name: first name of the user
-    /// - last_name: last name of the user
-    /// - civil_id_number: user's civil id number
-    /// - date_of_birth: user's birth date
-    /// - email: user's email
-    /// - phone_number: user's phone number
-    /// - photo: optional - url to the photo
+    /// - `first_name`: first name of the user
+    /// - `last_name`: last name of the user
+    /// - `civil_id_number`: user's civil id number
+    /// - `date_of_birth`: user's birth date
+    /// - `email`: user's email
+    /// - `phone_number`: user's phone number
+    /// - `photo`: optional - url to the photo
     ///
     /// Returns
     /// ---

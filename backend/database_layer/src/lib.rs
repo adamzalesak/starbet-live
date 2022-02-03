@@ -1,11 +1,5 @@
-#![allow(dead_code, unused_variables, unused_imports)]
-// #![warn(
-//     clippy::all,
-//     clippy::restriction,
-//     clippy::pedantic,
-//     clippy::nursery,
-//     clippy::cargo
-// )]
+// #![allow(dead_code, unused_variables, unused_imports)]
+// #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 #[macro_use]
 extern crate diesel;

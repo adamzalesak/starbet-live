@@ -41,7 +41,7 @@ impl Ticket {
     ) -> anyhow::Result<CreateSubmittedTicket> {
         if self.valid_until <= Utc::now().to_string() {
             anyhow::bail!("Cannot send an invalid ticket!")
-        } else if bets_and_matches.len() == 0 {
+        } else if bets_and_matches.is_empty() {
             anyhow::bail!("Cannot submit an empty ticket!")
         }
 
@@ -55,7 +55,7 @@ impl Ticket {
                 }
             })
             .map(|ratio| ratio.parse::<f64>().ok())
-            .filter_map(|parsed_ratio| parsed_ratio)
+            .flatten()
             .reduce(|element_one, element_two| element_one * element_two);
 
         if total_ratio.is_none() {

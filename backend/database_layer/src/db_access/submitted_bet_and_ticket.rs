@@ -1,32 +1,18 @@
 use async_trait::async_trait;
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::connection::{PgPool, PgPooledConnection};
-use crate::diesel::{delete, insert_into, prelude::*, sql_query, update, QueryDsl, RunQueryDsl};
-use crate::type_storing::time_handling::TimeHandling;
-use chrono::{DateTime, Duration, Utc};
+use crate::diesel::{prelude::*, update, QueryDsl, RunQueryDsl};
 
 // type and structure imports
 use crate::{
-    db_access::{
-        repo::Repo,
-        user::{PgUserRepo, UserRepo},
-    },
-    db_models::{
-        bet::{Bet, CreateBet},
-        game_match::GameMatch,
-        game_match_event::{GameMatchEvent, GameMatchEventFilter},
-        submitted_bet::{CreateSubmittedBet, SubmittedBet},
-        submitted_ticket::{CreateSubmittedTicket, SubmittedTicket},
-        ticket::{CreateTicket, ObtainedTicket, Ticket},
-        user_address::UserAddress,
-    },
+    db_access::repo::Repo,
+    db_models::{submitted_bet::SubmittedBet, submitted_ticket::SubmittedTicket},
 };
 
 // schema imports
-use crate::schema::{game_match, game_match_event, submitted_bet, submitted_ticket};
+use crate::schema::{submitted_bet, submitted_ticket};
 
 pub struct PgSubmittedBetAndTicketRepo {
     pub pool: Arc<PgPool>,
@@ -59,7 +45,7 @@ impl PgSubmittedBetAndTicketRepo {
 
         // bind the bets to the ticket
         for (ticket, bet) in tickets_to_reevaluate {
-            let bets_vector = bind_match_and_bets.entry(ticket).or_insert(Vec::new());
+            let bets_vector = bind_match_and_bets.entry(ticket).or_insert_with(Vec::new);
             bets_vector.push(bet);
         }
 
@@ -68,7 +54,7 @@ impl PgSubmittedBetAndTicketRepo {
 
         // look through the bets and set lost and won matches accordingly
         for (ticket, bets) in bind_match_and_bets.iter() {
-            let win_status: Vec<Option<bool>> = bets.iter().map(|bet| bet.won.clone()).collect();
+            let win_status: Vec<Option<bool>> = bets.iter().map(|bet| bet.won).collect();
 
             // if any bet.won is false, the match is lost
             if win_status.contains(&Some(false)) {
@@ -173,7 +159,7 @@ impl SubmittedBetAndTicketRepo for PgSubmittedBetAndTicketRepo {
 
         // deduplicating the list
         for (ticket, bet) in query_result {
-            let bets_vector = dedup_output.entry(ticket).or_insert(Vec::new());
+            let bets_vector = dedup_output.entry(ticket).or_insert_with(Vec::new);
             bets_vector.push(bet);
         }
 

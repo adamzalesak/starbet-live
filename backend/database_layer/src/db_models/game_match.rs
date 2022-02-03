@@ -3,8 +3,6 @@ use chrono::{DateTime, Utc};
 use crate::db_models::game::Game;
 use crate::schema::game_match;
 
-use diesel::sql_types::Double;
-
 /// Read structure, used for data mapping of
 /// `game_match` record from the database
 #[derive(Identifiable, Associations, Queryable, QueryableByName, PartialEq)]

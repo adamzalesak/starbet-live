@@ -1,4 +1,4 @@
-use diesel::sql_types::{Integer, Nullable, Text};
+use diesel::sql_types::{Integer, Text};
 
 /// Structure used for getting some fields of Game records from the database
 /// This is to limit the amout of traffic between the db and the backend

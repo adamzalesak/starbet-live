@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::db_models::{
     game_match::GameMatch, submitted_bet::CreateSubmittedBet, team::Team, ticket::Ticket,
 };

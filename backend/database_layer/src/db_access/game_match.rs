@@ -2,14 +2,14 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::connection::{PgPool, PgPooledConnection};
-use crate::diesel::{delete, insert_into, prelude::*, sql_query, update, QueryDsl, RunQueryDsl};
+use crate::diesel::{delete, insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
 use crate::type_storing::time_handling::TimeHandling;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 
 // type and structure imports
 use super::repo::Repo;
 use crate::db_models::{
-    game_match::{CreateGameMatch, GameMatch, GameMatchUpdate},
+    game_match::{CreateGameMatch, GameMatch},
     game_match_event::{
         CreateGameMatchEvent, GameMatchEvent, GameMatchEventFilter, GameMatchEventType,
     },
@@ -358,12 +358,12 @@ impl MatchRepo for PgMatchRepo {
                     .collect(),
                 (Some(period), None) => basic_query
                     .into_iter()
-                    .filter(|(game_match, game_event)| game_event.event_type == period.to_string())
+                    .filter(|(_, game_event)| game_event.event_type == period.to_string())
                     .collect(),
 
                 (None, Some(game)) => basic_query
                     .into_iter()
-                    .filter(|(game_match, game_event)| game_match.game_id == game)
+                    .filter(|(game_match, _)| game_match.game_id == game)
                     .collect(),
                 _ => basic_query,
             };
@@ -439,19 +439,16 @@ impl MatchRepo for PgMatchRepo {
         }
 
         // check if the team belongs to the match (when setting the winner of the match)
-        match desired_event_type {
-            GameMatchEventType::Ended(id) => {
-                let game_match: GameMatch = game_match::table
-                    .find(desired_match_id)
-                    .get_result(&connection)?;
+        if let GameMatchEventType::Ended(id) = desired_event_type {
+            let game_match: GameMatch = game_match::table
+                .find(desired_match_id)
+                .get_result(&connection)?;
 
-                if !(game_match.team_one_id != id || game_match.team_two_id != id) {
-                    anyhow::bail!(
-                        "The team you wish to select as the winner does not belong to this match"
-                    );
-                }
+            if !(game_match.team_one_id != id || game_match.team_two_id != id) {
+                anyhow::bail!(
+                    "The team you wish to select as the winner does not belong to this match"
+                );
             }
-            _ => {}
         }
 
         // create an event
@@ -464,9 +461,8 @@ impl MatchRepo for PgMatchRepo {
             .get_result(&connection)?;
 
         // if the match has ended, evaluate its bets
-        match desired_event_type {
-            GameMatchEventType::Ended(_) => self.evaluate_bets(desired_match_id).await?,
-            _ => {}
+        if let GameMatchEventType::Ended(_) = desired_event_type {
+            self.evaluate_bets(desired_match_id).await?
         }
 
         Ok(query_result)
@@ -514,8 +510,7 @@ impl MatchRepo for PgMatchRepo {
                     bet,
                     event // obtain those matches that have set the winner and are able to be parsed as id's
                         .event_value
-                        .clone()
-                        .unwrap_or(String::from("0"))
+                        .unwrap_or_else(|| String::from("0"))
                         .parse::<i32>()
                         .ok(), // convert the results to options
                 )
