@@ -7,6 +7,7 @@ service MatchService {
     rpc ListMatches (ListMatchesRequest) returns (ListMatchesReply);
     rpc CreateMatch (CreateMatchRequest) returns (CreateMatchReply);
     rpc CreateGameEvent (CreateGameEventRequest) returns (CreateGameEventReply);
+    rpc ChangeState (ChangeStateRequest) returns (ChangeStateReply);
 }
 
 enum GameEventType {
@@ -57,3 +58,12 @@ message CreateGameEventRequest {
 }
 
 message CreateGameEventReply {}
+
+message ChangeStateRequest {
+    int32 match_id = 1;
+    string state = 2;
+}
+
+message ChangeStateReply {}
+
+

@@ -7,8 +7,9 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::game_match::match_service_server::MatchService;
 use crate::game_match::{
-    CreateGameEventReply, CreateGameEventRequest, CreateMatchReply, CreateMatchRequest,
-    GameEventType, ListMatchesReply, ListMatchesRequest, Match,
+    ChangeStateReply, ChangeStateRequest, CreateGameEventReply, CreateGameEventRequest,
+    CreateMatchReply, CreateMatchRequest, GameEventType, ListMatchesReply, ListMatchesRequest,
+    Match,
 };
 use crate::team::Team;
 
@@ -209,6 +210,21 @@ impl MatchService for MyMatchService {
                 }
                 Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
             },
+            Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
+        }
+    }
+
+    async fn change_state(
+        &self,
+        request: Request<ChangeStateRequest>,
+    ) -> Result<Response<ChangeStateReply>, Status> {
+        let request = request.into_inner();
+        match self
+            .repo
+            .update_status(request.match_id, &request.state)
+            .await
+        {
+            Ok(()) => Ok(Response::new(ChangeStateReply {})),
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
     }
