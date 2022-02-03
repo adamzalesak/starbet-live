@@ -71,13 +71,20 @@ impl Component for GameMatches {
         match msg {
             Msg::MatchesStore(state) => {
                 let state = state.borrow();
+
                 let game_id = self.id.clone();
-                self.matches = state
-                    .matches_live
-                    .clone()
+                let matches = if self.event_type == GameEventType::Upcoming {
+                    state.matches_upcoming.clone()
+                } else if self.event_type == GameEventType::Live {
+                    state.matches_live.clone()
+                } else {
+                    state.matches_ended.clone()
+                };
+                self.matches = matches
                     .into_iter()
                     .filter(|match_item| match_item.game_id == game_id)
                     .collect();
+
                 self.is_loading = state.is_loading;
                 self.is_error = state.is_error;
             }
