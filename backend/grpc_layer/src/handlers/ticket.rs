@@ -154,7 +154,7 @@ impl TicketService for MyTicketService {
                             let mut winner_id = None;
                             let grpc_event_type = match game_event_type.extract_event().unwrap() {
                                 GameMatchEventType::Upcoming => GameEventType::Upcoming,
-                                GameMatchEventType::Live(_) => GameEventType::Live,
+                                GameMatchEventType::Live => GameEventType::Live,
                                 GameMatchEventType::Ended(id) => {
                                     winner_id = Some(id);
                                     GameEventType::Ended

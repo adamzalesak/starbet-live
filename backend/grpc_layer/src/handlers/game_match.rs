@@ -82,7 +82,7 @@ impl MatchService for MyMatchService {
                             let mut winner_id = None;
                             let grpc_event_type = match game_event_type.extract_event().unwrap() {
                                 GameMatchEventType::Upcoming => GameEventType::Upcoming,
-                                GameMatchEventType::Live(_) => GameEventType::Live,
+                                GameMatchEventType::Live => GameEventType::Live,
                                 GameMatchEventType::Ended(id) => {
                                     winner_id = Some(id);
                                     GameEventType::Ended
@@ -171,7 +171,7 @@ impl MatchService for MyMatchService {
         let game_match_event_type = match GameEventType::from_i32(request.game_event_type).unwrap()
         {
             GameEventType::Upcoming => GameMatchEventType::Upcoming,
-            GameEventType::Live => GameMatchEventType::Live(Utc::now()),
+            GameEventType::Live => GameMatchEventType::Live,
             GameEventType::Ended => GameMatchEventType::Ended(winner_id.unwrap()),
         };
         match self
