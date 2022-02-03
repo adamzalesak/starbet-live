@@ -127,7 +127,7 @@ impl CreateUser {
             email: String::from(email),
             phone_number: String::from(phone_number),
             created_at: TimeHandling::store(),
-            balance: 0.0.to_string(),
+            balance: 100.0.to_string(),
             photo: photo.map(String::from),
         }
     }
