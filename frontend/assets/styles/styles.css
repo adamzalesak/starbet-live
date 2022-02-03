@@ -173,6 +173,11 @@ body {
   background-color: var(--light-dark-grey);
 }
 
+.profile-nav > div:hover {
+  background-color: var(--light-grey);
+  color: var(--black);
+}
+
 /* -------------------------------------------------------------------- */
 /* loading animation */
 

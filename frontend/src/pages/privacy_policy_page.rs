@@ -21,7 +21,8 @@ impl Component for PrivacyPolicyPage {
             <>
                 <div class="h-56 bg-danger-light">{"Privacy policy page"}</div>
                 <div class="h-56 bg-danger-light">{"Privacy policy page"}</div>
-                <div class="h-56 bg-danger-light">{"Privacy policy page"}</div><div class="h-56 bg-danger-light">{"Privacy policy page"}</div>
+                <div class="h-56 bg-danger-light">{"Privacy policy page"}</div>
+                <div class="h-56 bg-danger-light">{"Privacy policy page"}</div>
             </>
         }
     }

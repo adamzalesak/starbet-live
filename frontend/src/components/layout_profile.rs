@@ -71,21 +71,29 @@ impl Component for LayoutProfile {
                 <button type="button" class="p-1 rounded bg-blue" onclick={ctx.link().callback(|_| Msg::Logout)}>
                     { "Logout" }
                 </button>
-                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={if self.current_tab == Some(ProfileRoute::Summary) {"bg-blue text-white"} else {""}}>
-                    <Link<ProfileRoute> to={ProfileRoute::Summary}>
-                        { "Summary" }
-                    </Link<ProfileRoute>>
-                </span>
-                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={if self.current_tab == Some(ProfileRoute::Tickets) {"bg-blue text-white"} else {""}}>
-                    <Link<ProfileRoute> to={ProfileRoute::Tickets}>
-                        { "Tickets" }
-                    </Link<ProfileRoute>>
-                </span>
-                <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={if self.current_tab == Some(ProfileRoute::Statistics) {"bg-blue text-white"} else {""}}>
-                    <Link<ProfileRoute> to={ProfileRoute::Statistics}>
-                        { "Statistics" }
-                    </Link<ProfileRoute>>
-                </span>
+                <div class="grid grid-cols-3 text-center profile-nav">
+                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
+                                                                                        if self.current_tab == Some(ProfileRoute::Summary) 
+                                                                                            {"bg-light-grey"} else {"bg-blue text-white"})}>
+                        <Link<ProfileRoute> to={ProfileRoute::Summary} classes="block">
+                            { "Summary" }
+                        </Link<ProfileRoute>>
+                    </div>
+                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
+                                                                                        if self.current_tab == Some(ProfileRoute::Tickets) 
+                                                                                            {"bg-light-grey"} else {"bg-blue text-white"})}>
+                        <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block">
+                            { "Tickets" }
+                        </Link<ProfileRoute>>
+                    </div>
+                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
+                                                                                        if self.current_tab == Some(ProfileRoute::Statistics) 
+                                                                                            {"bg-light-grey"} else {"bg-blue text-white"})}>
+                        <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="block">
+                            { "Statistics" }
+                        </Link<ProfileRoute>>
+                    </div>
+                </div>
                 { ctx.props().children.clone() }
 
             </>

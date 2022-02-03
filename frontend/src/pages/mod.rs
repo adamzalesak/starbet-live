@@ -7,3 +7,6 @@ pub mod privacy_policy_page;
 pub mod registration_page;
 pub mod results_page;
 pub mod upcoming_page;
+pub mod profile_statistics;
+pub mod profile_tickets;
+pub mod profile_summary;

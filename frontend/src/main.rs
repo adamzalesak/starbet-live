@@ -5,8 +5,9 @@ use crate::{
     pages::{
         about_page::AboutPage, administration_page::AdministrationPage, contact_page::ContactPage,
         live_page::LivePage, not_found::NotFoundPage, privacy_policy_page::PrivacyPolicyPage,
-        registration_page::RegistrationPage, results_page::ResultsPage,
-        upcoming_page::UpcomingPage,
+        profile_statistics::ProfileStatistics, profile_summary::ProfileSummary,
+        profile_tickets::ProfileTickets, registration_page::RegistrationPage,
+        results_page::ResultsPage, upcoming_page::UpcomingPage,
     },
     store::{MatchesRequest, MatchesStore, UserRequest, UserStore},
     types::{grpc_types::game_match::Match, MainRoute, ProfileRoute},
@@ -46,6 +47,8 @@ impl Component for App {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
+        ctx.link().send_message(Msg::InitUser);
+
         let mut client = wasm_sockets::EventClient::new("ws://127.0.0.1:50052/match").unwrap();
 
         let callback = ctx
@@ -62,7 +65,6 @@ impl Component for App {
             },
         )));
 
-        ctx.link().send_message(Msg::InitUser);
         ctx.link().send_message(Msg::FetchMatches);
 
         Self {
@@ -188,9 +190,9 @@ fn switch_main(routes: &MainRoute) -> Html {
 
 fn switch_profile(route: &ProfileRoute) -> Html {
     match route {
-        ProfileRoute::Summary => html! {<h1>{"Profile"}</h1>},
-        ProfileRoute::Statistics => html! {<h1>{"Statistics"}</h1>},
-        ProfileRoute::Tickets => html! {<h1>{"Tickets"}</h1>},
+        ProfileRoute::Summary => html! { <ProfileSummary /> },
+        ProfileRoute::Statistics => html! { <ProfileStatistics /> },
+        ProfileRoute::Tickets => html! { <ProfileTickets /> },
         ProfileRoute::NotFound => html! {
             <Redirect<MainRoute> to={MainRoute::NotFound}/>
         },
