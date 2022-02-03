@@ -74,16 +74,28 @@ impl MatchService for MyMatchService {
                         }
                     }
                 }
-
                 Ok(Response::new(ListMatchesReply {
                     game_matches: game_matches
                         .iter()
-                        .map(|(game_match, _)| {
+                        .map(|(game_match, game_event_type)| {
+                            let mut winner_id = None;
+                            let grpc_event_type = match game_event_type.extract_event().unwrap() {
+                                GameMatchEventType::Upcoming => GameEventType::Upcoming,
+                                GameMatchEventType::Live(_) => GameEventType::Live,
+                                GameMatchEventType::Ended(id) => {
+                                    winner_id = Some(id);
+                                    GameEventType::Ended
+                                }
+                                _ => GameEventType::Upcoming,
+                            };
+
                             let mut grpc_match = Match::from(game_match);
                             grpc_match.team_one =
                                 Some(teams.get(&game_match.team_one_id).unwrap().clone());
                             grpc_match.team_two =
                                 Some(teams.get(&game_match.team_two_id).unwrap().clone());
+                            grpc_match.game_event_type = grpc_event_type.into();
+                            grpc_match.winner_id = winner_id;
                             grpc_match
                         })
                         .collect(),
