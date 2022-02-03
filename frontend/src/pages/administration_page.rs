@@ -43,7 +43,7 @@ impl Component for AdministrationPage {
                 // only authenticated user with admin rights can access
                 let flag: bool = match &state.user {
                     None => true,
-                    Some(val) => val.id != 1,
+                    Some(val) => val.id != 0,
                 };
                 if flag {
                     let history = ctx.link().history().unwrap();

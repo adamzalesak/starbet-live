@@ -14,10 +14,10 @@ pub enum MainRoute {
     About,
     #[at("/privacy-policy")]
     PrivacyPolicy,
-    #[at("/contact")]
-    Contact,
     #[at("/administration")]
     Administration,
+    #[at("/contact")]
+    Contact,
     #[at("/profile/:s")]
     Profile,
     #[at("/")]
@@ -35,6 +35,8 @@ pub enum ProfileRoute {
     Summary,
     #[at("/profile/statistics")]
     Statistics,
+    #[at("/profile/administration")]
+    Administration,
     #[not_found]
     #[at("/profile/404")]
     NotFound,

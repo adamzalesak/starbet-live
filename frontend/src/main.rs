@@ -195,6 +195,9 @@ fn switch_profile(route: &ProfileRoute) -> Html {
         ProfileRoute::Summary => html! { <ProfileSummary /> },
         ProfileRoute::Statistics => html! { <ProfileStatistics /> },
         ProfileRoute::Tickets => html! { <ProfileTickets /> },
+        ProfileRoute::Administration => html! {
+            <Redirect<MainRoute> to={MainRoute::Administration}/>
+        },
         ProfileRoute::NotFound => html! {
             <Redirect<MainRoute> to={MainRoute::NotFound}/>
         },

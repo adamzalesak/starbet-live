@@ -186,6 +186,19 @@ body {
   -webkit-box-shadow: 0px 0px 9px 15px rgba(255, 255, 255, 0.85);
   box-shadow: 0px 0px 9px 15px rgba(255, 255, 255, 0.85);
 }
+.privacy-policy h1,
+.privacy-policy h3 {
+  font-weight: bold;
+  margin: 0.5rem 0 0.5rem 0;
+  background-color: var(--light-grey);
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+}
+
+.privacy-policy p {
+  margin-bottom: 0.3rem;
+  padding: 0 0.25rem 0 0.25rem;
+}
 
 /* -------------------------------------------------------------------- */
 /* loading animation */

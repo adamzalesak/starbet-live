@@ -46,7 +46,6 @@ impl Component for ProfileTickets {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::FetchTickets => {
-                info!("fetchin tickets");
                 ctx.link().send_message(Msg::SetLoading(true));
 
                 let grpc_client = ticket_service_client::TicketService::new(String::from(
@@ -77,7 +76,6 @@ impl Component for ProfileTickets {
                 true
             }
             Msg::UserStore(state) => {
-                info!("user store");
                 let state = state.borrow();
                 self.user_id = match &state.user {
                     Some(val) => val.id,
@@ -95,7 +93,7 @@ impl Component for ProfileTickets {
                 {
                     if self.tickets.is_empty() {
                         html! {
-                            <div class="text-center p-1 rounded-md bg-blue text-white">{"No tickets to show"}</div>
+                            <div class="text-center my-2 p-1 rounded-md bg-dark-blue text-white">{"No tickets to show"}</div>
                         }
                     } else {
                         self.tickets.clone().into_iter().map(|ticket| {

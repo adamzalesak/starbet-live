@@ -1,4 +1,4 @@
-use crate::types::{MainRoute, ProfileRoute};
+use crate::types::ProfileRoute;
 use yew::prelude::*;
 use yew_router::prelude::Link;
 
@@ -39,15 +39,14 @@ impl Component for UserSummary {
                 {
                     if is_admin {
                         html! {
-                            <Link<MainRoute> to={MainRoute::Administration} classes="block p-2 my-auto bg-blue rounded-md transition-all">
+                            <Link<ProfileRoute> to={ProfileRoute::Administration} classes="block p-2 my-auto bg-blue rounded-md transition-all">
                                 { "Admin" }
-                            </Link<MainRoute>>
+                            </Link<ProfileRoute>>
                         }
                     } else {
                         html! {}
                     }
                 }
-                
                 <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block p-2 my-auto bg-blue rounded-md transition-all">
                     { "My tickets" }
                 </Link<ProfileRoute>>
