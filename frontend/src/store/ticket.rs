@@ -2,14 +2,14 @@ use crate::types::grpc_types::bet::{
     bet_service_client, Bet, CreateBetReply, CreateBetRequest, DeleteBetReply, DeleteBetRequest,
 };
 use crate::types::grpc_types::ticket::{
-    ticket_service_client, GetCurrentTicketReply, GetCurrentTicketRequest,
+    ticket_service_client, GetCurrentTicketReply, GetCurrentTicketRequest, SubmitTicketReply,
+    SubmitTicketRequest,
 };
 use anyhow;
 use gloo::console::{error, info};
 use std::collections::HashMap;
 use yew_agent::utils::store::{Store, StoreWrapper};
 use yew_agent::AgentLink;
-
 
 #[derive(Debug)]
 pub enum TicketRequest {
@@ -25,10 +25,10 @@ pub enum TicketRequest {
 pub enum Action {
     SetUserId(i32),
     LoadTicket(anyhow::Result<GetCurrentTicketReply>),
-    DeleteBet(i32),
     SetTicketValue(f32),
     CreateBetReceiveResponse(anyhow::Result<CreateBetReply>),
     DeleteBetReceiveResponse(anyhow::Result<DeleteBetReply>),
+    SubmitTicketReceiveResponse(anyhow::Result<SubmitTicketReply>),
 }
 
 pub struct TicketStore {
@@ -121,7 +121,36 @@ impl Store for TicketStore {
                 });
             }
             // TODO
-            TicketRequest::SubmitTicket => {}
+            TicketRequest::SubmitTicket => {
+                let ticket_id = self.id.clone();
+                let price_paid = self.ticket_value.clone();
+                let grpc_client = ticket_service_client::TicketService::new(String::from(
+                    "http://127.0.0.1:5430",
+                ));
+                link.send_future(async move {
+                    Action::SubmitTicketReceiveResponse(
+                        grpc_client
+                            .submit_ticket(SubmitTicketRequest {
+                                ticket_id,
+                                price_paid,
+                            })
+                            .await,
+                    )
+                });
+
+                // reload ticket
+                let user_id = self.user_id.clone();
+                let grpc_client = ticket_service_client::TicketService::new(String::from(
+                    "http://127.0.0.1:5430",
+                ));
+                link.send_future(async move {
+                    Action::LoadTicket(
+                        grpc_client
+                            .get_current_ticket(GetCurrentTicketRequest { user_id })
+                            .await,
+                    )
+                });
+            }
             TicketRequest::ChangeTicketValue(value) => {
                 link.send_message(Action::SetTicketValue(value));
             }
@@ -133,9 +162,6 @@ impl Store for TicketStore {
         match msg {
             Action::SetUserId(id) => {
                 self.user_id = id;
-            }
-            Action::DeleteBet(id) => {
-                // self.bets.remove(&id);
             }
             Action::SetTicketValue(value) => {
                 self.ticket_value = value;
@@ -158,6 +184,12 @@ impl Store for TicketStore {
             }
             Action::DeleteBetReceiveResponse(Err(err)) => {
                 error!("error delete bet", err.to_string());
+            }
+            Action::SubmitTicketReceiveResponse(Ok(_)) => {
+                info!("ticket submited");
+            }
+            Action::SubmitTicketReceiveResponse(Err(err)) => {
+                error!("error submit ticket", err.to_string());
             }
         }
     }
