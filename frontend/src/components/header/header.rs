@@ -1,7 +1,7 @@
 use super::date_time::DateTime;
 use crate::{
     components::{auth::login_form::LoginForm, user::user_summary::UserSummary},
-    store::UserStore,
+    store::{UserRequest, UserStore},
     types::{grpc_types::user::User, MainRoute},
 };
 use yew::prelude::*;
@@ -12,6 +12,7 @@ use yew_agent::{
 use yew_router::{prelude::Link, scope_ext::RouterScopeExt};
 
 pub enum Msg {
+    Logout,
     SetCurrentTab,
     UserStore(ReadOnly<UserStore>),
 }
@@ -41,6 +42,7 @@ impl Component for Header {
                 self.user = state.user.clone();
             }
             Msg::SetCurrentTab => self.current_tab = ctx.link().route::<MainRoute>(),
+            Msg::Logout => self.user_store.send(UserRequest::Logout),
         }
         true
     }
@@ -99,6 +101,7 @@ impl Component for Header {
                         match &self.user {
                             Some(user) => html! {
                                 <UserSummary
+                                    on_logout={ctx.link().callback(|_| Msg::Logout)}
                                     is_admin={user.id == 0}
                                     first_name={user.first_name.clone()}
                                     last_name={user.last_name.clone()}

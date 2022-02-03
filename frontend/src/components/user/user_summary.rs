@@ -8,6 +8,7 @@ pub struct UserSummary {}
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct UserSummaryProps {
+    pub on_logout: Callback<()>,
     pub is_admin: bool,
     pub first_name: String,
     pub last_name: String,
@@ -28,6 +29,7 @@ impl Component for UserSummary {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let UserSummaryProps {
+            on_logout,
             is_admin,
             first_name,
             last_name,
@@ -39,7 +41,7 @@ impl Component for UserSummary {
                 {
                     if is_admin {
                         html! {
-                            <Link<ProfileRoute> to={ProfileRoute::Administration} classes="block p-2 my-auto bg-blue rounded-md transition-all">
+                            <Link<ProfileRoute> to={ProfileRoute::Administration} classes="block p-2 my-auto bg-blue rounded-md transition-all uppercase font-light">
                                 { "Admin" }
                             </Link<ProfileRoute>>
                         }
@@ -47,13 +49,13 @@ impl Component for UserSummary {
                         html! {}
                     }
                 }
-                <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block p-2 my-auto bg-blue rounded-md transition-all">
+                <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block p-2 my-auto bg-blue rounded-md transition-all uppercase font-light">
                     { "My tickets" }
                 </Link<ProfileRoute>>
 
-                <Link<ProfileRoute> to={ProfileRoute::Summary} classes="block p-2 my-auto bg-blue rounded-md transition-all">
-                    { "Profile" }
-                </Link<ProfileRoute>>
+                <button type="button" onclick={move |_| on_logout.emit(())} class="block p-2 my-auto bg-dark-blue rounded-md transition-all uppercase font-light">
+                    {"Logout"}
+                </button>
 
                 <div class="my-auto text-right text-black">
                     <span>{ first_name }{" "}{ last_name }</span>

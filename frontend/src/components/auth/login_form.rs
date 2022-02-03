@@ -2,13 +2,12 @@ use crate::{
     components::auth::input::{InputType, TextInput},
     store::{UserRequest, UserStore},
     types::{
-        grpc_types::user::{user_service_client, Address, AuthUserReply, AuthUserRequest, User},
-        Field, MainRoute, SubmitResult, UserLoginFormData,
+        grpc_types::user::{user_service_client, AuthUserReply, AuthUserRequest},
+        Field, MainRoute, UserLoginFormData,
     },
 };
 use gloo_timers::callback::Timeout;
-use log::{error, info, warn};
-use serde::{Deserialize, Serialize};
+use log::warn;
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
@@ -92,7 +91,6 @@ impl Component for LoginForm {
                             field={Field::Email}
                             label="Email address"
                             placeholder="EMAIL"
-                            // value={self.data.email.clone()}
                             on_change={ctx.link().callback(Msg::SetEmail)}
                             required={false}
                         />
@@ -101,7 +99,6 @@ impl Component for LoginForm {
                             field={Field::Password}
                             label="Password"
                             placeholder="PASSWORD"
-                            // value={self.data.password.clone()}
                             on_change={ctx.link().callback(Msg::SetPassword)}
                             required={false}
                         />

@@ -1,11 +1,15 @@
-use crate::services::{get_token, set_token};
-use crate::types::grpc_types::user::{
-    user_service_client, Address, AuthUserReply, AuthUserRequest, GetUserReply, GetUserRequest,
-    User,
+use crate::{
+    services::{get_token, set_token},
+    types::grpc_types::user::{
+        user_service_client, Address, AuthUserReply, AuthUserRequest, GetUserReply, GetUserRequest,
+        User,
+    },
 };
 use log::{error, warn};
-use yew_agent::utils::store::{Store, StoreWrapper};
-use yew_agent::AgentLink;
+use yew_agent::{
+    utils::store::{Store, StoreWrapper},
+    AgentLink,
+};
 
 #[derive(Debug)]
 pub enum UserRequest {

@@ -200,6 +200,11 @@ body {
   padding: 0 0.25rem 0 0.25rem;
 }
 
+.user-summary > button:hover {
+  background-color: var(--yellow);
+  color: var(--black);
+}
+
 /* -------------------------------------------------------------------- */
 /* loading animation */
 

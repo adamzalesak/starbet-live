@@ -1,8 +1,7 @@
 use crate::{
     store::UserStore,
-    types::{
-        grpc_types::ticket::{ticket_service_client, ListTicketsReply, ListTicketsRequest, Ticket},
-        SubmitResult,
+    types::grpc_types::ticket::{
+        ticket_service_client, ListTicketsReply, ListTicketsRequest, Ticket,
     },
 };
 use log::{error, info};
@@ -24,7 +23,6 @@ pub struct ProfileTickets {
     is_loading: bool,
     user_id: i32,
     error: String,
-    submit_result: SubmitResult,
     user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
 
@@ -39,7 +37,6 @@ impl Component for ProfileTickets {
             tickets: Vec::new(),
             error: String::new(),
             is_loading: false,
-            submit_result: SubmitResult::None,
         }
     }
 
