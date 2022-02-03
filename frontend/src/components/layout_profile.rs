@@ -66,28 +66,53 @@ impl Component for LayoutProfile {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let (name, last_name, balance) = match &self.user {
+            Some(val) => (
+                val.first_name.clone(),
+                val.last_name.clone(),
+                val.balance.clone(),
+            ),
+            None => (String::new(), String::new(), String::new()),
+        };
         html! {
             <>
-                <button type="button" class="p-1 rounded bg-blue" onclick={ctx.link().callback(|_| Msg::Logout)}>
-                    { "Logout" }
-                </button>
+                <div class="relative">
+                    <picture class="transition-all">
+                        <source media="(min-width:1024px)" srcset="/profile-background-cropped.jpg" />
+                        <img src="/profile-background.jpg" alt="profile background image" style="width:auto;" />
+                    </picture>
+
+                    <div class="absolute flex flex-row gap-3 content-center p-4 rounded-xl text-dark-blue blur-background">
+                        <div class="w-28">
+                            <img src="/user.svg" alt="user profile picture" class="min-w-full"/>
+                        </div>
+                        <div class="my-auto flex flex-col">
+                            <span class="text-xl font-bold">{format!("{} {}", name, last_name)}</span>
+                            <span>{format!("Balance: {}€", balance)}</span>
+                            <button type="button" class="p-1 rounded bg-yellow transition-all" onclick={ctx.link().callback(|_| Msg::Logout)}>
+                                { "Logout" }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-3 text-center profile-nav">
                     <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
-                                                                                        if self.current_tab == Some(ProfileRoute::Summary) 
+                                                                                        if self.current_tab == Some(ProfileRoute::Summary)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
                         <Link<ProfileRoute> to={ProfileRoute::Summary} classes="block">
                             { "Summary" }
                         </Link<ProfileRoute>>
                     </div>
                     <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
-                                                                                        if self.current_tab == Some(ProfileRoute::Tickets) 
+                                                                                        if self.current_tab == Some(ProfileRoute::Tickets)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
                         <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block">
                             { "Tickets" }
                         </Link<ProfileRoute>>
                     </div>
                     <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
-                                                                                        if self.current_tab == Some(ProfileRoute::Statistics) 
+                                                                                        if self.current_tab == Some(ProfileRoute::Statistics)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
                         <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="block">
                             { "Statistics" }

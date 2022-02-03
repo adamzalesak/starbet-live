@@ -86,8 +86,8 @@ impl Component for RegistrationForm {
                                 last_name: reg_data.last_name.0.trim().to_string(),
                                 password: reg_data.password.0.trim().to_string(),
                                 civil_id_number: reg_data.civil_id_number.0.trim().to_string(),
-                                date_of_birth: reg_data.email.0.trim().to_string(),
-                                email: date_of_birth.to_string(),
+                                date_of_birth: date_of_birth.to_string(),
+                                email: reg_data.email.0.trim().to_string(),
                                 phone_number: reg_data.phone_number.0.trim().to_string(),
                                 photo: None,
                                 address: Some(Address {

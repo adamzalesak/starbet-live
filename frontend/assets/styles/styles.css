@@ -178,6 +178,15 @@ body {
   color: var(--black);
 }
 
+.blur-background {
+  top: 50%;
+  left: 25%;
+  transform: translate(-25%, -50%);
+  background-color: rgba(255, 255, 255, 0.85);
+  -webkit-box-shadow: 0px 0px 9px 15px rgba(255, 255, 255, 0.85);
+  box-shadow: 0px 0px 9px 15px rgba(255, 255, 255, 0.85);
+}
+
 /* -------------------------------------------------------------------- */
 /* loading animation */
 

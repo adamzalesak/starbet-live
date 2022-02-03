@@ -28,7 +28,7 @@ impl Component for LayoutNoSidebars {
             <>
                 <Header />
                 <div class="flex flex-col h-full overflow-auto">
-                    <main class="w-full lg:w-8/12 p-2 sm:w-10/12 mx-auto transition-all main-grow">
+                    <main class="w-full lg:w-8/12 px-2 sm:w-10/12 mx-auto transition-all main-grow">
                         { ctx.props().children.clone() }
                     </main>
                     <Footer squared_design={false} />

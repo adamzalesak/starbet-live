@@ -3,7 +3,7 @@ use crate::types::grpc_types::user::{
     user_service_client, Address, AuthUserReply, AuthUserRequest, GetUserReply, GetUserRequest,
     User,
 };
-use log::{error, info};
+use log::{error, warn};
 use yew_agent::utils::store::{Store, StoreWrapper};
 use yew_agent::AgentLink;
 
@@ -42,18 +42,19 @@ impl Store for UserStore {
                 None => error!("Couldn't set user"),
             },
             UserRequest::InitializeUser => {
-                info!("Retrieving token from local storage!");
                 match get_token() {
                     Some(token) => {
-                        info!("token -> {}", token);
-
+                        let id = match token.parse::<i32>() {
+                            Ok(v) => v,
+                            _ => 0,
+                        };
                         // get identity and create user
                         let grpc_client = user_service_client::UserService::new(String::from(
                             "http://127.0.0.1:5430",
                         ));
                         link.send_future(async move {
                             Action::ReceiveResponse(
-                                grpc_client.get_user(GetUserRequest { id: 2 }).await,
+                                grpc_client.get_user(GetUserRequest { id }).await,
                             )
                         });
                     }

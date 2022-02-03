@@ -1,10 +1,12 @@
-use crate::components::administration::{
-    change_match_event::ChangeMatchEvent, create_game_form::CreateGameForm,
-    create_match_form::CreateMatchForm, create_team_form::CreateTeamForm,
-    create_team_plays_game_form::CreateTeamPlaysGameForm,
+use crate::{
+    components::administration::{
+        change_match_event::ChangeMatchEvent, create_game_form::CreateGameForm,
+        create_match_form::CreateMatchForm, create_team_form::CreateTeamForm,
+        create_team_plays_game_form::CreateTeamPlaysGameForm,
+    },
+    store::UserStore,
+    types::{grpc_types::user::User, MainRoute},
 };
-use crate::store::UserStore;
-use crate::types::{grpc_types::user::User, MainRoute};
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},

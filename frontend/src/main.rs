@@ -37,6 +37,7 @@ enum Msg {
 }
 
 struct App {
+    user_id: i32,
     user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
     matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
     ws_client: wasm_sockets::EventClient,
@@ -68,6 +69,7 @@ impl Component for App {
         ctx.link().send_message(Msg::FetchMatches);
 
         Self {
+            user_id: 0,
             user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
             ws_client: client,
