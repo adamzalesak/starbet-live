@@ -1,8 +1,8 @@
 use crate::{
     components::administration::{
-        change_match_event::ChangeMatchEvent, create_game_form::CreateGameForm,
-        create_match_form::CreateMatchForm, create_team_form::CreateTeamForm,
-        create_team_plays_game_form::CreateTeamPlaysGameForm,
+        change_match_event::ChangeMatchEvent, change_match_state::ChangeMatchState,
+        create_game_form::CreateGameForm, create_match_form::CreateMatchForm,
+        create_team_form::CreateTeamForm, create_team_plays_game_form::CreateTeamPlaysGameForm,
     },
     store::UserStore,
     types::{grpc_types::user::User, MainRoute},
@@ -62,6 +62,7 @@ impl Component for AdministrationPage {
                 <CreateTeamPlaysGameForm />
                 <CreateMatchForm />
                 <ChangeMatchEvent />
+                <ChangeMatchState />
             </div>
         }
     }

@@ -15,7 +15,6 @@ use yew_router::{
 pub enum Msg {
     SetCurrentTab,
     UserStore(ReadOnly<UserStore>),
-    Logout,
 }
 
 #[derive(Properties, PartialEq)]
@@ -60,7 +59,6 @@ impl Component for LayoutProfile {
             Msg::SetCurrentTab => {
                 self.current_tab = ctx.link().route::<ProfileRoute>();
             }
-            Msg::Logout => self.user_store.send(UserRequest::Logout),
         }
         true
     }
@@ -89,32 +87,29 @@ impl Component for LayoutProfile {
                         <div class="my-auto flex flex-col">
                             <span class="text-xl font-bold">{format!("{} {}", name, last_name)}</span>
                             <span>{format!("Balance: {}€", balance)}</span>
-                            <button type="button" class="p-1 rounded bg-yellow transition-all" onclick={ctx.link().callback(|_| Msg::Logout)}>
-                                { "Logout" }
-                            </button>
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-3 text-center profile-nav">
-                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
+                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
                                                                                         if self.current_tab == Some(ProfileRoute::Summary)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
-                        <Link<ProfileRoute> to={ProfileRoute::Summary} classes="block">
+                        <Link<ProfileRoute> to={ProfileRoute::Summary} classes="block p-1">
                             { "Summary" }
                         </Link<ProfileRoute>>
                     </div>
-                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
+                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
                                                                                         if self.current_tab == Some(ProfileRoute::Tickets)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
-                        <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block">
+                        <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="blockp-1 ">
                             { "Tickets" }
                         </Link<ProfileRoute>>
                     </div>
-                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium p-1 transition-all {}",
+                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
                                                                                         if self.current_tab == Some(ProfileRoute::Statistics)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
-                        <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="block">
+                        <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="blockp-1 ">
                             { "Statistics" }
                         </Link<ProfileRoute>>
                     </div>
