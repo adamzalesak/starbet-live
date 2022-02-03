@@ -230,7 +230,7 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         // check if the game is played right now
         let is_game_played: GameMatchEvent = game_match_event::table
             .filter(game_match_event::game_match_id.eq(new_bet.game_match_id))
-            .order(game_match_event::created_at)
+            .order(game_match_event::created_at.desc())
             .first(&connection)?;
 
         let event = is_game_played.extract_event()?;
