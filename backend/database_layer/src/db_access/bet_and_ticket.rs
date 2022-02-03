@@ -36,7 +36,7 @@ impl Repo for PgBetAndTicketRepo {
     ///
     /// Params
     /// ---
-    /// - pool: A reference to an already initialized database connection pool,
+    /// - `pool`: A reference to an already initialized database connection pool,
     ///         used for connecting to the database
     ///
     /// Returns
@@ -52,8 +52,8 @@ impl Repo for PgBetAndTicketRepo {
     ///
     /// Returns
     /// ---
-    /// - Ok(pooled_connection) if no error occurs
-    /// - Err(_) if the wait for another connection is too long
+    /// - `Ok(pooled_connection)` if no error occurs
+    /// - `Err(_)` if the wait for another connection is too long
     async fn get_connection(&self) -> anyhow::Result<PgPooledConnection> {
         Ok(self.pool.get()?)
     }
@@ -72,7 +72,7 @@ pub trait BetAndTicketRepo {
     ///
     /// Params
     /// ---
-    /// - desired_user_id: ID of the user we wish to remove invalid tickets
+    /// - `desired_user_id`: ID of the user we wish to remove invalid tickets
     ///
     /// Returns
     /// ---
@@ -86,7 +86,7 @@ pub trait BetAndTicketRepo {
     ///
     /// Params
     /// ---
-    /// - desired_user_id: ID of the user we wish to retrieve the ticket of
+    /// - `desired_user_id`: ID of the user we wish to retrieve the ticket of
     ///
     /// Returns
     /// ---
@@ -101,7 +101,7 @@ pub trait BetAndTicketRepo {
     ///
     /// Params
     /// ---
-    /// - desired_ticket_id: ID of the desired ticket
+    /// - `desired_ticket_id`: ID of the desired ticket
     ///
     /// Returns
     /// ---
@@ -114,8 +114,8 @@ pub trait BetAndTicketRepo {
     ///
     /// Params
     /// ---
-    /// - desired_ticket_id: ID of the ticket we wish to place the bet on
-    /// - new_bet: bet we wish to place
+    /// - `desired_ticket_id`: ID of the ticket we wish to place the bet on
+    /// - `new_bet`: bet we wish to place
     ///
     /// Returns
     /// ---
@@ -128,8 +128,8 @@ pub trait BetAndTicketRepo {
     ///
     /// Params
     /// ---
-    /// - desired_ticket_id: ID of the ticket we wish to place the bet on
-    /// - desired_bet_id: ID of the bet we wish to discard
+    /// - `desired_ticket_id`: ID of the ticket we wish to place the bet on
+    /// - `desired_bet_id`: ID of the bet we wish to discard
     ///
     /// Returns
     /// ---
@@ -145,7 +145,7 @@ pub trait BetAndTicketRepo {
     ///
     /// Params
     /// ---
-    /// - desired_ticket_id: ID of the ticket we wish to pay for
+    /// - `desired_ticket_id`: ID of the ticket we wish to pay for
     ///
     /// Returns
     /// ---

@@ -11,7 +11,7 @@ use database_layer::{
         game_match::{MatchRepo, PgMatchRepo},
         repo::Repo,
     },
-    db_models::game_match::CreateGameMatch,
+    db_models::{game_match::CreateGameMatch, game_match_event::GameMatchEventFilter},
 };
 
 pub async fn get_all() -> anyhow::Result<()> {
@@ -22,7 +22,12 @@ pub async fn get_all() -> anyhow::Result<()> {
 
     println!("Get all game matches:");
 
-    let matches = pg_game_match.get_all_show_info(None, None);
+    println!("Event type (leave empty for none):");
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    let event_type = GameMatchEventFilter::from_input(input.trim()).ok();
+
+    let matches = pg_game_match.get_all_show_info(event_type, None);
 
     match matches.await {
         Ok(game_matches) => {

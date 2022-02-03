@@ -34,7 +34,7 @@ impl Repo for PgMatchRepo {
     ///
     /// Params
     /// ---
-    /// - pool: A reference to an already initialized database connection pool,
+    /// - `pool`: A reference to an already initialized database connection pool,
     ///         used for connecting to the database
     ///
     /// Returns
@@ -50,8 +50,8 @@ impl Repo for PgMatchRepo {
     ///
     /// Returns
     /// ---
-    /// - Ok(pooled_connection) if no error occurs
-    /// - Err(_) if the wait for another connection is too long
+    /// - `Ok(pooled_connection)` if no error occurs
+    /// - `Err(_)` if the wait for another connection is too long
     async fn get_connection(&self) -> anyhow::Result<PgPooledConnection> {
         Ok(self.pool.get()?)
     }
@@ -64,12 +64,12 @@ pub trait MatchRepo {
     ///
     /// Params
     /// ---
-    /// - new_match: write structure for creating a new game match
+    /// - `new_match`: write structure for creating a new game match
     ///
     /// Returns
     /// ---
-    /// - Ok(id) if the match could be created -> both teams exist, game exists and both teams play the game
-    /// - Err(_) if an error occurrs or some bounds were not satisfied
+    /// - `Ok(id)` if the match could be created -> both teams exist, game exists and both teams play the game
+    /// - `Err(_)` if an error occurrs or some bounds were not satisfied
     async fn create(&self, new_match: CreateGameMatch) -> anyhow::Result<i32>;
 
     /// Delete a game match
@@ -78,24 +78,24 @@ pub trait MatchRepo {
     ///
     /// Params
     /// ---
-    /// - desired_match_id: ID of the match we wish to delete
+    /// - `desired_match_id`: ID of the match we wish to delete
     ///
     /// Returns
     /// ---
-    /// - Ok(GameMatchEvent) if successful to preserve the content of the deleted item
-    /// - Err(_) if any error occurrs
+    /// - `Ok(GameMatchEvent)` if successful to preserve the content of the deleted item
+    /// - `Err(_)` if any error occurrs
     async fn delete(&self, desired_match_id: i32) -> anyhow::Result<GameMatch>;
 
     /// Get a desired match by its ID
     ///
     /// Params
     /// ---
-    /// - desired_match_id: ID of the desired match
+    /// - `desired_match_id`: ID of the desired match
     ///
     /// Returns
     /// ---
-    /// - Ok(GameMatch) if the match has been found
-    /// - Err(_) if an error has occurred or the match has not been found
+    /// - `Ok(GameMatch)` if the match has been found
+    /// - `Err(_)` if an error has occurred or the match has not been found
     async fn get(&self, desired_match_id: i32) -> anyhow::Result<GameMatch>;
 
     /// Get a desired match (together with display information) by its ID
