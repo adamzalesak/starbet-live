@@ -1,16 +1,21 @@
-use crate::types::{MainRoute, ProfileRoute};
-use crate::{store::UserStore, types::UserInfo};
+use crate::{
+    store::{UserRequest, UserStore},
+    types::{grpc_types::user::User, MainRoute, ProfileRoute},
+};
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
     Bridge,
 };
-use yew_router::history::History;
-use yew_router::prelude::{Link, RouterScopeExt};
+use yew_router::{
+    history::History,
+    prelude::{Link, RouterScopeExt},
+};
 
 pub enum Msg {
     SetCurrentTab,
     UserStore(ReadOnly<UserStore>),
+    Logout,
 }
 
 #[derive(Properties, PartialEq)]
@@ -21,7 +26,7 @@ pub struct LayoutProfileProps {
 
 pub struct LayoutProfile {
     current_tab: Option<ProfileRoute>,
-    user: UserInfo,
+    user: Option<User>,
     user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
 
@@ -32,7 +37,7 @@ impl Component for LayoutProfile {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             current_tab: ctx.link().route::<ProfileRoute>(),
-            user: UserInfo::new(),
+            user: None,
             user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
         }
     }
@@ -44,14 +49,18 @@ impl Component for LayoutProfile {
                 self.user = state.user.clone();
 
                 // only authenticated user can access profile page
-                if !self.user.is_authenticated() {
-                    let history = ctx.link().history().unwrap();
-                    history.push(MainRoute::Home);
+                match state.user {
+                    None => {
+                        let history = ctx.link().history().unwrap();
+                        history.push(MainRoute::Home);
+                    }
+                    Some(_) => {}
                 }
             }
             Msg::SetCurrentTab => {
                 self.current_tab = ctx.link().route::<ProfileRoute>();
             }
+            Msg::Logout => self.user_store.send(UserRequest::Logout),
         }
         true
     }
@@ -59,6 +68,9 @@ impl Component for LayoutProfile {
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <>
+                <button type="button" class="p-1 rounded bg-blue" onclick={ctx.link().callback(|_| Msg::Logout)}>
+                    { "Logout" }
+                </button>
                 <span onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={if self.current_tab == Some(ProfileRoute::Summary) {"bg-blue text-white"} else {""}}>
                     <Link<ProfileRoute> to={ProfileRoute::Summary}>
                         { "Summary" }

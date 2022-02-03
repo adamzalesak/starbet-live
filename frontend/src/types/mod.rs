@@ -4,7 +4,7 @@ pub mod router;
 pub mod tickets;
 pub mod users;
 
-pub use users::{Field, SubmitResult, UserInfo, UserLoginFormData, UserRegistrationFormData};
+pub use users::{Field, SubmitResult, UserLoginFormData, UserRegistrationFormData};
 
 pub use tickets::{BetInfo, TicketInfo};
 

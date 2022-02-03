@@ -1,17 +1,18 @@
-use crate::components::{
-    layout::Layout, layout_no_sidebars::LayoutNoSidebars, layout_profile::LayoutProfile,
+use crate::{
+    components::{
+        layout::Layout, layout_no_sidebars::LayoutNoSidebars, layout_profile::LayoutProfile,
+    },
+    pages::{
+        about_page::AboutPage, administration_page::AdministrationPage, contact_page::ContactPage,
+        live_page::LivePage, not_found::NotFoundPage, privacy_policy_page::PrivacyPolicyPage,
+        registration_page::RegistrationPage, results_page::ResultsPage,
+        upcoming_page::UpcomingPage,
+    },
+    store::{MatchesRequest, MatchesStore, UserRequest, UserStore},
+    types::{grpc_types::game_match::Match, MainRoute, ProfileRoute},
 };
-use crate::pages::{
-    about_page::AboutPage, administration_page::AdministrationPage, contact_page::ContactPage,
-    live_page::LivePage, not_found::NotFoundPage, privacy_policy_page::PrivacyPolicyPage,
-    results_page::ResultsPage, upcoming_page::UpcomingPage,
-};
-use crate::store::{MatchesRequest, MatchesStore};
-use crate::types::grpc_types::game_match::Match;
 use bytes::BytesMut;
-use pages::registration_page::RegistrationPage;
 use prost::{DecodeError, Message as ProstMessage};
-use types::{MainRoute, ProfileRoute};
 use wasm_sockets::{self, Message, WebSocketError};
 use yew::prelude::*;
 use yew_agent::{
@@ -27,12 +28,15 @@ mod store;
 mod types;
 
 enum Msg {
+    UserStore(ReadOnly<UserStore>),
+    InitUser,
     MatchesStore(ReadOnly<MatchesStore>),
     FetchMatches,
     ReceiveMatchUpdate(Result<Match, DecodeError>),
 }
 
 struct App {
+    user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
     matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
     ws_client: wasm_sockets::EventClient,
 }
@@ -58,9 +62,11 @@ impl Component for App {
             },
         )));
 
+        ctx.link().send_message(Msg::InitUser);
         ctx.link().send_message(Msg::FetchMatches);
 
         Self {
+            user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
             ws_client: client,
         }
@@ -79,6 +85,10 @@ impl Component for App {
             }
             Msg::ReceiveMatchUpdate(Err(err)) => {
                 log::error!("WebSocket message decode error");
+            }
+            Msg::UserStore(_) => {}
+            Msg::InitUser => {
+                self.user_store.send(UserRequest::InitializeUser);
             }
         }
         false

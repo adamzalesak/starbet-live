@@ -4,7 +4,7 @@ use crate::components::administration::{
     create_team_plays_game_form::CreateTeamPlaysGameForm,
 };
 use crate::store::UserStore;
-use crate::types::{MainRoute, UserInfo};
+use crate::types::{grpc_types::user::User, MainRoute};
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
@@ -17,7 +17,7 @@ pub enum Msg {
 }
 
 pub struct AdministrationPage {
-    user: UserInfo,
+    user: Option<User>,
     _user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
 
@@ -27,7 +27,7 @@ impl Component for AdministrationPage {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            user: UserInfo::new(),
+            user: None,
             _user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
         }
     }
@@ -39,7 +39,11 @@ impl Component for AdministrationPage {
                 self.user = state.user.clone();
 
                 // only authenticated user with admin rights can access
-                if !state.user.is_authenticated() || state.user.id != 0 {
+                let flag: bool = match &state.user {
+                    None => true,
+                    Some(val) => val.id != 0,
+                };
+                if flag {
                     let history = ctx.link().history().unwrap();
                     history.push(MainRoute::Home);
                 }

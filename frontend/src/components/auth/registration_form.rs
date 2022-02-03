@@ -6,7 +6,7 @@ use crate::{
         Field, MainRoute, SubmitResult, UserRegistrationFormData,
     },
 };
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Datelike, Utc};
 use gloo_timers::callback::Timeout;
 use log::{error, warn};
 use yew::prelude::*;
@@ -49,7 +49,7 @@ impl Component for RegistrationForm {
                 } else {
                     self.error = String::new();
                 }
-                ctx.link().send_message(Msg::SetLoading(true));
+
                 // convert date string to chrono datetime and check age
                 let datetime = match DateTime::parse_from_rfc3339(&format!(
                     "{}T00:00:00+01:00",
@@ -61,9 +61,17 @@ impl Component for RegistrationForm {
                         return false;
                     }
                 };
+                let date_of_birth = datetime.with_timezone(&Utc);
+                let datetime_today = js_sys::Date::new_0();
 
-                let datetime_utc = datetime.with_timezone(&Utc);
-                // add age check
+                if (datetime_today.get_full_year() as i32) - date_of_birth.year() < 18 {
+                    self.error =
+                        "You are not allowed to make bets until you are an adult".to_string();
+                    return true;
+                } else {
+                    self.error = String::new();
+                }
+                ctx.link().send_message(Msg::SetLoading(true));
 
                 let grpc_client =
                     user_service_client::UserService::new(String::from("http://127.0.0.1:5430"));
@@ -78,8 +86,8 @@ impl Component for RegistrationForm {
                                 last_name: reg_data.last_name.0.trim().to_string(),
                                 password: reg_data.password.0.trim().to_string(),
                                 civil_id_number: reg_data.civil_id_number.0.trim().to_string(),
-                                date_of_birth: datetime_utc.to_string(),
-                                email: reg_data.email.0.trim().to_string(),
+                                date_of_birth: reg_data.email.0.trim().to_string(),
+                                email: date_of_birth.to_string(),
                                 phone_number: reg_data.phone_number.0.trim().to_string(),
                                 photo: None,
                                 address: Some(Address {
@@ -91,11 +99,13 @@ impl Component for RegistrationForm {
                                         .trim()
                                         .to_string(),
                                     city: reg_data.address.city.0.trim().to_string(),
-                                    // area: if self.data.address.area == Some("".to_string()) {} else {},
-                                    area: Some("".to_string()),
+                                    area: match reg_data.address.area.0 {
+                                        Some(val) => Some(val.trim().to_string()),
+                                        None => None,
+                                    },
                                     postal_code: reg_data.address.postal_code.0.trim().to_string(),
                                     country: reg_data.address.country.0.trim().to_string(),
-                                    valid_from: js_sys::Date::new_0().to_iso_string().into(),
+                                    valid_from: datetime_today.to_iso_string().into(),
                                 }),
                             })
                             .await,

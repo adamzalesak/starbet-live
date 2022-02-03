@@ -47,7 +47,7 @@ impl Component for UserSummary {
                         html! {}
                     }
                 }
-
+                
                 <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block p-2 my-auto bg-blue rounded-md transition-all">
                     { "My tickets" }
                 </Link<ProfileRoute>>
@@ -63,8 +63,9 @@ impl Component for UserSummary {
                         <span>{ current_balance }{"€"}</span>
                     </div>
                 </div>
-                <div class="w-10">
-                    <img src="/user.svg" alt="user profile picture"/>
+
+                <div class="w-10 h-10">
+                    <img src="/user.svg" alt="user profile picture" class="min-w-full"/>
                 </div>
             </div>
         }

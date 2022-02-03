@@ -1,8 +1,9 @@
 use super::date_time::DateTime;
-use crate::components::{auth::login_form::LoginForm, user::user_summary::UserSummary};
-use crate::store::UserStore;
-use crate::types::MainRoute;
-use crate::types::UserInfo;
+use crate::{
+    components::{auth::login_form::LoginForm, user::user_summary::UserSummary},
+    store::UserStore,
+    types::{grpc_types::user::User, MainRoute},
+};
 use yew::prelude::*;
 use yew_agent::{
     utils::store::{Bridgeable, ReadOnly, StoreWrapper},
@@ -17,7 +18,7 @@ pub enum Msg {
 
 pub struct Header {
     current_tab: Option<MainRoute>,
-    user: UserInfo,
+    user: Option<User>,
     user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
 }
 
@@ -28,7 +29,7 @@ impl Component for Header {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             current_tab: ctx.link().route::<MainRoute>(),
-            user: UserInfo::new(),
+            user: None,
             user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
         }
     }
@@ -59,27 +60,27 @@ impl Component for Header {
 
                     {
                         match self.current_tab {
-                            Some(MainRoute::Live) | Some(MainRoute::Results) | Some(MainRoute::Upcoming) | Some(MainRoute::Home) => { 
+                            Some(MainRoute::Live) | Some(MainRoute::Results) | Some(MainRoute::Upcoming) | Some(MainRoute::Home) => {
                                 html! {
                                     <nav>
                                         <ul>
-                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)} 
+                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)}
                                                 class={if self.current_tab == Some(MainRoute::Live) || self.current_tab == Some(MainRoute::Home) {"current_active_page"} else {""}}>
-                                                <Link<MainRoute> to={MainRoute::Live} 
+                                                <Link<MainRoute> to={MainRoute::Live}
                                                     classes={"inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black"}>
                                                     { "Live" }
                                                 </Link<MainRoute>>
                                             </span>
-                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)} 
+                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)}
                                                 class={if self.current_tab == Some(MainRoute::Upcoming)  {"current_active_page"} else {""}}>
-                                                <Link<MainRoute> to={MainRoute::Upcoming} 
+                                                <Link<MainRoute> to={MainRoute::Upcoming}
                                                     classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
                                                     { "Upcoming" }
                                                 </Link<MainRoute>>
                                             </span>
-                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)} 
+                                            <span onclick={ctx.link().callback(|_| Msg::SetCurrentTab)}
                                                 class={if self.current_tab == Some(MainRoute::Results) {"current_active_page"} else {""}}>
-                                                <Link<MainRoute> to={MainRoute::Results} 
+                                                <Link<MainRoute> to={MainRoute::Results}
                                                     classes="inline-block bg-blue font-bold py-1 px-5 lg:px-9 rounded-t-lg mx-2 transition-all hover:bg-white hover:text-black">
                                                     { "Results" }
                                                 </Link<MainRoute>>
@@ -88,24 +89,25 @@ impl Component for Header {
                                     </nav>
                                 }
                             }
-                            _ => html!{} 
+                            _ => html!{}
                         }
-                        
+
                     }
                 </div>
                 <div class="my-auto text-sm p-2">
                     {
-                        if self.user.is_authenticated() {
-                            html! { 
+                        match &self.user {
+                            Some(user) => html! {
                                 <UserSummary
-                                    is_admin={self.user.id == 0}
-                                    first_name={self.user.first_name.clone()}
-                                    last_name={self.user.last_name.clone()}
-                                    current_balance={self.user.current_balance.clone()}
+                                    is_admin={user.id == 0}
+                                    first_name={user.first_name.clone()}
+                                    last_name={user.last_name.clone()}
+                                    current_balance={user.balance.clone()}
                                 />
-                        }
-                        } else {
-                            html! { <LoginForm /> }
+                            },
+                            None => html! {
+                                <LoginForm />
+                            },
                         }
                     }
                 </div>

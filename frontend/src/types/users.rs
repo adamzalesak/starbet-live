@@ -34,18 +34,6 @@ pub struct UserLoginFormData {
     pub password: String,
 }
 
-// struct represents user's data stored in the app
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct UserInfo {
-    pub id: u32,
-    pub first_name: String,
-    pub last_name: String,
-    pub token: String,
-    pub current_balance: String,
-}
-
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SubmitResult {
     None,
@@ -127,20 +115,5 @@ impl UserLoginFormData {
             email: String::new(),
             password: String::new(),
         }
-    }
-}
-
-impl UserInfo {
-    pub fn new() -> Self {
-        Self {
-            id: 0,
-            first_name: String::new(),
-            last_name: String::new(),
-            token: String::new(),
-            current_balance: String::new(),
-        }
-    }
-    pub fn is_authenticated(&self) -> bool {
-        !self.token.is_empty()
     }
 }
