@@ -99,7 +99,7 @@ impl Component for Header {
                         match &self.user {
                             Some(user) => html! {
                                 <UserSummary
-                                    is_admin={user.id == 0}
+                                    is_admin={user.id == 1}
                                     first_name={user.first_name.clone()}
                                     last_name={user.last_name.clone()}
                                     current_balance={user.balance.clone()}
