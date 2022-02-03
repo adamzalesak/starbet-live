@@ -1,5 +1,5 @@
 use bytes::BytesMut;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use prost::Message;
 use std::convert::*;
 use std::{collections::HashMap, sync::Arc};
@@ -116,7 +116,7 @@ impl MatchService for MyMatchService {
             request.team_two_id,
             &*request.team_one_ratio,
             &*request.team_two_ratio,
-            Utc::now(),
+            request.supposed_start_at.parse::<DateTime<Utc>>().unwrap(),
             &*request.state,
         );
 
