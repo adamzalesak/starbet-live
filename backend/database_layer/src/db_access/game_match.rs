@@ -373,9 +373,16 @@ impl MatchRepo for PgMatchRepo {
 
     /// Update match display string -> status
     async fn update_status(&self, desired_match_id: i32, new_status: &str) -> anyhow::Result<()> {
-        let _ = update(game_match::table.filter(game_match::id.eq(desired_match_id)))
-            .set(game_match::state.eq(new_status))
-            .execute(&self.get_connection().await?)?;
+        let number_of_effected_rows: usize =
+            update(game_match::table.filter(game_match::id.eq(desired_match_id)))
+                .set(game_match::state.eq(new_status))
+                .execute(&self.get_connection().await?)?;
+
+        match number_of_effected_rows {
+            0 => anyhow::bail!("No match was updated"),
+            1 => {}
+            _ => anyhow::bail!("Internal error -> multiple matches have been updated"),
+        }
 
         Ok(())
     }
