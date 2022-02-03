@@ -2,9 +2,8 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::connection::{PgPool, PgPooledConnection};
-use crate::diesel::{delete, insert_into, prelude::*, update, QueryDsl, RunQueryDsl};
+use crate::diesel::{delete, insert_into, prelude::*, QueryDsl, RunQueryDsl};
 use crate::type_storing::time_handling::TimeHandling;
-use chrono::{Duration, Utc};
 
 // type and structure imports
 use crate::{
@@ -15,7 +14,7 @@ use crate::{
     db_models::{
         bet::{Bet, CreateBet},
         game_match::GameMatch,
-        game_match_event::{GameMatchEvent, GameMatchEventFilter, GameMatchEventType},
+        game_match_event::{GameMatchEvent, GameMatchEventType},
         ticket::{CreateTicket, ObtainedTicket, Ticket},
     },
 };
@@ -161,17 +160,21 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
     /// Remove all invalid tickets of the user
     /// invalid tickets are the ones which have not been paid and their 'valid_until' field has expired.
     async fn remove_invalid_tickets(&self, desired_user_id: i32) -> anyhow::Result<Vec<i32>> {
-        let invalid_ticket_ids: Vec<i32> = delete(
-            ticket::table.filter(
-                ticket::user_id
-                    .eq(desired_user_id)
-                    .and(ticket::valid_until.le(TimeHandling::store())),
-            ),
-        )
-        .returning(ticket::id)
-        .get_results(&self.get_connection().await?)?;
+        let tickets_to_remove: Vec<i32> = ticket::table
+            .filter(ticket::user_id.eq(desired_user_id))
+            .inner_join(bet::table.inner_join(
+                game_match_event::table.on(game_match_event::game_match_id.eq(bet::game_match_id)),
+            ))
+            .order((bet::id, game_match_event::created_at.desc()))
+            .filter(game_match_event::event_type.ne(GameMatchEventType::Live.to_string()))
+            .or_filter(game_match_event::event_type.ne(GameMatchEventType::Overtime.to_string()))
+            .distinct_on(bet::id)
+            .select(ticket::id)
+            .get_results(&self.get_connection().await?)?;
 
-        Ok(invalid_ticket_ids)
+        let _ = delete(ticket::table.filter(ticket::id.eq_any(&tickets_to_remove)));
+
+        Ok(tickets_to_remove)
     }
 
     /// Get the current ticket
@@ -235,14 +238,9 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
 
         let event = is_game_played.extract_event()?;
 
-        // retrieve played until date
-        let played_until = match event {
-            GameMatchEventType::Live(date) | GameMatchEventType::Overtime(date) => {
-                if date <= Utc::now() {
-                    anyhow::bail!("Cannot place a bet on a match that is in the past");
-                }
-                date
-            }
+        // if the game is not live or overtime, the placing of the bet cannot happen
+        match event {
+            GameMatchEventType::Live | GameMatchEventType::Overtime => {}
             _ => anyhow::bail!("The game is not currently played!"),
         };
 
@@ -250,24 +248,16 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         let desired_ticket: Ticket = ticket::table.find(desired_ticket_id).first(&connection)?;
 
         // does the same person already have a bet on the match in the ticket?
-        let already_has_bet: usize = (bet::table
-            .filter(bet::game_match_id.eq(new_bet.game_match_id))
-            .inner_join(ticket::table))
-        .filter(ticket::id.eq(desired_ticket.id))
-        .execute(&connection)?;
+        let already_has_bet: usize = bet::table
+            .filter(
+                bet::game_match_id
+                    .eq(new_bet.game_match_id)
+                    .and(bet::ticket_id.eq(desired_ticket_id)),
+            )
+            .execute(&connection)?;
 
         if already_has_bet != 0 {
             anyhow::bail!("Cannot put more bets on the same match!");
-        }
-
-        // update the new ticket validity
-        // either when no validity has been set, or when the valid date is bigger than on the current ticket
-        if desired_ticket.valid_until.as_str() == ""
-            || TimeHandling::load_timestamp(&desired_ticket.valid_until)? >= played_until
-        {
-            let _ = update(ticket::table.filter(ticket::id.eq(desired_ticket.id)))
-                .set(ticket::valid_until.eq(played_until.to_string()))
-                .execute(&connection)?;
         }
 
         let query_result: Bet = insert_into(bet::table)
@@ -286,59 +276,23 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
     ) -> anyhow::Result<()> {
         let connection: PgPooledConnection = self.get_connection().await?;
 
-        // obtain all bets
-        let bets_and_info: Vec<(Bet, Ticket, GameMatchEvent)> = ticket::table
-            .filter(ticket::id.eq(desired_ticket_id))
-            .inner_join(
-                bet::table.inner_join(game_match::table.inner_join(game_match_event::table)),
-            )
-            .order((bet::id, game_match_event::created_at.desc()))
-            .filter(game_match_event::event_type.eq(GameMatchEventFilter::Live.to_string()))
-            .or_filter(game_match_event::event_type.eq(GameMatchEventFilter::Overtime.to_string()))
-            .distinct_on(bet::id)
-            .select((
-                bet::all_columns,
-                ticket::all_columns,
-                game_match_event::all_columns,
-            ))
-            .get_results(&connection)?;
-
-        // retrieve the desired bet from the list
-        let desired_bet = bets_and_info
-            .iter()
-            .find(|(bet, _, _)| bet.id == desired_bet_id);
-
         // check if the bet is in ticket
-        if desired_bet.is_none() {
+        let is_bet_in_ticket: usize = bet::table
+            .filter(
+                bet::id
+                    .eq(desired_bet_id)
+                    .and(bet::ticket_id.eq(desired_ticket_id)),
+            )
+            .execute(&connection)?;
+
+        if is_bet_in_ticket == 0 {
             anyhow::bail!("The bet does not belong to the ticket!")
-        }
-
-        // unwrap the bet
-        let (bet_to_remove, in_ticket, with_event) = desired_bet.unwrap();
-
-        // find new minimal ticket validity
-        // unwrap_or called to avoid panics.
-        // it is fixed in this api, because whenever the type is "Live" or "Overtime", it always has the
-        // "event_value" field filled with a DateTime string representation
-        if in_ticket.valid_until.clone()
-            == with_event.event_value.clone().unwrap_or_else(|| "".into())
-        {
-            // in case this was the only bet, the new valid date is set to 10 days from now
-            let new_validity = bets_and_info
-                .iter()
-                .map(|(_, _, event)| event.event_value.clone())
-                .flatten()
-                .min()
-                .unwrap_or_else(|| (Utc::now() + Duration::days(10)).to_string());
-
-            // set the new validity
-            let _ = update(ticket::table.filter(ticket::id.eq(desired_ticket_id)))
-                .set(ticket::valid_until.eq(new_validity))
-                .execute(&connection)?;
+        } else if is_bet_in_ticket != 1 {
+            anyhow::bail!("Inconsistent data in the database. The bet is present twice!");
         }
 
         // remove the bet from the ticket
-        let _ = delete(bet::table.filter(bet::id.eq(bet_to_remove.id))).execute(&connection)?;
+        let _ = delete(bet::table.filter(bet::id.eq(desired_bet_id))).execute(&connection)?;
 
         Ok(())
     }
@@ -348,26 +302,48 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
         let connection: PgPooledConnection = self.get_connection().await?;
 
         // obtain current ticket, along with the bets
-        let tickets_bets_and_games: Vec<(Ticket, Bet, GameMatch)> = ticket::table
-            .filter(ticket::id.eq(desired_ticket_id))
-            .inner_join(bet::table.inner_join(game_match::table))
-            .select((
-                ticket::all_columns,
-                bet::all_columns,
-                game_match::all_columns,
-            ))
-            .get_results(&connection)?;
+        let tickets_bets_games_and_latest_event: Vec<(Ticket, Bet, GameMatch, GameMatchEvent)> =
+            ticket::table
+                .filter(ticket::id.eq(desired_ticket_id))
+                .inner_join(
+                    bet::table.inner_join(game_match::table.inner_join(game_match_event::table)),
+                )
+                .order((bet::id, game_match_event::created_at.desc()))
+                .distinct_on(bet::id)
+                .select((
+                    ticket::all_columns,
+                    bet::all_columns,
+                    game_match::all_columns,
+                    game_match_event::all_columns,
+                ))
+                .get_results(&connection)?;
 
         // the ticket is empty
-        if tickets_bets_and_games.is_empty() {
-            anyhow::bail!("Cannot submit an empty ticket!")
+        if tickets_bets_games_and_latest_event.is_empty() {
+            anyhow::bail!("Cannot submit an empty ticket!");
+        }
+
+        // find if there are matches that are not live
+        let are_some_not_live: Option<i32> = tickets_bets_games_and_latest_event
+            .iter()
+            .map(|(_, _, _, event)| event.event_type.clone())
+            .filter(|event_type| {
+                event_type != &GameMatchEventType::Live.to_string()
+                    || event_type != &GameMatchEventType::Overtime.to_string()
+            })
+            .map(|_| 1)
+            .reduce(|element, element_two| element + element_two);
+
+        // not all matches are live!
+        if are_some_not_live.is_some() {
+            anyhow::bail!("Cannot submit ticket with bets on matches that have ended or have not been played yet!");
         }
 
         // obtain the ticket
-        let ticket: Ticket = tickets_bets_and_games[0].0.clone();
-        let bets_and_matches: Vec<(Bet, GameMatch)> = tickets_bets_and_games
+        let ticket: Ticket = tickets_bets_games_and_latest_event[0].0.clone();
+        let bets_and_matches: Vec<(Bet, GameMatch)> = tickets_bets_games_and_latest_event
             .into_iter()
-            .map(|(_, bet, game_match)| (bet, game_match))
+            .map(|(_, bet, game_match, _)| (bet, game_match))
             .collect();
 
         // check user balance first

@@ -77,8 +77,7 @@ CREATE TABLE "game_match_event" (
 CREATE TABLE "ticket" (
     id SERIAL PRIMARY KEY,
     "user_id" INTEGER REFERENCES "user" NOT NULL,
-    created_at TEXT NOT NULL,
-    valid_until TEXT NOT NULL
+    created_at TEXT NOT NULL
 );
 
 -- Tickets that have been submitted

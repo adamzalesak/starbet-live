@@ -90,7 +90,6 @@ table! {
         id -> Int4,
         user_id -> Int4,
         created_at -> Text,
-        valid_until -> Text,
     }
 }
 

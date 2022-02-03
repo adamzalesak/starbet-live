@@ -3,7 +3,6 @@ use std::fmt::Display;
 use crate::db_models::game_match::GameMatch;
 use crate::schema::game_match_event;
 use crate::type_storing::time_handling::TimeHandling;
-use chrono::{DateTime, Utc};
 
 /// Read structure, used for data mapping of
 /// `game_match_event` record from the database
@@ -33,9 +32,9 @@ pub struct CreateGameMatchEvent {
 #[derive(PartialEq, Clone)]
 pub enum GameMatchEventType {
     Upcoming,
-    Live(DateTime<Utc>),
+    Live,
     Cancelled,
-    Overtime(DateTime<Utc>),
+    Overtime,
     Ended(i32),
 }
 
@@ -59,9 +58,9 @@ impl Display for GameMatchEventType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let self_string = match self {
             GameMatchEventType::Upcoming => "Upcoming",
-            GameMatchEventType::Live(_) => "Live",
+            GameMatchEventType::Live => "Live",
             GameMatchEventType::Cancelled => "Cancelled",
-            GameMatchEventType::Overtime(_) => "Overtime",
+            GameMatchEventType::Overtime => "Overtime",
             GameMatchEventType::Ended(_) => "Ended",
         };
 
@@ -107,19 +106,9 @@ impl GameMatchEvent {
     pub fn extract_event(&self) -> anyhow::Result<GameMatchEventType> {
         match self.event_type.as_ref() {
             "Upcoming" => Ok(GameMatchEventType::Upcoming),
-            "Live" => Ok(GameMatchEventType::Overtime(TimeHandling::load_timestamp(
-                &self
-                    .event_value
-                    .clone()
-                    .unwrap_or_else(|| String::from("Will not convert")),
-            )?)),
+            "Live" => Ok(GameMatchEventType::Live),
             "Cancelled" => Ok(GameMatchEventType::Cancelled),
-            "Overtime" => Ok(GameMatchEventType::Overtime(TimeHandling::load_timestamp(
-                &self
-                    .event_value
-                    .clone()
-                    .unwrap_or_else(|| String::from("Will not convert")),
-            )?)),
+            "Overtime" => Ok(GameMatchEventType::Overtime),
             "Ended" => {
                 let get_event_value = self
                     .event_value
@@ -154,9 +143,6 @@ impl CreateGameMatchEvent {
             event_type: event_type.to_string(),
             created_at: TimeHandling::store(),
             event_value: match event_type {
-                GameMatchEventType::Live(until) | GameMatchEventType::Overtime(until) => {
-                    Some(until.to_string())
-                }
                 GameMatchEventType::Ended(winner_team_id) => Some(winner_team_id.to_string()),
                 _ => None,
             },

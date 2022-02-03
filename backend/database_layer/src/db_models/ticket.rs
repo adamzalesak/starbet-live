@@ -2,7 +2,6 @@ use crate::db_models::{
     bet::Bet, game_match::GameMatch, submitted_ticket::CreateSubmittedTicket, user::User,
 };
 use crate::{schema::ticket, type_storing::time_handling::TimeHandling};
-use chrono::{Duration, Utc};
 
 /// encapuslates an obtained ticket
 pub enum ObtainedTicket {
@@ -20,7 +19,6 @@ pub struct Ticket {
     pub id: i32,
     pub user_id: i32,
     pub created_at: String,
-    pub valid_until: String,
 }
 
 /// Write structure, used for inserting
@@ -30,7 +28,6 @@ pub struct Ticket {
 pub struct CreateTicket {
     pub user_id: i32,
     pub created_at: String,
-    pub valid_until: String,
 }
 
 impl Ticket {
@@ -39,9 +36,7 @@ impl Ticket {
         paid_price: f64,
         bets_and_matches: &[(Bet, GameMatch)],
     ) -> anyhow::Result<CreateSubmittedTicket> {
-        if self.valid_until <= Utc::now().to_string() {
-            anyhow::bail!("Cannot send an invalid ticket!")
-        } else if bets_and_matches.is_empty() {
+        if bets_and_matches.is_empty() {
             anyhow::bail!("Cannot submit an empty ticket!")
         }
 
@@ -85,7 +80,6 @@ impl CreateTicket {
     /// Params
     /// ---
     /// - user_id: ID of the user we wish to link the ticket to
-    /// - price: how much is the user going to pay for this ticket
     ///  
     /// Returns
     /// ---
@@ -94,7 +88,6 @@ impl CreateTicket {
         CreateTicket {
             user_id,
             created_at: TimeHandling::store(),
-            valid_until: (Utc::now() + Duration::days(10)).to_string(),
         }
     }
 }
