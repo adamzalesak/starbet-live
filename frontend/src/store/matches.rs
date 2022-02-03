@@ -150,13 +150,13 @@ impl Store for MatchesStore {
                     .filter(|m| m.id != match_id)
                     .collect();
                 self.matches_live = self
-                    .matches_upcoming
+                    .matches_live
                     .clone()
                     .into_iter()
                     .filter(|m| m.id != match_id)
                     .collect();
                 self.matches_ended = self
-                    .matches_upcoming
+                    .matches_ended
                     .clone()
                     .into_iter()
                     .filter(|m| m.id != match_id)
