@@ -3,7 +3,7 @@ use yew::prelude::*;
 
 pub enum Msg {}
 
-pub struct MatchItem {
+pub struct MatchItemLive {
     id: i32,
     game_id: i32,
     team_one_name: String,
@@ -14,7 +14,7 @@ pub struct MatchItem {
 }
 
 #[derive(Properties, PartialEq)]
-pub struct MatchItemProps {
+pub struct MatchItemLiveProps {
     pub id: i32,
     pub game_id: i32,
     pub team_one_name: String,
@@ -24,12 +24,12 @@ pub struct MatchItemProps {
     pub state: String,
 }
 
-impl Component for MatchItem {
+impl Component for MatchItemLive {
     type Message = Msg;
-    type Properties = MatchItemProps;
+    type Properties = MatchItemLiveProps;
 
     fn create(ctx: &Context<Self>) -> Self {
-        let MatchItemProps {
+        let MatchItemLiveProps {
             id,
             game_id,
             team_one_name,

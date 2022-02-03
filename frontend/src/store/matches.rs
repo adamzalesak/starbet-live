@@ -52,9 +52,10 @@ impl Store for MatchesStore {
             MatchesRequest::Fetch => {
                 link.send_message(Action::SetLoading(true));
 
-                let grpc_client =
-                    match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
                 link.send_future(async move {
+                    let grpc_client = match_service_client::MatchService::new(String::from(
+                        "http://127.0.0.1:5430",
+                    ));
                     Action::ReceiveResponseUpcoming(
                         grpc_client
                             .list_matches(ListMatchesRequest {
@@ -63,9 +64,11 @@ impl Store for MatchesStore {
                             .await,
                     )
                 });
-                let grpc_client =
-                    match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
+
                 link.send_future(async move {
+                    let grpc_client = match_service_client::MatchService::new(String::from(
+                        "http://127.0.0.1:5430",
+                    ));
                     Action::ReceiveResponseLive(
                         grpc_client
                             .list_matches(ListMatchesRequest {
@@ -74,9 +77,11 @@ impl Store for MatchesStore {
                             .await,
                     )
                 });
-                let grpc_client =
-                    match_service_client::MatchService::new(String::from("http://127.0.0.1:5430"));
+
                 link.send_future(async move {
+                    let grpc_client = match_service_client::MatchService::new(String::from(
+                        "http://127.0.0.1:5430",
+                    ));
                     Action::ReceiveResponseEnded(
                         grpc_client
                             .list_matches(ListMatchesRequest {
@@ -101,7 +106,9 @@ impl Store for MatchesStore {
 
             Action::ReceiveResponseUpcoming(Ok(result)) => {
                 self.matches_upcoming = result.game_matches;
-                self.matches_upcoming.sort_by_key(|m| m.id);
+                self.matches_upcoming
+                    .sort_by_key(|m| m.supposed_start_at.clone());
+                self.matches_upcoming.reverse();
                 self.is_loading = false;
             }
             Action::ReceiveResponseUpcoming(Err(err)) => {
@@ -111,7 +118,9 @@ impl Store for MatchesStore {
             }
             Action::ReceiveResponseLive(Ok(result)) => {
                 self.matches_live = result.game_matches;
-                self.matches_live.sort_by_key(|m| m.id);
+                self.matches_live
+                    .sort_by_key(|m| m.supposed_start_at.clone());
+                self.matches_live.reverse();
                 self.is_loading = false;
             }
             Action::ReceiveResponseLive(Err(err)) => {
@@ -121,7 +130,9 @@ impl Store for MatchesStore {
             }
             Action::ReceiveResponseEnded(Ok(result)) => {
                 self.matches_ended = result.game_matches;
-                self.matches_ended.sort_by_key(|m| m.id);
+                self.matches_ended
+                    .sort_by_key(|m| m.supposed_start_at.clone());
+                self.matches_ended.reverse();
                 self.is_loading = false;
             }
             Action::ReceiveResponseEnded(Err(err)) => {
@@ -154,15 +165,21 @@ impl Store for MatchesStore {
                 match match_item.game_event_type {
                     0 => {
                         self.matches_upcoming.push(match_item);
-                        self.matches_upcoming.sort_by_key(|m| m.id);
+                        self.matches_upcoming
+                            .sort_by_key(|m| m.supposed_start_at.clone());
+                        self.matches_upcoming.reverse();
                     }
                     1 => {
                         self.matches_live.push(match_item);
-                        self.matches_live.sort_by_key(|m| m.id);
+                        self.matches_live
+                            .sort_by_key(|m| m.supposed_start_at.clone());
+                        self.matches_live.reverse();
                     }
                     2 => {
                         self.matches_ended.push(match_item);
-                        self.matches_ended.sort_by_key(|m| m.id);
+                        self.matches_ended
+                            .sort_by_key(|m| m.supposed_start_at.clone());
+                        self.matches_ended.reverse();
                     }
                     _ => {}
                 }

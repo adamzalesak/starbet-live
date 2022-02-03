@@ -1,3 +1,4 @@
+use crate::components::main::matches_upcoming::MatchesUpcoming;
 use yew::prelude::*;
 
 pub enum Msg {}
@@ -18,7 +19,7 @@ impl Component for UpcomingPage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-         <div>{"upcoming matches page"}</div>
+            <MatchesUpcoming />
         }
     }
 }

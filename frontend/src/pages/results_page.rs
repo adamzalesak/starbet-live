@@ -1,3 +1,4 @@
+use crate::components::main::matches_ended::MatchesEnded;
 use yew::prelude::*;
 
 pub enum Msg {}
@@ -18,7 +19,7 @@ impl Component for ResultsPage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-         <div>{"results page"}</div>
+         <MatchesEnded />
         }
     }
 }

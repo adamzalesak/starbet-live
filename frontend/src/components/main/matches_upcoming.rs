@@ -1,4 +1,4 @@
-use super::matches_game::MatchesGame;
+use super::game_matches::GameMatches;
 use crate::components::loading_animation::LoadingAnimation;
 use crate::store::{GamesRequest, GamesStore, MatchesRequest, MatchesStore};
 use crate::types::grpc_types::game::Game;
@@ -18,7 +18,7 @@ pub enum Msg {
     MatchesStore(ReadOnly<MatchesStore>),
     HandleChange,
 }
-pub struct Matches {
+pub struct MatchesUpcoming {
     filter_ids: Vec<i32>,
     is_loading: bool,
     is_error: bool,
@@ -26,12 +26,12 @@ pub struct Matches {
     games_store: Box<dyn Bridge<StoreWrapper<GamesStore>>>,
     matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
     games: Vec<Game>,
-    live_matches: Vec<Match>,
+    matches_upcoming: Vec<Match>,
 
     matches: Vec<Match>,
 }
 
-impl Component for Matches {
+impl Component for MatchesUpcoming {
     type Message = Msg;
     type Properties = ();
 
@@ -44,7 +44,7 @@ impl Component for Matches {
             games_store: GamesStore::bridge(ctx.link().callback(Msg::GamesStore)),
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
             games: Vec::new(),
-            live_matches: Vec::new(),
+            matches_upcoming: Vec::new(),
 
             matches: Vec::new(),
         }
@@ -69,7 +69,7 @@ impl Component for Matches {
             }
             Msg::MatchesStore(state) => {
                 let state = state.borrow();
-                self.live_matches = state.matches_live.clone();
+                self.matches_upcoming = state.matches_upcoming.clone();
 
                 ctx.link().send_message(Msg::HandleChange);
             }
@@ -82,7 +82,7 @@ impl Component for Matches {
                     .map(|g| g.id)
                     .collect();
                 self.matches = self
-                    .live_matches
+                    .matches_upcoming
                     .clone()
                     .into_iter()
                     .filter(|m| game_ids.contains(&m.game_id))
@@ -94,20 +94,25 @@ impl Component for Matches {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <ul class="flex flex-col gap-2 overflow-auto">
+            <ul class="flex flex-col overflow-auto">
             {
                 if self.is_loading {
                     html! { <LoadingAnimation color="dark-blue" /> }
                 } else if self.is_error {
                     html! { {"error"} }
                 } else if self.matches.is_empty() {
-                    html! { <div class="bg-blue rounded-md p-1 text-center text-white" >{ "No live matches to show" }</div> }
+                    html! { <div class="bg-blue rounded-md p-1 text-center text-white" >{ "No upcoming matches to show" }</div> }
                 } else {
                     self.games.clone().into_iter().map(|game| {
                         let game_id = game.id.clone();
                         html! {
                             <li key={ game.id }>
-                                <MatchesGame id={game.id} name={game.name} logo_url={game.logo_url} />
+                                <GameMatches
+                                    event_type={GameEventType::Upcoming}
+                                    id={game.id}
+                                    name={game.name}
+                                    logo_url={game.logo_url}
+                                />
                             </li>
                         }
                     }).collect::<Html>()

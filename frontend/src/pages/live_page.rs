@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::components::main::live_matches::Matches;
+use crate::components::main::matches_live::MatchesLive;
 
 pub enum Msg {}
 
@@ -20,7 +20,7 @@ impl Component for LivePage {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-          <Matches />
+          <MatchesLive />
         }
     }
 }
