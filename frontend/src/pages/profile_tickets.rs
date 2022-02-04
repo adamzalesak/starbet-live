@@ -94,10 +94,26 @@ impl Component for ProfileTickets {
                         }
                     } else {
                         self.tickets.clone().into_iter().map(|ticket| {
+                            let price_paid = match ticket.price_paid.parse::<f32>() {
+                                Ok(val) => val,
+                                _ => 1.0,
+                            };
+                            let total_ratio = match ticket.total_ratio.parse::<f32>() {
+                                Ok(val) => val,
+                                _ => 1.0,
+                            };
+
                             html! {
-                                <div>
-                                    <div>{ticket.submitted_at}</div>
-                                    <div>{ticket.price_paid}</div>
+                                <div class={format!("rounded-md p-1 mt-2 border {}", match ticket.won {
+                                    Some(true) => "bg-success-light border-success".to_string(),
+                                    Some(false) => "bg-danger-light border-danger".to_string(),
+                                    None => "bg-light-grey".to_string(),
+                                })}>
+                                    <div>{format!("Number of bets: {}", ticket.bets.len())}</div>
+                                    <div>{format!("Price paid: {}", price_paid)}</div>
+                                    <div>{format!("Total ratio: {}", total_ratio)}</div>
+                                    <div>{format!("Submitted at: {}", ticket.submitted_at)}</div>
+                                    <div>{format!("Eventual win: {}", total_ratio * price_paid)}</div>
                                     <div>{match ticket.won {
                                         Some(v) => v.to_string(),
                                         None => "not evaluated yet".to_string(),

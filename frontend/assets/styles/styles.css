@@ -123,6 +123,10 @@ body {
   border-color: var(--danger);
 }
 
+.border-success {
+  border-color: var(--success);
+}
+
 .required_input:after {
   content: ' *';
   color: var(--danger);

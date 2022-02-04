@@ -102,14 +102,14 @@ impl Component for LayoutProfile {
                     <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
                                                                                         if self.current_tab == Some(ProfileRoute::Tickets)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
-                        <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="blockp-1 ">
+                        <Link<ProfileRoute> to={ProfileRoute::Tickets} classes="block p-1 ">
                             { "Tickets" }
                         </Link<ProfileRoute>>
                     </div>
                     <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
                                                                                         if self.current_tab == Some(ProfileRoute::Statistics)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
-                        <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="blockp-1 ">
+                        <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="block p-1 ">
                             { "Statistics" }
                         </Link<ProfileRoute>>
                     </div>
