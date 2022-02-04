@@ -451,7 +451,7 @@ impl MatchRepo for PgMatchRepo {
                 .find(desired_match_id)
                 .get_result(&connection)?;
 
-            if !(game_match.team_one_id != id || game_match.team_two_id != id) {
+            if !(game_match.team_one_id == id || game_match.team_two_id == id) {
                 anyhow::bail!(
                     "The team you wish to select as the winner does not belong to this match"
                 );
