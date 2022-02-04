@@ -45,7 +45,7 @@ impl GameService for MyGameService {
         request: Request<CreateGameRequest>,
     ) -> Result<Response<CreateGameReply>, Status> {
         let request = request.into_inner();
-        let create_game = CreateGame::new(&*request.name, "", &*request.logo_url); // TODO
+        let create_game = CreateGame::new(&*request.name, "", &*request.logo_url);
 
         match self.repo.create(create_game).await {
             Ok(game_id) => Ok(Response::new(CreateGameReply { id: game_id })),

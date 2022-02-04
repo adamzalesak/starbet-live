@@ -11,15 +11,12 @@ use crate::game_match::{
     CreateMatchReply, CreateMatchRequest, GameEventType, ListMatchesReply, ListMatchesRequest,
     Match,
 };
+use crate::repos::Repos;
 use crate::team::Team;
 
 use database_layer::{
     connection::PgPool,
-    db_access::{
-        game_match::{MatchRepo, PgMatchRepo},
-        repo::Repo,
-        team::{PgTeamRepo, TeamRepo},
-    },
+    db_access::{game_match::MatchRepo, team::TeamRepo},
     db_models::{
         game_match::CreateGameMatch,
         game_match_event::{GameMatchEventFilter, GameMatchEventType},
@@ -28,16 +25,14 @@ use database_layer::{
 use ws_layer::Clients;
 
 pub struct MyMatchService {
-    repo: PgMatchRepo,
-    team_repo: PgTeamRepo,
+    repos: Repos,
     ws_clients: Clients,
 }
 
 impl MyMatchService {
     pub fn new(pool: &Arc<PgPool>, ws_clients: Clients) -> MyMatchService {
         MyMatchService {
-            repo: PgMatchRepo::new(pool),
-            team_repo: PgTeamRepo::new(pool),
+            repos: Repos::new(pool),
             ws_clients: ws_clients,
         }
     }
@@ -58,7 +53,8 @@ impl MatchService for MyMatchService {
         };
 
         match self
-            .repo
+            .repos
+            .game_match
             .get_all_show_info(Some(game_match_event_type), None)
             .await
         {
@@ -67,7 +63,7 @@ impl MatchService for MyMatchService {
                 for (game_match, _) in &game_matches {
                     for team_id in vec![game_match.team_one_id, game_match.team_two_id] {
                         if !teams.contains_key(&team_id) {
-                            let team = match self.team_repo.get(team_id).await {
+                            let team = match self.repos.team.get(team_id).await {
                                 Ok(team) => Ok(Team::from(&team)),
                                 Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
                             }?;
@@ -121,32 +117,12 @@ impl MatchService for MyMatchService {
             &*request.state,
         );
 
-        match self.repo.create(create_match).await {
+        match self.repos.game_match.create(create_match).await {
             Ok(match_id) => {
-                match self.repo.get(match_id).await {
+                match self.repos.get_filled_match(match_id).await {
                     Ok(game_match) => {
-                        let mut teams = HashMap::new();
-                        for team_id in vec![game_match.team_one_id, game_match.team_two_id] {
-                            if !teams.contains_key(&team_id) {
-                                let team = match self.team_repo.get(team_id).await {
-                                    Ok(team) => Ok(Team::from(&team)),
-                                    Err(err) => {
-                                        Err(Status::new(Code::from_i32(13), err.to_string()))
-                                    }
-                                }?;
-                                teams.insert(team_id, team);
-                            }
-                        }
-
-                        let mut grpc_match = Match::from(&game_match);
-                        grpc_match.team_one =
-                            Some(teams.get(&game_match.team_one_id).unwrap().clone());
-                        grpc_match.team_two =
-                            Some(teams.get(&game_match.team_two_id).unwrap().clone());
-                        grpc_match.game_event_type = GameEventType::Upcoming.into();
-
                         let mut buf = BytesMut::with_capacity(64);
-                        let _ = grpc_match.encode(&mut buf);
+                        let _ = game_match.encode(&mut buf);
                         for client in self.ws_clients.lock().await.values() {
                             if let Some(sender) = &client.sender {
                                 let _ = sender
@@ -155,7 +131,7 @@ impl MatchService for MyMatchService {
                         }
                     }
                     Err(err) => return Err(Status::new(Code::from_i32(13), err.to_string())),
-                };
+                }
                 Ok(Response::new(CreateMatchReply { id: match_id }))
             }
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
@@ -175,41 +151,27 @@ impl MatchService for MyMatchService {
             GameEventType::Ended => GameMatchEventType::Ended(winner_id.unwrap()),
         };
         match self
-            .repo
+            .repos
+            .game_match
             .create_event(request.match_id, game_match_event_type)
             .await
         {
-            Ok(_) => match self.repo.get(request.match_id).await {
-                Ok(game_match) => {
-                    let mut teams = HashMap::new();
-                    for team_id in vec![game_match.team_one_id, game_match.team_two_id] {
-                        if !teams.contains_key(&team_id) {
-                            let team = match self.team_repo.get(team_id).await {
-                                Ok(team) => Ok(Team::from(&team)),
-                                Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
-                            }?;
-                            teams.insert(team_id, team);
+            Ok(_) => {
+                match self.repos.get_filled_match(request.match_id).await {
+                    Ok(game_match) => {
+                        let mut buf = BytesMut::with_capacity(64);
+                        let _ = game_match.encode(&mut buf);
+                        for client in self.ws_clients.lock().await.values() {
+                            if let Some(sender) = &client.sender {
+                                let _ = sender
+                                    .send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+                            }
                         }
                     }
-
-                    let mut grpc_match = Match::from(&game_match);
-                    grpc_match.team_one = Some(teams.get(&game_match.team_one_id).unwrap().clone());
-                    grpc_match.team_two = Some(teams.get(&game_match.team_two_id).unwrap().clone());
-                    grpc_match.game_event_type = request.game_event_type;
-                    grpc_match.winner_id = winner_id;
-
-                    let mut buf = BytesMut::with_capacity(64);
-                    let _ = grpc_match.encode(&mut buf);
-                    for client in self.ws_clients.lock().await.values() {
-                        if let Some(sender) = &client.sender {
-                            let _ = sender
-                                .send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
-                        }
-                    }
-                    Ok(Response::new(CreateGameEventReply {}))
+                    Err(err) => return Err(Status::new(Code::from_i32(13), err.to_string())),
                 }
-                Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
-            },
+                Ok(Response::new(CreateGameEventReply {}))
+            }
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
     }
@@ -220,11 +182,27 @@ impl MatchService for MyMatchService {
     ) -> Result<Response<ChangeStateReply>, Status> {
         let request = request.into_inner();
         match self
-            .repo
+            .repos
+            .game_match
             .update_status(request.match_id, &request.state)
             .await
         {
-            Ok(()) => Ok(Response::new(ChangeStateReply {})),
+            Ok(()) => {
+                match self.repos.get_filled_match(request.match_id).await {
+                    Ok(game_match) => {
+                        let mut buf = BytesMut::with_capacity(64);
+                        let _ = game_match.encode(&mut buf);
+                        for client in self.ws_clients.lock().await.values() {
+                            if let Some(sender) = &client.sender {
+                                let _ = sender
+                                    .send(Ok(ws_layer::Msg::binary(buf.clone().freeze().to_vec())));
+                            }
+                        }
+                    }
+                    Err(err) => return Err(Status::new(Code::from_i32(13), err.to_string())),
+                }
+                Ok(Response::new(ChangeStateReply {}))
+            }
             Err(err) => Err(Status::new(Code::from_i32(13), err.to_string())),
         }
     }
