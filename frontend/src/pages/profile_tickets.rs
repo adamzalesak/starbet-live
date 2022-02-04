@@ -1,4 +1,5 @@
 use crate::{
+    components::loading_animation::LoadingAnimation,
     store::UserStore,
     types::grpc_types::ticket::{
         ticket_service_client, ListTicketsReply, ListTicketsRequest, Ticket,
@@ -88,6 +89,13 @@ impl Component for ProfileTickets {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <>
+                {
+                    if self.is_loading {
+                        html! { <LoadingAnimation color="dark-blue" /> }
+                    } else {
+                        html! { }
+                    }
+                }
                 {
                     if self.tickets.is_empty() {
                         html! {

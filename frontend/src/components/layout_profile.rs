@@ -91,7 +91,7 @@ impl Component for LayoutProfile {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 text-center profile-nav">
+                <div class="grid grid-cols-2 text-center profile-nav">
                     <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
                                                                                         if self.current_tab == Some(ProfileRoute::Summary)
                                                                                             {"bg-light-grey"} else {"bg-blue text-white"})}>
@@ -106,13 +106,13 @@ impl Component for LayoutProfile {
                             { "Tickets" }
                         </Link<ProfileRoute>>
                     </div>
-                    <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
-                                                                                        if self.current_tab == Some(ProfileRoute::Statistics)
-                                                                                            {"bg-light-grey"} else {"bg-blue text-white"})}>
-                        <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="block p-1 ">
-                            { "Statistics" }
-                        </Link<ProfileRoute>>
-                    </div>
+                    // <div onclick={ ctx.link().callback(|_| Msg::SetCurrentTab) } class={format!("font-medium transition-all {}",
+                    //                                                                     if self.current_tab == Some(ProfileRoute::Statistics)
+                    //                                                                         {"bg-light-grey"} else {"bg-blue text-white"})}>
+                    //     <Link<ProfileRoute> to={ProfileRoute::Statistics} classes="block p-1 ">
+                    //         { "Statistics" }
+                    //     </Link<ProfileRoute>>
+                    // </div>
                 </div>
                 { ctx.props().children.clone() }
 
