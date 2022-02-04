@@ -14,11 +14,12 @@ use yew_agent::AgentLink;
 #[derive(Debug)]
 pub enum TicketRequest {
     SetUserId(i32),
+    ChangeTicketValue(f32),
+    UpdateRate(f32),
     LoadTicket,
     CreateBet(i32, i32),
     DeleteBet(i32),
     SubmitTicket,
-    ChangeTicketValue(f32),
 }
 
 #[derive(Debug)]
@@ -26,6 +27,7 @@ pub enum Action {
     SetUserId(i32),
     LoadTicket(anyhow::Result<GetCurrentTicketReply>),
     SetTicketValue(f32),
+    SetRate(f32),
     CreateBetReceiveResponse(anyhow::Result<CreateBetReply>),
     DeleteBetReceiveResponse(anyhow::Result<DeleteBetReply>),
     SubmitTicketReceiveResponse(anyhow::Result<SubmitTicketReply>),
@@ -59,6 +61,12 @@ impl Store for TicketStore {
         match msg {
             TicketRequest::SetUserId(id) => {
                 link.send_message(Action::SetUserId(id));
+            }
+            TicketRequest::ChangeTicketValue(value) => {
+                link.send_message(Action::SetTicketValue(value));
+            }
+            TicketRequest::UpdateRate(value) => {
+                link.send_message(Action::SetRate(value));
             }
             TicketRequest::LoadTicket => {
                 let user_id = self.user_id.clone();
@@ -151,9 +159,6 @@ impl Store for TicketStore {
                     )
                 });
             }
-            TicketRequest::ChangeTicketValue(value) => {
-                link.send_message(Action::SetTicketValue(value));
-            }
         }
     }
 
@@ -165,6 +170,9 @@ impl Store for TicketStore {
             }
             Action::SetTicketValue(value) => {
                 self.ticket_value = value;
+            }
+            Action::SetRate(value) => {
+                self.rate = value;
             }
             Action::LoadTicket(Ok(ticket_reply)) => {
                 self.id = ticket_reply.ticket_id;

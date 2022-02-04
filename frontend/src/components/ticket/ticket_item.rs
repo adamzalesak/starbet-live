@@ -15,8 +15,10 @@ pub enum Msg {
 
 pub struct TicketItem {
     bet: Bet,
+
     ticket_store: Box<dyn Bridge<StoreWrapper<TicketStore>>>,
     matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
+
     team_one_name: String,
     team_two_name: String,
     bet_team_name: String,
@@ -35,8 +37,10 @@ impl Component for TicketItem {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             bet: ctx.props().bet.clone(),
+
             ticket_store: TicketStore::bridge(ctx.link().callback(Msg::TicketStore)),
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
+
             team_one_name: String::new(),
             team_two_name: String::new(),
             bet_team_name: String::new(),
@@ -93,7 +97,6 @@ impl Component for TicketItem {
                         <span class="text-yellow">{" vs. "}</span>
                         <span>{self.team_two_name.clone()}</span>
                     </div>
-                    //remove bet from ticket
                     <button type="button" class="w-3 self-start" onclick={ctx.link().callback(|_| Msg::Remove)}>
                         <img src="/remove.svg" alt="closing" class="w-full"/>
                     </button>

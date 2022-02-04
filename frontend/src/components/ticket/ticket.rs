@@ -1,6 +1,7 @@
 use super::ticket_item::TicketItem;
-use crate::store::{TicketRequest, TicketStore};
-use crate::types::grpc_types::bet::Bet;
+use crate::store::{MatchesRequest, MatchesStore, TicketRequest, TicketStore};
+use crate::types::grpc_types::{bet::Bet, game_match::Match};
+use gloo::console::info;
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
@@ -12,14 +13,20 @@ use yew_agent::{
 pub enum Msg {
     ChangeValue(Event),
     Submit,
+    RefreshRate,
     TicketStore(ReadOnly<TicketStore>),
+    MatchesStore(ReadOnly<MatchesStore>),
 }
 
 pub struct Ticket {
     bets: Vec<Bet>,
     rate: f32,
     ticket_value: f32,
+
+    live_matches: Vec<Match>,
+
     ticket_store: Box<dyn Bridge<StoreWrapper<TicketStore>>>,
+    matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
 }
 
 // parse value from event type
@@ -38,7 +45,11 @@ impl Component for Ticket {
             bets: Vec::new(),
             rate: 1.0,
             ticket_value: 1.0,
+
+            live_matches: Vec::new(),
+
             ticket_store: TicketStore::bridge(ctx.link().callback(Msg::TicketStore)),
+            matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
         }
     }
 
@@ -48,16 +59,40 @@ impl Component for Ticket {
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg::MatchesStore(state) => {
+                let state = state.borrow();
+                self.live_matches = state.matches_live.clone();
+
+                ctx.link().send_message(Msg::RefreshRate);
+            }
+
             Msg::TicketStore(state) => {
                 let state = state.borrow();
 
-                self.bets = state.bets.clone();
+                // refresh rate only if bets had changed
+                let x = self
+                    .bets
+                    .clone()
+                    .into_iter()
+                    .map(|b| b.id)
+                    .collect::<Vec<i32>>();
+                let y = state
+                    .bets
+                    .clone()
+                    .into_iter()
+                    .map(|b| b.id)
+                    .collect::<Vec<i32>>();
+                if !x.iter().eq(y.iter()) {
+                    ctx.link().send_message(Msg::RefreshRate);
+                }
 
+                self.bets = state.bets.clone();
                 self.ticket_value = state.ticket_value;
                 self.rate = state.rate;
             }
+
             // check if value is type of f32, otherwise wet bet_value to 1.0
             Msg::ChangeValue(data) => {
                 let val = get_value_from_event(data);
@@ -68,6 +103,38 @@ impl Component for Ticket {
                 self.ticket_store
                     .send(TicketRequest::ChangeTicketValue(value))
             }
+
+            Msg::RefreshRate => {
+                let mut rate_sum: f32 = 0.0;
+                let mut count = 0;
+
+                self.bets.clone().into_iter().for_each(|b| {
+                    count += 1;
+                    if let Some(match_item) = self
+                        .live_matches
+                        .clone()
+                        .into_iter()
+                        .find(|m| m.id == b.match_id)
+                    {
+                        if b.team_id == match_item.team_one.unwrap().id {
+                            if let Ok(team_ratio) = match_item.team_one_ratio.parse::<f32>() {
+                                rate_sum += team_ratio;
+                            }
+                        } else if b.team_id == match_item.team_two.unwrap().id {
+                            if let Ok(team_ratio) = match_item.team_two_ratio.parse::<f32>() {
+                                rate_sum += team_ratio;
+                            }
+                        }
+                    }
+                });
+                let result = if count == 0 {
+                    0.0
+                } else {
+                    rate_sum / count as f32
+                };
+                self.ticket_store.send(TicketRequest::UpdateRate(result));
+            }
+
             Msg::Submit => {
                 self.ticket_store.send(TicketRequest::SubmitTicket);
             }
@@ -105,7 +172,7 @@ impl Component for Ticket {
                         />
                     <button type="submit" class="bg-yellow w-full rounded-t-md p-1 font-bold mt-1 transition-all">{self.ticket_value}{" €"}</button>
                     <div class="flex flex-row justify-between text-sm bg-dark-yellow rounded-b-md p-1">
-                        <span>{"Rate: "}{self.rate}</span>
+                        <span>{"Total ratio: "}{self.rate}</span>
                         <span>{"ev.win: "}{self.ticket_value * self.rate}{"€"}</span>
                     </div>
                 </form>
