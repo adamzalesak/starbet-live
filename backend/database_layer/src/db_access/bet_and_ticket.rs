@@ -329,7 +329,7 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
             .map(|(_, _, _, event)| event.event_type.clone())
             .filter(|event_type| {
                 event_type != &GameMatchEventType::Live.to_string()
-                    || event_type != &GameMatchEventType::Overtime.to_string()
+                    && event_type != &GameMatchEventType::Overtime.to_string()
             })
             .map(|_| 1)
             .reduce(|element, element_two| element + element_two);
