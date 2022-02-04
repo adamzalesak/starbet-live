@@ -13,6 +13,7 @@ use crate::{
     types::{grpc_types::game_match::Match, MainRoute, ProfileRoute},
 };
 use bytes::BytesMut;
+use gloo::console::info;
 use prost::{DecodeError, Message as ProstMessage};
 use wasm_sockets::{self, Message, WebSocketError};
 use yew::prelude::*;
@@ -96,6 +97,8 @@ impl Component for App {
                 if let Some(user) = state.user.clone() {
                     self.ticket_store
                         .send(TicketRequest::SetUserId(user.id.clone()));
+                } else {
+                    self.ticket_store.send(TicketRequest::SetUserId(0));
                 }
             }
             Msg::InitUser => {

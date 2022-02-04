@@ -1,8 +1,11 @@
 use super::ticket_item::TicketItem;
 use crate::components::loading_animation::LoadingAnimation;
-use crate::store::{MatchesRequest, MatchesStore, TicketRequest, TicketStore};
+use crate::store::{
+    MatchesRequest, MatchesStore, TicketRequest, TicketStore, UserRequest, UserStore,
+};
 use crate::types::grpc_types::{bet::Bet, game_match::Match};
 use gloo::console::info;
+use gloo_timers::callback::Timeout;
 use std::collections::HashSet;
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
 use web_sys::HtmlInputElement;
@@ -18,6 +21,7 @@ pub enum Msg {
     RefreshRate,
     TicketStore(ReadOnly<TicketStore>),
     MatchesStore(ReadOnly<MatchesStore>),
+    UserStore(ReadOnly<UserStore>),
 }
 
 pub struct Ticket {
@@ -29,6 +33,7 @@ pub struct Ticket {
 
     ticket_store: Box<dyn Bridge<StoreWrapper<TicketStore>>>,
     matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
+    user_store: Box<dyn Bridge<StoreWrapper<UserStore>>>,
     ticket_is_loading: bool,
     matches_is_loading: bool,
 }
@@ -54,6 +59,7 @@ impl Component for Ticket {
 
             ticket_store: TicketStore::bridge(ctx.link().callback(Msg::TicketStore)),
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
+            user_store: UserStore::bridge(ctx.link().callback(Msg::UserStore)),
             ticket_is_loading: false,
             matches_is_loading: false,
         }
@@ -101,6 +107,8 @@ impl Component for Ticket {
                 self.ticket_is_loading = state.is_loading;
             }
 
+            Msg::UserStore(_) => {}
+
             // check if value is type of f32, otherwise wet bet_value to 1.0
             Msg::ChangeValue(data) => {
                 let val = get_value_from_event(data);
@@ -139,6 +147,7 @@ impl Component for Ticket {
 
             Msg::Submit => {
                 self.ticket_store.send(TicketRequest::SubmitTicket);
+                self.user_store.send(UserRequest::InitializeUser);
             }
         }
         true

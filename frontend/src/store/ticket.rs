@@ -65,7 +65,20 @@ impl Store for TicketStore {
     fn handle_input(&self, link: AgentLink<StoreWrapper<Self>>, msg: Self::Input) {
         match msg {
             TicketRequest::SetUserId(id) => {
-                link.send_message(Action::SetUserId(id));
+                link.send_message(Action::SetUserId(id.clone()));
+
+                // reload ticket
+                let user_id = self.user_id.clone();
+                let grpc_client = ticket_service_client::TicketService::new(String::from(
+                    "http://127.0.0.1:5430",
+                ));
+                link.send_future(async move {
+                    Action::LoadTicket(
+                        grpc_client
+                            .get_current_ticket(GetCurrentTicketRequest { user_id: id })
+                            .await,
+                    )
+                });
             }
             TicketRequest::ChangeTicketValue(value) => {
                 link.send_message(Action::SetTicketValue(value));
@@ -90,7 +103,7 @@ impl Store for TicketStore {
             }
             TicketRequest::CreateBet(match_id, team_id) => {
                 // no ticket id
-                if self.id == 0 {
+                if self.id == 0 || self.user_id == 0 {
                     return;
                 };
 
