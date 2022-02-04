@@ -7,7 +7,10 @@ use crate::diesel::{prelude::*, update, QueryDsl, RunQueryDsl};
 
 // type and structure imports
 use crate::{
-    db_access::repo::Repo,
+    db_access::{
+        repo::Repo,
+        user::{PgUserRepo, UserRepo},
+    },
     db_models::{submitted_bet::SubmittedBet, submitted_ticket::SubmittedTicket},
 };
 
@@ -31,6 +34,7 @@ impl PgSubmittedBetAndTicketRepo {
     /// - `Err(_)` otherwise
     async fn evaluate_submitted_tickets(&self, desired_user_id: i32) -> anyhow::Result<()> {
         let connection: PgPooledConnection = self.get_connection().await?;
+        let pg_user = PgUserRepo::new(&self.pool);
 
         let tickets_to_reevaluate: Vec<(SubmittedTicket, SubmittedBet)> = submitted_ticket::table
             .filter(
@@ -50,11 +54,14 @@ impl PgSubmittedBetAndTicketRepo {
         }
 
         let mut lost_matches: Vec<i32> = Vec::new();
+        let mut won_price: f64 = 0.0;
         let mut won_matches: Vec<i32> = Vec::new();
 
         // look through the bets and set lost and won matches accordingly
         for (ticket, bets) in bind_match_and_bets.iter() {
             let win_status: Vec<Option<bool>> = bets.iter().map(|bet| bet.won).collect();
+            let total_ratio = ticket.total_ratio.parse::<f64>().ok();
+            let price_paid = ticket.price_paid.parse::<f64>().ok();
 
             // if any bet.won is false, the match is lost
             if win_status.contains(&Some(false)) {
@@ -62,6 +69,13 @@ impl PgSubmittedBetAndTicketRepo {
             // this means there was no loss, also if all matches are over, this means the bet is won
             } else if !win_status.contains(&None) {
                 won_matches.push(ticket.id);
+
+                match (total_ratio, price_paid) {
+                    (Some(ratio), Some(price)) => won_price += ratio * price,
+                    _ => {
+                        anyhow::bail!("There has been an internal error while adding the won price")
+                    }
+                }
             }
         }
 
@@ -74,6 +88,11 @@ impl PgSubmittedBetAndTicketRepo {
         let _ = update(submitted_ticket::table.filter(submitted_ticket::id.eq_any(won_matches)))
             .set(submitted_ticket::won.eq(true))
             .execute(&connection)?;
+
+        // add balance to the user
+        if won_price > 0.0 {
+            pg_user.add_balance(desired_user_id, won_price).await?;
+        }
 
         Ok(())
     }
