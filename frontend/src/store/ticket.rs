@@ -24,6 +24,7 @@ pub enum TicketRequest {
 
 #[derive(Debug)]
 pub enum Action {
+    SetIsLoading(bool),
     SetUserId(i32),
     LoadTicket(anyhow::Result<GetCurrentTicketReply>),
     SetTicketValue(f32),
@@ -39,6 +40,8 @@ pub struct TicketStore {
     pub bets: Vec<Bet>,
     pub ticket_value: f32,
     pub rate: f32,
+
+    pub is_loading: bool,
 }
 
 impl Store for TicketStore {
@@ -53,6 +56,8 @@ impl Store for TicketStore {
             bets: Vec::new(),
             ticket_value: 1.0,
             rate: 1.0,
+
+            is_loading: false,
         }
     }
 
@@ -69,6 +74,8 @@ impl Store for TicketStore {
                 link.send_message(Action::SetRate(value));
             }
             TicketRequest::LoadTicket => {
+                link.send_message(Action::SetIsLoading(true));
+
                 let user_id = self.user_id.clone();
                 let grpc_client = ticket_service_client::TicketService::new(String::from(
                     "http://127.0.0.1:5430",
@@ -82,9 +89,11 @@ impl Store for TicketStore {
                 })
             }
             TicketRequest::CreateBet(match_id, team_id) => {
+                // no ticket id
                 if self.id == 0 {
                     return;
                 };
+
                 let ticket_id = self.id.clone();
                 let grpc_client =
                     bet_service_client::BetService::new(String::from("http://127.0.0.1:5430"));
@@ -92,7 +101,7 @@ impl Store for TicketStore {
                     Action::CreateBetReceiveResponse(
                         grpc_client
                             .create_bet(CreateBetRequest {
-                                ticket_id: ticket_id,
+                                ticket_id,
                                 match_id: match_id.clone(),
                                 team_id: team_id.clone(),
                             })
@@ -128,7 +137,6 @@ impl Store for TicketStore {
                     )
                 });
             }
-            // TODO
             TicketRequest::SubmitTicket => {
                 let ticket_id = self.id.clone();
                 let price_paid = self.ticket_value.clone();
@@ -165,6 +173,9 @@ impl Store for TicketStore {
     // store's operations
     fn reduce(&mut self, msg: Self::Action) {
         match msg {
+            Action::SetIsLoading(value) => {
+                self.is_loading = value;
+            }
             Action::SetUserId(id) => {
                 self.user_id = id;
             }
@@ -175,11 +186,13 @@ impl Store for TicketStore {
                 self.rate = value;
             }
             Action::LoadTicket(Ok(ticket_reply)) => {
+                self.is_loading = false;
                 self.id = ticket_reply.ticket_id;
                 self.bets = ticket_reply.bets;
             }
             Action::LoadTicket(Err(_)) => {
-                // todo handle error
+                self.is_loading = false;
+                // TODO handle error
             }
             Action::CreateBetReceiveResponse(Ok(_)) => {
                 info!("bet created");

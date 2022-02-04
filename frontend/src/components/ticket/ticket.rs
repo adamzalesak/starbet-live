@@ -1,4 +1,5 @@
 use super::ticket_item::TicketItem;
+use crate::components::loading_animation::LoadingAnimation;
 use crate::store::{MatchesRequest, MatchesStore, TicketRequest, TicketStore};
 use crate::types::grpc_types::{bet::Bet, game_match::Match};
 use gloo::console::info;
@@ -27,6 +28,8 @@ pub struct Ticket {
 
     ticket_store: Box<dyn Bridge<StoreWrapper<TicketStore>>>,
     matches_store: Box<dyn Bridge<StoreWrapper<MatchesStore>>>,
+    ticket_is_loading: bool,
+    matches_is_loading: bool,
 }
 
 // parse value from event type
@@ -50,6 +53,8 @@ impl Component for Ticket {
 
             ticket_store: TicketStore::bridge(ctx.link().callback(Msg::TicketStore)),
             matches_store: MatchesStore::bridge(ctx.link().callback(Msg::MatchesStore)),
+            ticket_is_loading: false,
+            matches_is_loading: false,
         }
     }
 
@@ -64,6 +69,7 @@ impl Component for Ticket {
             Msg::MatchesStore(state) => {
                 let state = state.borrow();
                 self.live_matches = state.matches_live.clone();
+                self.matches_is_loading = state.is_loading;
 
                 ctx.link().send_message(Msg::RefreshRate);
             }
@@ -91,6 +97,7 @@ impl Component for Ticket {
                 self.bets = state.bets.clone();
                 self.ticket_value = state.ticket_value;
                 self.rate = state.rate;
+                self.ticket_is_loading = state.is_loading;
             }
 
             // check if value is type of f32, otherwise wet bet_value to 1.0
@@ -147,18 +154,24 @@ impl Component for Ticket {
          <div class="bg-dark-blue text-white rounded-md p-1 h-full max-h-full">
             <div class="bg-light-grey rounded-md text-black flex flex-col h-full">
                 <div class="font-bold text-center pt-1 pb-3 bg-dark-blue text-white">{"Current ticket"}</div>
-                <ul class="overflow-auto m-1 mb-auto bg-light-grey">
-                    {
-                        if self.bets.is_empty() {
-                            html!{ <div>{"Your current ticket is empty!"}</div>}
-                        } else {
-                            html! {}
-                        }
+                <div class="overflow-auto m-1 mb-auto bg-light-grey">
+                    if self.ticket_is_loading || self.matches_is_loading {
+                        <LoadingAnimation color="dark-blue" />
+                    } else {
+                        <ul>
+                            {
+                                if self.bets.is_empty() {
+                                    html!{ <div>{"Your current ticket is empty!"}</div>}
+                                } else {
+                                    html! {}
+                                }
+                            }
+                            {
+                                for self.bets.iter().map(|x| html! { <li key={x.clone().id}><TicketItem bet={x.clone()} /></li> })
+                            }
+                        </ul>
                     }
-                    {
-                        for self.bets.iter().map(|x| html! { <li key={x.clone().id}><TicketItem bet={x.clone()} /></li> })
-                    }
-                </ul>
+                </div>
 
                 <form class="m-1" onsubmit={ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::Submit })} >
                     <div class="text-sm">{ "Number of matches: " }{ self.bets.len() }</div>
