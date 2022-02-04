@@ -84,6 +84,8 @@ impl Repos {
             ratio1 *= 1.1;
             ratio2 *= 0.95;
         }
+        ratio1 = (ratio1 * 100.0).round() / 100.0;
+        ratio2 = (ratio2 * 100.0).round() / 100.0;
         self.game_match.set_ratios(match_id, ratio1, ratio2).await?;
         Ok(())
     }
