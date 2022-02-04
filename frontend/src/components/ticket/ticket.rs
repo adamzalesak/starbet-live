@@ -113,11 +113,9 @@ impl Component for Ticket {
             }
 
             Msg::RefreshRate => {
-                let mut rate_sum: f32 = 0.0;
-                let mut count = 0;
+                let mut result: f32 = 1.0;
 
                 self.bets.clone().into_iter().for_each(|b| {
-                    count += 1;
                     if let Some(match_item) = self
                         .live_matches
                         .clone()
@@ -126,20 +124,16 @@ impl Component for Ticket {
                     {
                         if b.team_id == match_item.team_one.unwrap().id {
                             if let Ok(team_ratio) = match_item.team_one_ratio.parse::<f32>() {
-                                rate_sum += team_ratio;
+                                result *= team_ratio;
                             }
                         } else if b.team_id == match_item.team_two.unwrap().id {
                             if let Ok(team_ratio) = match_item.team_two_ratio.parse::<f32>() {
-                                rate_sum += team_ratio;
+                                result *= team_ratio;
                             }
                         }
                     }
                 });
-                let result = if count == 0 {
-                    0.0
-                } else {
-                    rate_sum / count as f32
-                };
+
                 self.ticket_store.send(TicketRequest::UpdateRate(result));
             }
 
