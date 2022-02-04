@@ -65,5 +65,3 @@ message ChangeStateRequest {
 }
 
 message ChangeStateReply {}
-
-
