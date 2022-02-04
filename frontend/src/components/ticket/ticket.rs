@@ -3,6 +3,7 @@ use crate::components::loading_animation::LoadingAnimation;
 use crate::store::{MatchesRequest, MatchesStore, TicketRequest, TicketStore};
 use crate::types::grpc_types::{bet::Bet, game_match::Match};
 use gloo::console::info;
+use std::collections::HashSet;
 use wasm_bindgen::{JsCast, UnwrapThrowExt};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
@@ -78,19 +79,19 @@ impl Component for Ticket {
                 let state = state.borrow();
 
                 // refresh rate only if bets had changed
-                let x = self
+                let x: HashSet<i32> = self
                     .bets
                     .clone()
                     .into_iter()
                     .map(|b| b.id)
-                    .collect::<Vec<i32>>();
-                let y = state
+                    .collect::<HashSet<i32>>();
+                let y: HashSet<i32> = state
                     .bets
                     .clone()
                     .into_iter()
                     .map(|b| b.id)
-                    .collect::<Vec<i32>>();
-                if !x.iter().eq(y.iter()) {
+                    .collect::<HashSet<i32>>();
+                if x != y {
                     ctx.link().send_message(Msg::RefreshRate);
                 }
 

@@ -107,7 +107,20 @@ impl Store for TicketStore {
                             })
                             .await,
                     )
-                })
+                });
+
+                // reload ticket
+                let user_id = self.user_id.clone();
+                let grpc_client = ticket_service_client::TicketService::new(String::from(
+                    "http://127.0.0.1:5430",
+                ));
+                link.send_future(async move {
+                    Action::LoadTicket(
+                        grpc_client
+                            .get_current_ticket(GetCurrentTicketRequest { user_id })
+                            .await,
+                    )
+                });
             }
             TicketRequest::DeleteBet(id) => {
                 let ticket_id = self.id.clone();

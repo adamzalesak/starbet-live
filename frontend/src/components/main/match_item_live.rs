@@ -81,14 +81,12 @@ impl Component for MatchItemLive {
                     self.id.clone(),
                     self.team_one_id.clone(),
                 ));
-                self.ticket_store.send(TicketRequest::LoadTicket);
             }
             Msg::CreateBetTeamTwo => {
                 self.ticket_store.send(TicketRequest::CreateBet(
                     self.id.clone(),
                     self.team_two_id.clone(),
                 ));
-                self.ticket_store.send(TicketRequest::LoadTicket);
             }
         }
         false
