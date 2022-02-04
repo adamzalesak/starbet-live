@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use crate::connection::{PgPool, PgPooledConnection};
@@ -77,7 +78,7 @@ pub trait BetAndTicketRepo {
     /// ---
     /// - `Ok(Vec<i32>)` with ID's of removed tickets
     /// - `Err(_)` if an error occurred
-    async fn remove_invalid_tickets(&self, desired_user_id: i32) -> anyhow::Result<Vec<i32>>;
+    async fn remove_invalid_tickets(&self, desired_user_id: i32) -> anyhow::Result<()>;
 
     /// Get the current ticket
     /// Either open a new one if the old one is invalid, or the last one was submitted
@@ -159,22 +160,33 @@ impl BetAndTicketRepo for PgBetAndTicketRepo {
 
     /// Remove all invalid tickets of the user
     /// invalid tickets are the ones which have not been paid and their 'valid_until' field has expired.
-    async fn remove_invalid_tickets(&self, desired_user_id: i32) -> anyhow::Result<Vec<i32>> {
-        let tickets_to_remove: Vec<i32> = ticket::table
+    async fn remove_invalid_tickets(&self, desired_user_id: i32) -> anyhow::Result<()> {
+        let tickets_and_bets_and_events: Vec<(Ticket, GameMatchEvent)> = ticket::table
             .filter(ticket::user_id.eq(desired_user_id))
             .inner_join(bet::table.inner_join(
                 game_match_event::table.on(game_match_event::game_match_id.eq(bet::game_match_id)),
             ))
             .order((bet::id, game_match_event::created_at.desc()))
-            .filter(game_match_event::event_type.ne(GameMatchEventType::Live.to_string()))
-            .or_filter(game_match_event::event_type.ne(GameMatchEventType::Overtime.to_string()))
             .distinct_on(bet::id)
-            .select(ticket::id)
+            .select((ticket::all_columns, game_match_event::all_columns))
             .get_results(&self.get_connection().await?)?;
 
-        let _ = delete(ticket::table.filter(ticket::id.eq_any(&tickets_to_remove)));
+        // obtain unique ticket ids
+        let tickets_to_remove: HashSet<i32> = tickets_and_bets_and_events
+            .iter()
+            .filter(|(_, event)| {
+                event.event_type != GameMatchEventType::Live.to_string()
+                    && event.event_type != GameMatchEventType::Overtime.to_string()
+            })
+            .map(|(ticket, _)| ticket.id)
+            .collect();
 
-        Ok(tickets_to_remove)
+        // convert to vector for diesel
+        let tickets_to_remove: Vec<i32> = tickets_to_remove.into_iter().collect();
+
+        let _ = delete(ticket::table.filter(ticket::id.eq_any(tickets_to_remove)));
+
+        Ok(())
     }
 
     /// Get the current ticket
