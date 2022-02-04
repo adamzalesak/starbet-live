@@ -4,6 +4,7 @@ use crate::{
         ticket_service_client, ListTicketsReply, ListTicketsRequest, Ticket,
     },
 };
+use chrono::NaiveDateTime;
 use log::{error, info};
 use yew::prelude::*;
 use yew_agent::{
@@ -93,7 +94,10 @@ impl Component for ProfileTickets {
                             <div class="text-center my-2 p-1 rounded-md bg-dark-blue text-white">{"No tickets to show"}</div>
                         }
                     } else {
-                        self.tickets.clone().into_iter().map(|ticket| {
+                        let mut temp = self.tickets.clone();
+                        temp.sort_by_key(|x| x.submitted_at.clone());
+                        temp.reverse();
+                        temp.into_iter().map(|ticket| {
                             let price_paid = match ticket.price_paid.parse::<f32>() {
                                 Ok(val) => val,
                                 _ => 1.0,
@@ -103,21 +107,28 @@ impl Component for ProfileTickets {
                                 _ => 1.0,
                             };
 
+                            let temp =
+                                NaiveDateTime::parse_from_str(&ticket.submitted_at, "%Y-%m-%d %H:%M:%S%.9f UTC")
+                                    .unwrap();
+                            let submitted_at = temp.format("%d/%m/%Y %H:%M").to_string();
+
                             html! {
                                 <div class={format!("rounded-md p-1 mt-2 border {}", match ticket.won {
                                     Some(true) => "bg-success-light border-success".to_string(),
                                     Some(false) => "bg-danger-light border-danger".to_string(),
                                     None => "bg-light-grey".to_string(),
                                 })}>
-                                    <div>{format!("Number of bets: {}", ticket.bets.len())}</div>
-                                    <div>{format!("Price paid: {}", price_paid)}</div>
-                                    <div>{format!("Total ratio: {}", total_ratio)}</div>
-                                    <div>{format!("Submitted at: {}", ticket.submitted_at)}</div>
-                                    <div>{format!("Eventual win: {}", total_ratio * price_paid)}</div>
-                                    <div>{match ticket.won {
-                                        Some(v) => v.to_string(),
-                                        None => "not evaluated yet".to_string(),
-                                    }}</div>
+                                    <div class="grid grid-cols-2">
+                                        <div>
+                                            <div>{"Number of bets: "}<span class="font-bold">{ticket.bets.len()}</span></div>
+                                            <div>{"Total ratio: "}<span class="font-bold">{total_ratio}</span></div>
+                                        </div>
+                                        <div>
+                                            <div>{"Price paid: "}<span class="font-bold">{price_paid}</span>{"€"}</div>
+                                            <div>{"Eventual win: "}<span class="font-bold">{total_ratio * price_paid}</span>{"€"}</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm border-t border-black">{format!("Submitted at: {}", submitted_at)}</div>
                                 </div>
                             }
                         }).collect::<Html>()
